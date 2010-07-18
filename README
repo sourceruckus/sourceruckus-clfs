@@ -1,3 +1,7 @@
+-*- mode: outline; mode: flyspell -*-
+
+* Intro
+
 Source Ruckus Linux - an embeddable, robust, free, Linux meta-distro
 
 What's a meta distro?  It's a collection of build tools, source packages,
@@ -6,13 +10,54 @@ scripts, and documentation all ready to be built into a Linux distro.
 Source Ruckus Linux can be used out-of-the-box, but it's real strength lies
 in being used as a base to derive your OWN distro from.
 
-Goals:
-- 32bit or 64bit multilib build
-- hard-realtime scheduling (PREEMPT_RT)
-- Xen pvops dom0 kernel (either/or?)
-- tiny, base, and extra images
-    - tiny: this is for embedded systems.  No x, EGLIBC (uclibc?), busybox
-    - base: server, non-emedded but smal (only basic x, etc)
-    - extra: workstation, development and/or play environment (gnome, multimedia, debug symbols, extra deb libs and tools, etc)
+
+* Goals
+
+** 32bit or 64bit multilib build
+
+** Hard-realtime Scheduling
+
+Using CONFIG_PREEMPT gives us soft-realtime scheduling.  Hard-realtime
+scheduling could be accomplished by using Ingo Molnar's CONFIG_PREEMPT_RT
+patches, or by using a layered microkernel approach.  PREEMPT_RT is probably
+less likely to break things, although it might not play well with Xen or KVM
+virtual machines.  We'll see.
+
+** Xen Pvops Dom0 Kernel
+
+The Xen pvops dom0 kernel code isn't quite in upstream yet.  We should merge
+in Jeremy Fitzhardinge's xen/stable-x.y.z branch if at all possible.  It might be
+necessary to have both a PREEMPT_RT and separate Xen dom0 kernel... not sure
+yet how those two will play with each other.
+
+
+** Upstream DRM Kernel Code
+
+Backporting the upstream DRM code from the Nouveau project's source tree
+will provide our kernel with the latest and greatest upstream DRM code
+(including development Nouveau code for Nvidia cards) while allowing us to
+hopefully co-exist with the Xen dom0 patches.
+
+
+** tiny, base, and extra images
+
+The idea here is provide a hierarchy of filesystem images to install from,
+with each image being applied on top of it's parent images.  The result of
+this will be a nice, tiered, system suited for embedded, server, or
+development environments.
+
+*** tiny
+This is for embedded systems.  No X server or libs, EGLIBC, busybox, only
+what's absolutely necessary.  I thought about using uclibc, but that would
+break binary compatibility with the rest of the images (ie, we couldn't use
+the tiny image as a base to build the base and extra images off of).
+
+*** base
+Server, non-emedded but small (only basic X, libs, tools, daemons, etc).
+
+*** extra
+Workstation, development and/or play environment (gnome, multimedia, debug
+symbols, extra deb libs and tools, etc).
+
 
 

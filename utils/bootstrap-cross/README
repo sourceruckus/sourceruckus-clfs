@@ -15,3 +15,8 @@ user.
 ** Gotcha's
 
 *** host system's e2fsprogs extensions
+
+Do I need to make a bootstrap-bootstrap section to ensure that the version
+of e2fsprogs we're using doesn't enable any non-standard features in the
+filesystem we're creating?  If it does, our baby system's kernel probably
+won't be able to mount the filesystem... which would be bad.

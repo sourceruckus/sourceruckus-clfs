@@ -1,41 +1,71 @@
-v3.0?
+-*- mode: outline; mode: flyspell -*-
+
+* version
+v3.0?  Pretty sure last version was 2.0... 3.0 never actually got out of the
+planning stages last time... maybe I should start this at 4.0?  maybe jump
+it all the way to 5.0 just to show how much time there's been (mozilla-ish,
+i know).  Or it could be 6.x since it's based off version 6.x of the LFS
+book... although it's actually following v1.0 of the CLFS book more
+closely... i don't konw.
+ 
+
+* source tree layout
+just have everything in a packages directory?  or a src directory?
+splitting things up into contrib and src doesn't really make sense...
 
 
 
-Extra stuff to add
+* Extra stuff to add
+
+** embedded.img
+eglibc
+busybox
+zsh
+vi
+git (or should this go in server... might be handy here)
+srp
+mdlskel
+tcpdump (maybe... could be handy)
 
 
-Elessar:
-
+** server.img
+gcc
+glib
+texinfo
 libupnp 1.4.2 or later (1.6.6)
+libdlna 0.2.3
+ushare hg (1.1a)
+ffmpeg (servers should be able to encode video)
+dvgrab
+libgphoto2 (maybe move this to workstation)
+media_utils
+Xorg
+gtk
+qt (?)
+emacs
+firefox (gotta have a web browser)
+xscreensaver
+wireshark
 
 
-Libdlna 0.2.3
+** workstation.img
+tetex
+docbook
+kino
+vlc
+wxgtk
+audacity
+Gthumb
+ImageMagick
+audacious
+rhythmbox (?)
+all of gnome
+all of kde (?)
+thunderbird
 
 
-Ushare hg (1.1a)
 
-
-Ffmpeg (encoding locally will be much faster)
-
-
+* misc notes
 route add -net 239.0.0.0 netmask 255.0.0.0 eth0
 
 
-Olorin:
-?Dvgrab
-?Kino
-Ffmpeg
-?Vlc
-?Wxgtk
-Audacity
-?Zsh
-?Git
-?Gphoto2
-?Gthumb
-?ImageMagick
-Audacious
-
-Mdlskel
-Media_utils
-Srp
