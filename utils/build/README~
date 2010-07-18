@@ -1,0 +1,17 @@
+-*- mode: outline; mode: flyspell -*-
+
+README - utils/bootstrap-cross
+
+This is where the build scripts for a cross-compiling bootstrap system will
+live.  The scripts in utils/bootstrap (native bootstrap) might get merged in
+here if that's easier to maintain, but we'll see.
+
+
+The final result of building in this directory is bootstrap-cross.img, which
+can be used by restore to populate a bootstrap-cross environment as the root
+user.
+
+
+** Gotcha's
+
+*** host system's e2fsprogs extensions

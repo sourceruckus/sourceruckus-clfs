@@ -1,0 +1,7 @@
+-*- mode: outline; mode: flyspell -*-
+
+README - utils/bootstrap
+
+This is where the build scripts for a native bootstrap system will live.
+This might get merged into utils/bootstrap-cross if that's easier to
+maintain, but we'll see.

@@ -1,0 +1,18 @@
+Source Ruckus Linux - an embeddable, robust, free, Linux meta-distro
+
+What's a meta distro?  It's a collection of build tools, source packages,
+scripts, and documentation all ready to be built into a Linux distro.
+
+Source Ruckus Linux can be used out-of-the-box, but it's real strength lies
+in being used as a base to derive your OWN distro from.
+
+Goals:
+- 32bit or 64bit multilib build
+- hard-realtime scheduling (PREEMPT_RT)
+- Xen pvops dom0 kernel (either/or?)
+- tiny, base, and extra images
+    - tiny: this is for embedded systems.  No x, EGLIBC (uclibc?), busybox
+    - base: server, non-emedded but smal (only basic x, etc)
+    - extra: workstation, development and/or play environment (gnome, multimedia, debug symbols, extra deb libs and tools, etc)
+
+

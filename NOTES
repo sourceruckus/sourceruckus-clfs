@@ -1,0 +1,41 @@
+v3.0?
+
+
+
+Extra stuff to add
+
+
+Elessar:
+
+libupnp 1.4.2 or later (1.6.6)
+
+
+Libdlna 0.2.3
+
+
+Ushare hg (1.1a)
+
+
+Ffmpeg (encoding locally will be much faster)
+
+
+route add -net 239.0.0.0 netmask 255.0.0.0 eth0
+
+
+Olorin:
+?Dvgrab
+?Kino
+Ffmpeg
+?Vlc
+?Wxgtk
+Audacity
+?Zsh
+?Git
+?Gphoto2
+?Gthumb
+?ImageMagick
+Audacious
+
+Mdlskel
+Media_utils
+Srp

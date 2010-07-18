@@ -1,0 +1,11 @@
+-*- mode: outline; mode: flyspell -*-
+
+README - utils/build
+
+This is where the build scripts for each installable image will live
+
+** tiny.img
+
+** base.img
+
+** extra.img
