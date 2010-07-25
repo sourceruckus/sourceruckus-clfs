@@ -14,6 +14,51 @@ just have everything in a packages directory?  or a src directory?
 splitting things up into contrib and src doesn't really make sense...
 
 
+* build process
+
+** bootstrap
+This step builds an environment suitable to start compiling the
+cross-compilation suite.
+
+*** e2fsprogs
+*** python
+*** srp
+*** anything else our builder needs to run through its scripts
+
+
+** bootstrap-cross
+This step creates the cross-compilation suite of tools
+
+
+** stage1
+This step builds a basic bootable/chrootable system for the target
+architecture used to build the actual final system.  At the end of this
+stage, cross-compiled builds will have to reboot into the new system
+(potentially on different hardware).
+
+NOTE: Cross-compiling x86_64 on an x86 32bit host requires reboot into the
+      x86_64 kernel, i think... not 100% sure.  Compiling for the same arch
+      (x86 for x86) can just chroot into the baby system using the running
+      kernel.  Cross-compiling for a completely different arch (ppc on an
+      x86 host) will require getting the bootable filesystem migrated over
+      to a ppc host to complete the build on.  Might be a good idea to just
+      assume host and target architectures are different and always do a
+      reboot...  Not sure how we'll automate the whole reboot and continue
+      building thing... especially if a completely different host is
+      required.
+
+** stage2
+This step builds up each segmented filesystem image
+
+*** embedded.img
+*** server.img
+*** workstation.img
+
+** stage3
+This step builds a bootable ISO9660 filesystem to use as installation
+media.  Should we perhaps create bootable flash drive installer, too?
+
+
 
 * Extra stuff to add
 
@@ -69,3 +114,4 @@ thunderbird
 route add -net 239.0.0.0 netmask 255.0.0.0 eth0
 
 
+genisoimage vs mkisofs?

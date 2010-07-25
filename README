@@ -15,6 +15,13 @@ in being used as a base to derive your OWN distro from.
 
 ** 32bit or 64bit multilib build
 
+At build time, the user should be able to select a specific architecture to
+cross-compile the Linux distro for (x86, x86_64 (pure64 or multilib), sparc,
+ppc, etc).  Obviously, there are some limitations (pure64 can't use grub,
+etc) and if the target system isn't bootable on the build hardware (ie,
+building sparc on an x86 machine), the second half of the build will have to
+be done elsewhere.
+
 ** Hard-realtime Scheduling
 
 Using CONFIG_PREEMPT gives us soft-realtime scheduling.  Hard-realtime
