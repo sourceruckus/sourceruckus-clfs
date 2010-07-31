@@ -6,6 +6,21 @@ toplevel=$PWD/../..
 packagedir=$toplevel/packages
 pacakges=""
 
+PREFIX=/ruckus/staging
+
+# setup environment to use software as we install it
+export PATH=$PREFIX/bin:$PREFIX/sbin:$PATH
+export MANPATH=$PREFIX/man:$PREFIX/share/man:$MANPATH
+export PKG_CONFIG_PATH=$PREFIX/lib/pkg-config:$PKG_CONFIG_PATH
+if [ -z "$LD_LIBRARY_PATH" ]; then
+    export LD_LIBRARY_PATH=$PREFIX/lib
+else
+    export LD_LIBRARY_PATH=$PREFIX/lib:$LD_LIBRARY_PATH
+fi
+
+# might need autotools
+packages+=" autoconf automake libtool"
+
 # don't remember why
 packages+=" bison"
 
@@ -38,9 +53,8 @@ build_generic()
     fi
 
     pushd $builddir
-    $configure --prefix=/ruckus/staging || exit 1
-    make -j3 || exit 1
-    make install || exit 1
+    $configure --prefix=$PREFIX || exit 1
+    make -j3 install || exit 1
     popd
 }
 
@@ -64,6 +78,6 @@ build()
 
 # build and install each package in our /ruckus/staging tree
 for p in $packages; do
-    echo "build: $p"
-    build $p
+    echo "building package: $p"
+    build $p || exit 1
 done
