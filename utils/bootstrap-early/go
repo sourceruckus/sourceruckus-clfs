@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# should set toplevel via autoconf?
+toplevel=$PWD/../..
+
+packagedir=$toplevel/packages
+pacakges=""
+
+# don't remember why
+packages+=" bison"
+
+# to ensure that we don't inadvertantly use a modified version with
+# non-standard extensions to build our filesystems
+packages+=" e2fsprogs"
+
+# a lot of the build tools are written in python
+packages+=" python"
+
+# the Source Ruckus Packager
+packages+=" srp"
+
+# might want to make sure we have the worlds greatest scm tool
+packages+=" git"
+
+
+# define generic builder method
+build_generic()
+{
+    builddir=.build/$1
+    configure=$packagedir/$1/configure
+    mkdir -p $builddir
+    if [ ! -x $configure ]; then
+	configure=./configure
+	pushd $builddir
+	tar jxf $packagedir/$1/*.bz2 || exit 1
+	builddir=$builddir/* || exit 1
+	popd
+    fi
+
+    pushd $builddir
+    $configure --prefix=/ruckus/staging || exit 1
+    make -j3 || exit 1
+    make install || exit 1
+    popd
+}
+
+build()
+{
+    case "$1" in
+	srp)
+	    build_srp
+	    ;;
+	*)
+	    build_generic $1
+    esac
+}
+
+
+
+#build_bison()
+#{
+#    echo yeah
+#}
+
+# build and install each package in our /ruckus/staging tree
+for p in $packages; do
+    echo "build: $p"
+    build $p
+done
