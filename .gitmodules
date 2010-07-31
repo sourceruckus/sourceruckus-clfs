@@ -1,0 +1,3 @@
+[submodule "packages/git"]
+	path = packages/git
+	url = git://git.kernel.org/pub/scm/git/git.git
