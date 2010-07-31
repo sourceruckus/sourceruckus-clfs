@@ -13,10 +13,27 @@ closely... i don't konw.
 just have everything in a packages directory?  or a src directory?
 splitting things up into contrib and src doesn't really make sense...
 
+How about all the packages live in a 'packages' directory, and all the
+automated build utilities live in utils.
+
+RUCKUS/docs
+RUCKUS/packages
+RUCKUS/utils
+...
+
+
+* build user
+The LFS books to the build as a non-privileged 'lfs' user.  I don't really
+like this very much, as I'd rather preserve the history of who did a
+particular build.  The benefit of creating an lfs user and creating its
+login scripts is that we know exactly what's in them... so using an already
+created user account might introduce some inconsistencies in the build
+scripts.
+
 
 * build process
 
-** bootstrap
+** bootstrap-early
 This step builds an environment suitable to start compiling the
 cross-compilation suite.
 
@@ -30,7 +47,7 @@ cross-compilation suite.
 This step creates the cross-compilation suite of tools
 
 
-** stage1
+** bootstrap-final
 This step builds a basic bootable/chrootable system for the target
 architecture used to build the actual final system.  At the end of this
 stage, cross-compiled builds will have to reboot into the new system
@@ -47,14 +64,14 @@ NOTE: Cross-compiling x86_64 on an x86 32bit host requires reboot into the
       building thing... especially if a completely different host is
       required.
 
-** stage2
+** build
 This step builds up each segmented filesystem image
 
 *** embedded.img
 *** server.img
 *** workstation.img
 
-** stage3
+** build-installer
 This step builds a bootable ISO9660 filesystem to use as installation
 media.  Should we perhaps create bootable flash drive installer, too?
 
