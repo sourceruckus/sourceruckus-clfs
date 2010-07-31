@@ -1,6 +1,3 @@
 [submodule "packages/git"]
 	path = packages/git
 	url = git://git.kernel.org/pub/scm/git/git.git
-[submodule "srp"]
-	path = srp
-	url = git://labriola.dyndns.org/srp2.git
