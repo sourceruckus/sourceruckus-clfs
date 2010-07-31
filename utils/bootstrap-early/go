@@ -44,7 +44,13 @@ build_generic()
     builddir=.build/$1
     configure=$packagedir/$1/configure
     mkdir -p $builddir
-    if [ ! -x $configure ]; then
+
+    # figure out if we're using a source tarball or an already unpacked
+    # source tree.  we do this by looking for configure, configure.ac, or
+    # configure.in in the packagedir
+    if [ ! -x $configure ] && [ ! -f $configure.ac ] && [ ! -f $configure.in ]; then
+	# using tarball.  need to modify some variables and extract the
+	# source tree
 	configure=./configure
 	pushd $builddir
 	tar jxf $packagedir/$1/*.bz2 || exit 1
@@ -52,11 +58,32 @@ build_generic()
 	popd
     fi
 
+    # go guild it!
     pushd $builddir
-    $configure --prefix=$PREFIX || exit 1
+    # only explicitly run configure the first time
+    if [ ! -f Makefile ]; then
+	# only explicitly run autoreconf he first time
+	if [ ! $configure ]; then
+	    pushd $(dirname $configure)
+	    autoreconf || exit 1
+	    popd
+	fi
+	$configure --prefix=$PREFIX || exit 1
+    fi
     make -j3 install || exit 1
     popd
 }
+
+
+build_srp()
+{
+    builddir=.build/srp
+    rsync -va $packagedir/srp/ $builddir
+    pushd $builddir
+    make PREFIX=$PREFIX install || exit 1
+    popd
+}
+
 
 build()
 {
