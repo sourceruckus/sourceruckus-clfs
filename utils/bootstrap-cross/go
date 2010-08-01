@@ -37,6 +37,22 @@ build()
 	    # the 10M
 	    build_generic $1 --prefix=$PREFIX_CROSS --without-debug --without-shared
 	    ;;
+	gmp)
+	    CPPFLAGS=-fexceptions \
+		build_generic $1 --prefix=$PREFIX_CROSS --enable-cxx
+	    ;;
+	mpfr)
+	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+		build_generic $1 --prefix=$PREFIX_CROSS \
+		--enable-shared \
+		--with-gmp=$PREFIX_CROSS
+	    ;;
+	mpc)
+	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+		build_generic $1 --prefix=$PREFIX_CROSS \
+		--with-gmp=$PREFIX_CROSS \
+		--with-mpfr=$PREFIX_CROSS
+	    ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_CROSS
 	    ;;
@@ -44,7 +60,20 @@ build()
 }
 
 
-packages="linux_headers file ncurses"
+packages=""
+packages+=" linux_headers"
+packages+=" file"
+packages+=" ncurses"
+packages+=" gmp"
+packages+=" mpfr"
+packages+=" mpc"
+#packages+=" ppl"
+#packages+=" cloog-ppl"
+#packages+=" binutils"
+#packages+=" gcc-static"
+#packages+=" eglibc-32bit"
+#packages+=" eglibc-64bit"
+#packages+=" gcc"
 
 for p in $packages; do
     echo "building cross package: $p"
