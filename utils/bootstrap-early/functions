@@ -1,0 +1,79 @@
+# -*- mode: sh -*-
+
+packagedir=$toplevel/packages
+
+INSTALLROOT=$HOME/RUCKUS
+PREFIX_EARLY=$INSTALLROOT/bootstrap-early
+PREFIX_CROSS=$INSTALLROOT/bootstrap-cross
+
+# setup environment to use our bootstrap-early stuff
+export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
+export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH
+export PKG_CONFIG_PATH=$PREFIX_EARLY/lib/pkg-config:$PKG_CONFIG_PATH
+if [ -z "$LD_LIBRARY_PATH" ]; then
+    export LD_LIBRARY_PATH=$PREFIX_EARLY/lib
+else
+    export LD_LIBRARY_PATH=$PREFIX_EARLY/lib:$LD_LIBRARY_PATH
+fi
+
+
+# set host and target variables.  this should eventually be done via autoconf
+
+# NOTE: MACHTYPE on a fedora 32bit box is 'i386-redhat-linux-gnu', but on a SUSE box it's just 'i686'
+#export CLFS_HOST="$(echo ${MACHTYPE} | \
+#    sed "s/$(echo ${MACHTYPE} | cut -d- -f2)/cross/")"
+
+export MACHTYPE_HOST="i686-cross-linux-gnu"
+
+export MACHTYPE_TARGET="x86_64-ruckus-linux-gnu"
+
+export MACHTYPE_TARGET32="i686-ruckus-linux-gnu"
+
+# these should also get determined by autoconf
+export ARCH_TARGET=x86_64
+
+# these variables seem like overkill, but might make things easier later on.
+# they should probably also be set vi autoconf
+export BUILD32="-m32"
+export BUILD64="-m64"
+
+
+# define generic builder method.  this does some magic to set up a build
+# tree based on what's stored in packagedir (ie, a source tree or a source
+# tarball).  first arg is package name, the rest are passed on to configure.
+build_generic()
+{
+    p=$1
+    shift
+    builddir=.build/$p
+    configure=$packagedir/$p/configure
+    mkdir -p $builddir
+
+    # figure out if we're using a source tarball or an already unpacked
+    # source tree.  we do this by looking for configure, configure.ac, or
+    # configure.in in the packagedir
+    if [ ! -x $configure ] && [ ! -f $configure.ac ] && [ ! -f $configure.in ]; then
+	# using tarball.  need to modify some variables and extract the
+	# source tree
+	configure=./configure
+	pushd $builddir
+	tar jxf $packagedir/$p/*.bz2 || exit 1
+	builddir=$builddir/* || exit 1
+	popd
+    fi
+
+    # go guild it!
+    pushd $builddir
+    # only explicitly run configure the first time
+    if [ ! -f Makefile ]; then
+	# only explicitly run autoreconf the first time
+	if [ ! -x $configure ]; then
+	    pushd $(dirname $configure)
+	    autoreconf || exit 1
+	    popd
+	fi
+	$configure $* || exit 1
+    fi
+    make -j3 install || exit 1
+    popd
+}

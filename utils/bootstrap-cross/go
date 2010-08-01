@@ -3,64 +3,50 @@
 # should set toplevel via autoconf?
 toplevel=$PWD/../..
 
-packagedir=$toplevel/packages
-
-PREFIX=$HOME/RUCKUS/bootstrap
-PREFIX_EARLY=$PREFIX-early
-PREFIX_CROSS=$PREFIX-cross
-
-# setup environment to use our bootstrap-early stuff
-export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
-export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH
-export PKG_CONFIG_PATH=$PREFIX_EARLY/lib/pkg-config:$PKG_CONFIG_PATH
-if [ -z "$LD_LIBRARY_PATH" ]; then
-    export LD_LIBRARY_PATH=$PREFIX_EARLY/lib
-else
-    export LD_LIBRARY_PATH=$PREFIX_EARLY/lib:$LD_LIBRARY_PATH
-fi
-
-
-# set host and target variables.  this should eventually be done via autoconf
-
-# NOTE: MACHTYPE on a fedora 32bit box is 'i386-redhat-linux-gnu', but on a SUSE box it's just 'i686'
-#export CLFS_HOST="$(echo ${MACHTYPE} | \
-#    sed "s/$(echo ${MACHTYPE} | cut -d- -f2)/cross/")"
-
-export MACHTYPE_HOST="i686-cross-linux-gnu"
-
-export MACHTYPE_TARGET="x86_64-ruckus-linux-gnu"
-
-export MACHTYPE_TARGET32="i686-ruckus-linux-gnu"
-
-# these should also get determined by autoconf
-export ARCH_TARGET=x86_64
-
-# these variables seem like overkill, but might make things easier later on.
-# they should probably also be set vi autoconf
-export BUILD32="-m32"
-export BUILD64="-m64"
+# source our common variables and functions
+. $toplevel/utils/bootstrap-early/functions
 
 
 # install linux headers
-linux_headers()
+build_linux_headers()
 {
     builddir=.build/kernel
     # get the source tree into our build dir
-    git clone --shared $packagedir/kernel $builddir
+    rsync -a --exclude .git $packagedir/kernel/ $builddir || exit 1
     pushd $builddir
-    make mrproper
-    make ARCH=$ARCH_TARGET headers_check
-    make ARCH=$ARCH_TARGET INSTALL_HDR_PATH=dest headers_install
+    make mrproper &&
+    make ARCH=$ARCH_TARGET headers_check &&
+    make ARCH=$ARCH_TARGET INSTALL_HDR_PATH=dest headers_install || exit 1
     mkdir -p $PREFIX_CROSS/include
-    mv -v dest/include/* $PREFIX_CROSS/include
+    rsync -v dest/include/* $PREFIX_CROSS/include || exit 1
     popd
 }
 
 
 
+build()
+{
+    case "$1" in
+	linux_headers)
+	    build_linux_headers
+	    ;;
+	ncurses)
+	    # probably only need to make the tic program, but this is
+	    # easier.  might save us 10M and 1 minute, but it's all
+	    # temporary files anyway so we don't really care very much about
+	    # the 10M
+	    build_generic $1 --prefix=$PREFIX_CROSS --without-debug --without-shared
+	    ;;
+	*)
+	    build_generic $1 --prefix=$PREFIX_CROSS
+	    ;;
+    esac
+}
 
 
-for func in linux_headers file; do
-    echo "building cross tools: $func"
-    eval $func
+packages="linux_headers file ncurses"
+
+for p in $packages; do
+    echo "building cross package: $p"
+    build $p || exit 1
 done
