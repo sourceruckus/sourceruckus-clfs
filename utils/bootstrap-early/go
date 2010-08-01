@@ -8,7 +8,7 @@ toplevel=$PWD/../..
 packagedir=$toplevel/packages
 pacakges=""
 
-PREFIX=/ruckus/staging
+PREFIX=$HOME/RUCKUS/bootstrap-early
 
 # setup environment to use software as we install it
 export PATH=$PREFIX/bin:$PREFIX/sbin:$PATH
