@@ -4,3 +4,6 @@
 [submodule "packages/srp"]
 	path = packages/srp
 	url = git://labriola.dyndns.org/srp2
+[submodule "packages/kernel"]
+	path = packages/kernel
+	url = git://labriola.dyndns.org/linux-2.6-mdl.git
