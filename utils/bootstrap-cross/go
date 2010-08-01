@@ -26,14 +26,41 @@ fi
 #export CLFS_HOST="$(echo ${MACHTYPE} | \
 #    sed "s/$(echo ${MACHTYPE} | cut -d- -f2)/cross/")"
 
-export ARCH_HOST="i686-cross-linux-gnu"
+export MACHTYPE_HOST="i686-cross-linux-gnu"
 
-export ARCH_TARGET="x86_64-ruckus-linux-gnu"
+export MACHTYPE_TARGET="x86_64-ruckus-linux-gnu"
 
-export ARCH_TARGET32="i686-ruckus-linux-gnu"
+export MACHTYPE_TARGET32="i686-ruckus-linux-gnu"
+
+# these should also get determined by autoconf
+export ARCH_TARGET=x86_64
 
 # these variables seem like overkill, but might make things easier later on.
 # they should probably also be set vi autoconf
 export BUILD32="-m32"
 export BUILD64="-m64"
 
+
+# install linux headers
+linux_headers()
+{
+    builddir=.build/kernel
+    # get the source tree into our build dir
+    git clone --shared $packagedir/kernel $builddir
+    pushd $builddir
+    make mrproper
+    make ARCH=$ARCH_TARGET headers_check
+    make ARCH=$ARCH_TARGET INSTALL_HDR_PATH=dest headers_install
+    mkdir -p $PREFIX_CROSS/include
+    mv -v dest/include/* $PREFIX_CROSS/include
+    popd
+}
+
+
+
+
+
+for func in linux_headers file; do
+    echo "building cross tools: $func"
+    eval $func
+done
