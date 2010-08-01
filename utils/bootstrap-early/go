@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# which packages need to be built should be determined by configure script
+
 # should set toplevel via autoconf?
 toplevel=$PWD/../..
 
@@ -62,8 +64,8 @@ build_generic()
     pushd $builddir
     # only explicitly run configure the first time
     if [ ! -f Makefile ]; then
-	# only explicitly run autoreconf he first time
-	if [ ! $configure ]; then
+	# only explicitly run autoreconf the first time
+	if [ ! -x $configure ]; then
 	    pushd $(dirname $configure)
 	    autoreconf || exit 1
 	    popd
@@ -85,11 +87,26 @@ build_srp()
 }
 
 
+build_git()
+{
+    builddir=.build/git
+    rsync -va $packagedir/git/ $builddir
+    pushd $builddir
+    autoreconf || exit 1
+    ./configure --prefix=$PREFIX || exit 1
+    make -j3 install || exit 1
+    popd
+}
+
+
 build()
 {
     case "$1" in
 	srp)
 	    build_srp
+	    ;;
+	git)
+	    build_git
 	    ;;
 	*)
 	    build_generic $1
