@@ -60,6 +60,12 @@ build_generic()
 	tar jxf $packagedir/$p/*.bz2 || exit 1
 	builddir=$builddir/* || exit 1
 	popd
+	# also apply any patches in the packagedir
+	pushd $builddir
+	for p in $packagedir/$p/*.patch; do
+	    patch -Np1 < $p || exit 1
+	done
+	popd
     fi
 
     # go guild it!
