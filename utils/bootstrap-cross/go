@@ -62,6 +62,14 @@ build()
 		--with-libgmp-prefix=$PREFIX_CROSS \
 		--with-libgmpxx-prefix=$PREFIX_CROSS
 	    ;;
+	cloog-ppl)
+	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+		build_generic $1 --prefix=$PREFIX_CROSS \
+		--enable-shared \
+		--with-bits=gmp \
+		--with-gmp=$PREFIX_CROSS \
+		--with-ppl=$PREFIX_CROSS
+	    ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_CROSS
 	    ;;
@@ -76,8 +84,8 @@ packages=""
 #packages+=" gmp"
 #packages+=" mpfr"
 #packages+=" mpc"
-packages+=" ppl"
-#packages+=" cloog-ppl"
+#packages+=" ppl"
+packages+=" cloog-ppl"
 #packages+=" binutils"
 #packages+=" gcc-static"
 #packages+=" eglibc-32bit"
