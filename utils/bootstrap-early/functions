@@ -43,6 +43,14 @@ export BUILD64="-m64"
 # tarball).  first arg is package name, the rest are passed on to configure.
 build_generic()
 {
+    setup_generic $*
+    configure_generic $*
+    compile_generic $*
+}
+
+
+setup_generic()
+{
     p=$1
     shift
     builddir=.build/$p
@@ -62,14 +70,26 @@ build_generic()
 	popd
 	# also apply any patches in the packagedir
 	pushd $builddir
-	for p in $packagedir/$p/*.patch; do
-	    patch -Np1 < $p || exit 1
-	done
+	if [ -f $packagedir/$p/*.patch ]; then
+	    for p in $packagedir/$p/*.patch; do
+		patch -Np1 < $p || exit 1
+	    done
+	fi
 	popd
     fi
+}
+
+
+configure_generic()
+{
+    p=$1
+    shift
+    #builddir=.build/$p
+    #configure=$packagedir/$p/configure
+    #mkdir -p $builddir
 
     # go guild it!
-    pushd $builddir
+    pushd $builddir || exit 1
     # only explicitly run configure the first time
     if [ ! -f Makefile ]; then
 	# only explicitly run autoreconf the first time
@@ -80,6 +100,19 @@ build_generic()
 	fi
 	$configure $* || exit 1
     fi
-    make -j3 install || exit 1
     popd
+}
+
+
+compile_generic()
+{
+    p=$1
+    shift
+    #builddir=.build/$p
+    #configure=$packagedir/$p/configure
+    #mkdir -p $builddir
+
+    pushd $builddir &&
+    make -j3 install &&
+    popd || exit 1
 }

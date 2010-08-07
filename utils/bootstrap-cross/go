@@ -70,6 +70,24 @@ build()
 		--with-gmp=$PREFIX_CROSS \
 		--with-ppl=$PREFIX_CROSS
 	    ;;
+	binutils)
+	    # this was using /tools as apposed to /tools-cross in the CLFS
+	    # book
+	    AR=ar AS=as setup_generic $1 &&
+	    AR=ar AS=as \
+		configure_generic $1 --prefix=$PREFIX_CROSS \
+		--host=${MACHTYPE_HOST} \
+		--target=${MACHTYPE_TARGET} \
+		--with-sysroot=${INSTALLROOT} \
+		--with-lib-path=/bootstrap/lib \
+		--disable-nls \
+		--enable-shared \
+		--enable-64-bit-bfd || exit 1
+	    pushd $builddir || exit 1
+	    make configure-host &&
+	    make -j3 &&
+	    make install || exit 1
+	    ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_CROSS
 	    ;;
@@ -85,8 +103,8 @@ packages=""
 #packages+=" mpfr"
 #packages+=" mpc"
 #packages+=" ppl"
-packages+=" cloog-ppl"
-#packages+=" binutils"
+#packages+=" cloog-ppl"
+packages+=" binutils"
 #packages+=" gcc-static"
 #packages+=" eglibc-32bit"
 #packages+=" eglibc-64bit"
