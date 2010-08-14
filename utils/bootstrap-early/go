@@ -40,7 +40,7 @@ build_srp()
     builddir=$PWD/.build/srp
     rsync -a --exclude .git $packagedir/srp/ $builddir || exit 1
     pushd $builddir
-    make PREFIX=$PREFIX install || exit 1
+    make PREFIX=$PREFIX_EARLY install || exit 1
     popd
 }
 
@@ -51,7 +51,7 @@ build_git()
     rsync -a --exclude .git $packagedir/git/ $builddir || exit 1
     pushd $builddir
     autoreconf &&
-    ./configure --prefix=$PREFIX &&
+    ./configure --prefix=$PREFIX_EARLY &&
     make -j3 install || exit 1
     popd
 }
