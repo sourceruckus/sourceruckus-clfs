@@ -37,7 +37,7 @@ packages+=" git"
 
 build_srp()
 {
-    builddir=.build/srp
+    builddir=$PWD/.build/srp
     rsync -a --exclude .git $packagedir/srp/ $builddir || exit 1
     pushd $builddir
     make PREFIX=$PREFIX install || exit 1
@@ -47,7 +47,7 @@ build_srp()
 
 build_git()
 {
-    builddir=.build/git
+    builddir=$PWD/.build/git
     rsync -a --exclude .git $packagedir/git/ $builddir || exit 1
     pushd $builddir
     autoreconf &&
@@ -81,8 +81,11 @@ build()
 #
 # FIXME: should reevaluate this later.  if sorting out /bootstrap vs
 #        $BABY/bootstrap turns out to be easy, we should take this out.
-mkdir -p $BABY$PREFIX_FINAL &&
-su -c "ln -fs $BABY$PREFIX_FINAL $PREFIX_FINAL" || exit 1
+mkdir -p $BABY$PREFIX_FINAL || exit 1
+if [ "`readlink $PREFIX_FINAL 2>/dev/null`" != "$BABY$PREFIX_FINAL" ]; then
+    echo "need root priveledges to create $PREFIX_FINAL symlink"
+    su -c "ln -s $BABY$PREFIX_FINAL $PREFIX_FINAL" || exit 1
+fi
 
 # build and install each package in our /ruckus/staging tree
 for p in $packages; do
