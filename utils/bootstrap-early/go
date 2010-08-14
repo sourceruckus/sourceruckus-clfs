@@ -5,23 +5,18 @@
 # should set toplevel via autoconf?
 toplevel=$PWD/../..
 
-packagedir=$toplevel/packages
+# source our common variables and functions
+. $toplevel/utils/bootstrap-early/functions
+
+
 pacakges=""
-
-PREFIX=$HOME/RUCKUS/bootstrap-early
-
-# setup environment to use software as we install it
-export PATH=$PREFIX/bin:$PREFIX/sbin:$PATH
-export MANPATH=$PREFIX/man:$PREFIX/share/man:$MANPATH
-export PKG_CONFIG_PATH=$PREFIX/lib/pkg-config:$PKG_CONFIG_PATH
-if [ -z "$LD_LIBRARY_PATH" ]; then
-    export LD_LIBRARY_PATH=$PREFIX/lib
-else
-    export LD_LIBRARY_PATH=$PREFIX/lib:$LD_LIBRARY_PATH
-fi
 
 # might need autotools
 packages+=" autoconf automake libtool"
+
+# add rsync so we can use it to copy source trees for packages that don't
+# support out-of-tree builds
+#packages+=" rsync"
 
 # don't remember why
 packages+=" bison"
@@ -40,47 +35,10 @@ packages+=" srp"
 packages+=" git"
 
 
-# define generic builder method
-build_generic()
-{
-    builddir=.build/$1
-    configure=$packagedir/$1/configure
-    mkdir -p $builddir
-
-    # figure out if we're using a source tarball or an already unpacked
-    # source tree.  we do this by looking for configure, configure.ac, or
-    # configure.in in the packagedir
-    if [ ! -x $configure ] && [ ! -f $configure.ac ] && [ ! -f $configure.in ]; then
-	# using tarball.  need to modify some variables and extract the
-	# source tree
-	configure=./configure
-	pushd $builddir
-	tar jxf $packagedir/$1/*.bz2 || exit 1
-	builddir=$builddir/* || exit 1
-	popd
-    fi
-
-    # go guild it!
-    pushd $builddir
-    # only explicitly run configure the first time
-    if [ ! -f Makefile ]; then
-	# only explicitly run autoreconf the first time
-	if [ ! -x $configure ]; then
-	    pushd $(dirname $configure)
-	    autoreconf || exit 1
-	    popd
-	fi
-	$configure --prefix=$PREFIX || exit 1
-    fi
-    make -j3 install || exit 1
-    popd
-}
-
-
 build_srp()
 {
     builddir=.build/srp
-    rsync -va $packagedir/srp/ $builddir
+    rsync -a --exclude .git $packagedir/srp/ $builddir || exit 1
     pushd $builddir
     make PREFIX=$PREFIX install || exit 1
     popd
@@ -90,10 +48,10 @@ build_srp()
 build_git()
 {
     builddir=.build/git
-    rsync -va $packagedir/git/ $builddir
+    rsync -a --exclude .git $packagedir/git/ $builddir || exit 1
     pushd $builddir
-    autoreconf || exit 1
-    ./configure --prefix=$PREFIX || exit 1
+    autoreconf &&
+    ./configure --prefix=$PREFIX &&
     make -j3 install || exit 1
     popd
 }
@@ -109,16 +67,22 @@ build()
 	    build_git
 	    ;;
 	*)
-	    build_generic $1
+	    build_generic $1 --prefix=$PREFIX_EARLY
     esac
 }
 
 
 
-#build_bison()
-#{
-#    echo yeah
-#}
+# create a /bootstrap symlink on the host system pointing to $BABY/bootstrap
+# so that we don't have to go crazy sorting out chroot vs non-chroot paths
+# throughout.  this would probably involve having to sort out 2 sets of
+# patches for each affected package, so requiring root priveledges for just
+# this one thing seems like an ok compromise.
+#
+# FIXME: should reevaluate this later.  if sorting out /bootstrap vs
+#        $BABY/bootstrap turns out to be easy, we should take this out.
+mkdir -p $BABY$PREFIX_FINAL &&
+su -c "ln -fs $BABY$PREFIX_FINAL $PREFIX_FINAL" || exit 1
 
 # build and install each package in our /ruckus/staging tree
 for p in $packages; do

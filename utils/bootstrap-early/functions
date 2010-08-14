@@ -6,6 +6,14 @@ INSTALLROOT=$HOME/RUCKUS
 PREFIX_EARLY=$INSTALLROOT/bootstrap-early
 PREFIX_CROSS=$INSTALLROOT/bootstrap-cross
 
+# this is where our baby filesystem will eventually be mounted
+BABY=$INSTALLROOT/baby
+
+# FIXME: should think about defining a variable for $BABY/bootstrap.  the
+#        /bootstrap moniker is hardcoded into a bunch of source files (into
+#        patches actually), so this might be non-trivial
+PREFIX_FINAL=/bootstrap
+
 # setup environment to use our bootstrap-early stuff
 export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
 export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH

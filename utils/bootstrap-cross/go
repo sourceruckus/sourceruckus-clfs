@@ -17,8 +17,13 @@ build_linux_headers()
     make mrproper &&
     make ARCH=$ARCH_TARGET headers_check &&
     make ARCH=$ARCH_TARGET INSTALL_HDR_PATH=dest headers_install || exit 1
-    mkdir -p $PREFIX_CROSS/include
-    rsync -v dest/include/* $PREFIX_CROSS/include || exit 1
+
+    # FIXME: CLFS book used /tools as apposed to /cross-tools here... not
+    #        sure why.  it might just be that this is really a
+    #        bootstrap-final chore that needs to be done prior to building
+    #        bootstrap-cross...  need to investigate later.
+    mkdir -p $BABY$PREFIX_FINAL/include &&
+    rsync -v dest/include/* $BABY$PREFIX_FINAL/include || exit 1
     popd
 }
 
@@ -79,7 +84,7 @@ build()
 		--host=${MACHTYPE_HOST} \
 		--target=${MACHTYPE_TARGET} \
 		--with-sysroot=${INSTALLROOT} \
-		--with-lib-path=/bootstrap/lib \
+		--with-lib-path=$BABY$PREFIX_FINAL/lib \
 		--disable-nls \
 		--enable-shared \
 		--enable-64-bit-bfd || exit 1
@@ -87,23 +92,60 @@ build()
 	    make configure-host &&
 	    make -j3 &&
 	    make install || exit 1
+
+	    # copy libiberty.h to $PREFIX_FINAL/include directory
+	    #
+	    # FIXME: not sure why the CLFS book used /tools instead of
+	    #        /cross-tools here... should look into it later on.
+	    #
+	    # FIXME: the CLFS book was also building this in a
+	    #        binutils-build dir, which we're not.  should look into
+	    #        adding code to figure out dynamically if we're doing an
+	    #        out-of-tree build and get the right path here, because
+	    #        we *could* be doing an out-of-tree build if
+	    #        $toplevel/packages/$1 is a git submodule.
+	    mkdir -p $BABY$PREFIX_FINAL/include &&
+	    cp -v include/libiberty.h $BABY$PREFIX_FINAL/include || exit 1
+	    popd
 	    ;;
 	gcc-static)
-	    # hmm... the patch mentioned is full of /tools stuff... which
-	    # means 2 things:
-	    #
-	    # 1. need to either sed /tools->/bootstrap or use /tools like
-	    # the CLFS book does (maybe even with the symlinks they talk
-	    # about).
-	    #
-	    # 2. don't want to automatically apply this patch later... maybe
-	    # it shouldn't live in packages/gcc...?
-
 	    setup_generic gcc &&
 	    pushd $builddir || exit 1
-	    for p in $toplevel/utils/bootstrap-cross/gcc-*.patch; do
+	    for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
 		patch -Np1 < $p || exit 1
 	    done
+	    popd
+
+	    # create a dummy limits.h so the build will not use the one
+	    # provided by the host distro
+	    mkdir -p $BABY$PREFIX_FINAL/include &&
+	    touch $BABY$PREFIX_FINAL/include/limits.h || exit 1
+
+	    AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+		configure_generic gcc --prefix=$PREFIX_CROSS \
+		--build=${MACHTYPE_HOST} \
+		--host=${MACHTYPE_HOST} \
+		--target=${MACHTYPE_TARGET} \
+		--with-sysroot=${INSTALLROOT} \
+		--with-local-prefix=$BABY$PREFIX_FINAL/lib \
+		--disable-nls \
+		--disable-shared \
+		--with-mpfr=$PREFIX_CROSS \
+		--with-gmp=$PREFIX_CROSS \
+		--with-ppl=$PREFIX_CROSS \
+		--with-cloog=$PREFIX_CROSS \
+		--without-headers \
+		--with-newlib \
+		--disable-decimal-float \
+		--disable-libgomp \
+		--disable-libmudflap \
+		--disable-libssp \
+		--disable-threads \
+		--enable-languages=c || exit 1
+
+	    pushd $builddir || exit 1
+	    make -j3 all-gcc all-target-libgcc &&
+	    make install-gcc install-target-libgcc || exit 1
 	    popd
 	    ;;
 	*)
