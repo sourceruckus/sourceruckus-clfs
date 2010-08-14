@@ -61,8 +61,9 @@ setup_generic()
 {
     p=$1
     shift
-    builddir=.build/$p
-    configure=$packagedir/$p/configure
+    builddir=$PWD/.build/$p
+    sourcedir=$packagedir/$p
+    configure=$sourcedir/configure
     mkdir -p $builddir
 
     # figure out if we're using a source tarball or an already unpacked
@@ -71,13 +72,17 @@ setup_generic()
     if [ ! -x $configure ] && [ ! -f $configure.ac ] && [ ! -f $configure.in ]; then
 	# using tarball.  need to modify some variables and extract the
 	# source tree
-	configure=./configure
 	pushd $builddir
-	tar jxf $packagedir/$p/*.bz2 || exit 1
-	builddir=$builddir/* || exit 1
+	tar jxf $packagedir/$p/*.tar.bz2 || exit 1
+	pushd ./* &&
+	sourcedir=$PWD &&
+	configure=$sourcedir/configure &&
+	popd &&
+	builddir=$builddir/build &&
+	mkdir -p $builddir || exit 1
 	popd
 	# also apply any patches in the packagedir
-	pushd $builddir
+	pushd $sourcedir
 	if [ -f $packagedir/$p/*.patch ]; then
 	    for p in $packagedir/$p/*.patch; do
 		patch -Np1 < $p || exit 1
@@ -121,6 +126,6 @@ compile_generic()
     #mkdir -p $builddir
 
     pushd $builddir &&
-    make -j3 install &&
+    make -j3 && make install &&
     popd || exit 1
 }
