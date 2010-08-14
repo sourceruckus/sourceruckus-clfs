@@ -88,6 +88,24 @@ build()
 	    make -j3 &&
 	    make install || exit 1
 	    ;;
+	gcc-static)
+	    # hmm... the patch mentioned is full of /tools stuff... which
+	    # means 2 things:
+	    #
+	    # 1. need to either sed /tools->/bootstrap or use /tools like
+	    # the CLFS book does (maybe even with the symlinks they talk
+	    # about).
+	    #
+	    # 2. don't want to automatically apply this patch later... maybe
+	    # it shouldn't live in packages/gcc...?
+
+	    setup_generic gcc &&
+	    pushd $builddir || exit 1
+	    for p in $toplevel/utils/bootstrap-cross/gcc-*.patch; do
+		patch -Np1 < $p || exit 1
+	    done
+	    popd
+	    ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_CROSS
 	    ;;
@@ -104,8 +122,8 @@ packages=""
 #packages+=" mpc"
 #packages+=" ppl"
 #packages+=" cloog-ppl"
-packages+=" binutils"
-#packages+=" gcc-static"
+#packages+=" binutils"
+packages+=" gcc-static"
 #packages+=" eglibc-32bit"
 #packages+=" eglibc-64bit"
 #packages+=" gcc"
