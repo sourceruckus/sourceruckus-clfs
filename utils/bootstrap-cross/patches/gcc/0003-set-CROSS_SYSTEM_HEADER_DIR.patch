@@ -1,0 +1,28 @@
+From e5b1235aae16b6f1063009f43c6bacb12a7f4f01 Mon Sep 17 00:00:00 2001
+From: Michael D Labriola <mdlabriola@yahoo.com>
+Date: Sat, 14 Aug 2010 10:27:06 -0400
+Subject: [PATCH 3/3] set CROSS_SYSTEM_HEADER_DIR
+
+I'm not sure why the CLFS book did it this way, as apposed to using whatever
+configure flag sets CROSS_SYSTEM_HEADER_DIR... but I might as well follow
+suit.
+---
+ gcc/Makefile.in |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/gcc/Makefile.in b/gcc/Makefile.in
+index ae2416b..37151f0 100644
+--- a/gcc/Makefile.in
++++ b/gcc/Makefile.in
+@@ -440,7 +440,7 @@ LTO_SYMTAB_H = $(srcdir)/../include/lto-symtab.h
+ # Default native SYSTEM_HEADER_DIR, to be overridden by targets.
+ NATIVE_SYSTEM_HEADER_DIR = /usr/include
+ # Default cross SYSTEM_HEADER_DIR, to be overridden by targets.
+-CROSS_SYSTEM_HEADER_DIR = @CROSS_SYSTEM_HEADER_DIR@
++CROSS_SYSTEM_HEADER_DIR = /bootstrap/include
+ 
+ # autoconf sets SYSTEM_HEADER_DIR to one of the above.
+ # Purge it of unneccessary internal relative paths
+-- 
+1.7.1.1
+
