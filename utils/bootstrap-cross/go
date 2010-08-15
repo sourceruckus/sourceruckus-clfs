@@ -10,7 +10,7 @@ toplevel=$PWD/../..
 # install linux headers
 build_linux_headers()
 {
-    builddir=.build/kernel
+    builddir=$PWD/.build/kernel
     # get the source tree into our build dir
     rsync -a --exclude .git $packagedir/kernel/ $builddir || exit 1
     pushd $builddir
@@ -105,16 +105,18 @@ build()
 	    #        we *could* be doing an out-of-tree build if
 	    #        $toplevel/packages/$1 is a git submodule.
 	    mkdir -p $BABY$PREFIX_FINAL/include &&
-	    cp -v include/libiberty.h $BABY$PREFIX_FINAL/include || exit 1
+	    cp -v $sourcedir/include/libiberty.h $BABY$PREFIX_FINAL/include || exit 1
 	    popd
 	    ;;
 	gcc-static)
 	    setup_generic gcc &&
-	    pushd $builddir || exit 1
-	    for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
-		patch -Np1 < $p || exit 1
-	    done
-	    popd
+	    if [ ! -f $builddir/Makefile ]; then
+		pushd $sourcedir || exit 1
+		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
+		    patch -Np1 < $p || exit 1
+		done
+		popd
+	    fi
 
 	    # create a dummy limits.h so the build will not use the one
 	    # provided by the host distro
@@ -127,7 +129,7 @@ build()
 		--host=${MACHTYPE_HOST} \
 		--target=${MACHTYPE_TARGET} \
 		--with-sysroot=${INSTALLROOT} \
-		--with-local-prefix=$BABY$PREFIX_FINAL/lib \
+		--with-local-prefix=$PREFIX_FINAL \
 		--disable-nls \
 		--disable-shared \
 		--with-mpfr=$PREFIX_CROSS \
@@ -169,6 +171,8 @@ packages+=" gcc-static"
 #packages+=" eglibc-32bit"
 #packages+=" eglibc-64bit"
 #packages+=" gcc"
+
+mkdir -p $PWD/.build
 
 for p in $packages; do
     echo "building cross package: $p"

@@ -70,11 +70,16 @@ setup_generic()
     # source tree.  we do this by looking for configure, configure.ac, or
     # configure.in in the packagedir
     if [ ! -x $configure ] && [ ! -f $configure.ac ] && [ ! -f $configure.in ]; then
+	echo "using source tarball"
 	# using tarball.  need to modify some variables and extract the
 	# source tree
 	pushd $builddir
-	tar jxf $packagedir/$p/*.tar.bz2 || exit 1
-	pushd ./* &&
+	echo checking for previously extracted source tree...
+	if ! $(cd ./$p*); then
+	    echo extracting...
+	    tar jxf $packagedir/$p/*.tar.bz2 || exit 1
+	fi
+	pushd ./$p* &&
 	sourcedir=$PWD &&
 	configure=$sourcedir/configure &&
 	popd &&
@@ -83,13 +88,19 @@ setup_generic()
 	popd
 	# also apply any patches in the packagedir
 	pushd $sourcedir
-	if [ -f $packagedir/$p/*.patch ]; then
-	    for p in $packagedir/$p/*.patch; do
-		patch -Np1 < $p || exit 1
-	    done
+	# only do this if we haven't previously configured
+	if [ ! -f $builddir/Makefile ]; then
+	    if [ -f $packagedir/$p/*.patch ]; then
+		for p in $packagedir/$p/*.patch; do
+		    patch -Np1 < $p || exit 1
+		done
+	    fi
 	fi
 	popd
     fi
+    echo sourcedir: $sourcedir
+    echo builddir:  $builddir
+    echo configure: $configure
 }
 
 
