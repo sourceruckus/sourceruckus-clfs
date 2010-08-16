@@ -24,6 +24,16 @@ else
     export LD_LIBRARY_PATH=$PREFIX_EARLY/lib:$LD_LIBRARY_PATH
 fi
 
+# and now add in the bootstrap-cross tools
+export PATH=$PREFIX_CROSS/bin:$PREFIX_CROSS/sbin:$PATH
+export MANPATH=$PREFIX_CROSS/man:$PREFIX_CROSS/share/man:$MANPATH
+export PKG_CONFIG_PATH=$PREFIX_CROSS/lib/pkg-config:$PKG_CONFIG_PATH
+if [ -z "$LD_LIBRARY_PATH" ]; then
+    export LD_LIBRARY_PATH=$PREFIX_CROSS/lib
+else
+    export LD_LIBRARY_PATH=$PREFIX_CROSS/lib:$LD_LIBRARY_PATH
+fi
+
 
 # set host and target variables.  this should eventually be done via autoconf
 
