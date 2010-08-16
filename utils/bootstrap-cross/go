@@ -22,8 +22,8 @@ build_linux_headers()
     #        sure why.  it might just be that this is really a
     #        bootstrap-final chore that needs to be done prior to building
     #        bootstrap-cross...  need to investigate later.
-    mkdir -p $BABY$PREFIX_FINAL/include &&
-    rsync -v dest/include/* $BABY$PREFIX_FINAL/include || exit 1
+    mkdir -p $PREFIX_FINAL/include &&
+    rsync -va dest/include $PREFIX_FINAL || exit 1
     popd
 }
 
@@ -35,29 +35,45 @@ build()
 	linux_headers)
 	    build_linux_headers
 	    ;;
+
 	ncurses)
-	    # probably only need to make the tic program, but this is
-	    # easier.  might save us 10M and 1 minute, but it's all
-	    # temporary files anyway so we don't really care very much about
-	    # the 10M
-	    build_generic $1 --prefix=$PREFIX_CROSS --without-debug --without-shared
+	    # only need a small part of this for now.  since I broke
+	    # build_generic into a bunch of sub-methods, this is pretty easy
+	    # to do.
+
+	    # first, use the generic setup and configure
+	    setup_generic $1 &&
+	    configure_generic $1 --prefix=$PREFIX_CROSS \
+		--without-debug \
+		--without-shared || exit 1
+
+	    # now go into the builddir and use custom build/install commands
+	    pushd $builddir &&
+	    make -j3 -C include && 
+	    make -j3 -C progs tic &&
+	    install -m755 progs/tic $PREFIX_CROSS/bin &&
+	    popd || exit 1
 	    ;;
+
 	gmp)
 	    CPPFLAGS=-fexceptions \
 		build_generic $1 --prefix=$PREFIX_CROSS --enable-cxx
 	    ;;
+
 	mpfr)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 --prefix=$PREFIX_CROSS \
 		--enable-shared \
 		--with-gmp=$PREFIX_CROSS
 	    ;;
+
 	mpc)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 --prefix=$PREFIX_CROSS \
 		--with-gmp=$PREFIX_CROSS \
 		--with-mpfr=$PREFIX_CROSS
 	    ;;
+
 	ppl)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 --prefix=$PREFIX_CROSS \
@@ -67,6 +83,7 @@ build()
 		--with-libgmp-prefix=$PREFIX_CROSS \
 		--with-libgmpxx-prefix=$PREFIX_CROSS
 	    ;;
+
 	cloog-ppl)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 --prefix=$PREFIX_CROSS \
@@ -75,20 +92,25 @@ build()
 		--with-gmp=$PREFIX_CROSS \
 		--with-ppl=$PREFIX_CROSS
 	    ;;
+
 	binutils)
 	    # this was using /tools as apposed to /tools-cross in the CLFS
 	    # book
+	    
+	    # FIXME: not sure if sysroot should be BABY or INSTALLROOT...
+
 	    AR=ar AS=as setup_generic $1 &&
 	    AR=ar AS=as \
 		configure_generic $1 --prefix=$PREFIX_CROSS \
 		--host=${MACHTYPE_HOST} \
 		--target=${MACHTYPE_TARGET} \
-		--with-sysroot=${INSTALLROOT} \
-		--with-lib-path=$BABY$PREFIX_FINAL/lib \
+		--with-sysroot=${BABY} \
+		--with-lib-path=$PREFIX_FINAL/lib \
 		--disable-nls \
 		--enable-shared \
 		--enable-64-bit-bfd || exit 1
-	    pushd $builddir || exit 1
+
+	    pushd $builddir &&
 	    make configure-host &&
 	    make -j3 &&
 	    make install || exit 1
@@ -97,17 +119,11 @@ build()
 	    #
 	    # FIXME: not sure why the CLFS book used /tools instead of
 	    #        /cross-tools here... should look into it later on.
-	    #
-	    # FIXME: the CLFS book was also building this in a
-	    #        binutils-build dir, which we're not.  should look into
-	    #        adding code to figure out dynamically if we're doing an
-	    #        out-of-tree build and get the right path here, because
-	    #        we *could* be doing an out-of-tree build if
-	    #        $toplevel/packages/$1 is a git submodule.
-	    mkdir -p $BABY$PREFIX_FINAL/include &&
-	    cp -v $sourcedir/include/libiberty.h $BABY$PREFIX_FINAL/include || exit 1
+	    mkdir -p $PREFIX_FINAL/include &&
+	    cp -v $sourcedir/include/libiberty.h $PREFIX_FINAL/include || exit 1
 	    popd
 	    ;;
+
 	gcc-static)
 	    setup_generic gcc &&
 	    if [ ! -f $builddir/Makefile ]; then
@@ -120,15 +136,17 @@ build()
 
 	    # create a dummy limits.h so the build will not use the one
 	    # provided by the host distro
-	    mkdir -p $BABY$PREFIX_FINAL/include &&
-	    touch $BABY$PREFIX_FINAL/include/limits.h || exit 1
+	    mkdir -p $PREFIX_FINAL/include &&
+	    touch $PREFIX_FINAL/include/limits.h || exit 1
+
+	    # FIXME: not sure if sysroot should be BABY or INSTALLROOT...
 
 	    AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		configure_generic gcc --prefix=$PREFIX_CROSS \
 		--build=${MACHTYPE_HOST} \
 		--host=${MACHTYPE_HOST} \
 		--target=${MACHTYPE_TARGET} \
-		--with-sysroot=${INSTALLROOT} \
+		--with-sysroot=${BABY} \
 		--with-local-prefix=$PREFIX_FINAL \
 		--disable-nls \
 		--disable-shared \

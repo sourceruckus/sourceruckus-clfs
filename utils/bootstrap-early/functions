@@ -4,7 +4,7 @@ packagedir=$toplevel/packages
 
 INSTALLROOT=$HOME/RUCKUS
 PREFIX_EARLY=$INSTALLROOT/bootstrap-early
-PREFIX_CROSS=$INSTALLROOT/bootstrap-cross
+PREFIX_CROSS=/bootstrap-cross
 
 # this is where our baby filesystem will eventually be mounted
 BABY=$INSTALLROOT/baby
