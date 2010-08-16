@@ -168,6 +168,42 @@ build()
 	    make install-gcc install-target-libgcc || exit 1
 	    popd
 	    ;;
+
+	eglibc-32bit)
+	    setup_generic eglibc &&
+	    if [ ! -f $builddir/Makefile ]; then
+		pushd $sourcedir || exit 1
+		for p in $toplevel/utils/bootstrap-cross/patches/eglibc/*.patch; do
+		    patch -Np1 < $p || exit 1
+		done
+		popd
+	    fi
+
+	    BUILD_CC="gcc" CC="${MACHTYPE_TARGET}-gcc ${BUILD32}" \
+		AR="${MACHTYPE_TARGET}-ar" RANLIB="${MACHTYPE_TARGET}-ranlib" \
+		CFLAGS="-march=$(cut -d- -f1 <<< $MACHTYPE_TARGET32) -mtune=generic -g -O2" \
+		configure_generic eglibc --prefix=$PREFIX_FINAL \
+		--host=${MACHTYPE_TARGET32} \
+		--build=${MACHTYPE_HOST} \
+		--disable-profile \
+		--enable-add-ons \
+		--with-tls \
+		--enable-kernel=2.6.0 \
+		--with-__thread \
+		--with-binutils=$PREFIX_CROSS/bin \
+		--with-headers=$PREFIX_FINAL/include \
+		--cache-file=config.cache || exit 1
+
+	    compile_generic eglibc || exit 1
+
+	    ;;
+
+	eglibc-64bit)
+	    ;;
+
+	gcc)
+	    ;;
+
 	*)
 	    build_generic $1 --prefix=$PREFIX_CROSS
 	    ;;
@@ -185,8 +221,8 @@ packages=""
 #packages+=" ppl"
 #packages+=" cloog-ppl"
 #packages+=" binutils"
-packages+=" gcc-static"
-#packages+=" eglibc-32bit"
+#packages+=" gcc-static"
+packages+=" eglibc-32bit"
 #packages+=" eglibc-64bit"
 #packages+=" gcc"
 
