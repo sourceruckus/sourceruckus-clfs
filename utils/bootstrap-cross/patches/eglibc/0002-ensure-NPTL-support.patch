@@ -1,0 +1,23 @@
+From 090ebd79193751adee5e4ebd3e117c52ae1e4826 Mon Sep 17 00:00:00 2001
+From: Michael D Labriola <mdlabriola@yahoo.com>
+Date: Sun, 15 Aug 2010 21:48:46 -0400
+Subject: [PATCH 2/2] ensure NPTL support
+
+---
+ config.cache |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+ create mode 100644 config.cache
+
+diff --git a/config.cache b/config.cache
+new file mode 100644
+index 0000000..8b348e9
+--- /dev/null
++++ b/config.cache
+@@ -0,0 +1,4 @@
++libc_cv_forced_unwind=yes
++libc_cv_c_cleanup=yes
++libc_cv_gnu89_inline=yes
++libc_cv_ssp=no
+-- 
+1.7.1.1
+
