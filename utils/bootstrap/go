@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# should set toplevel via autoconf?
+toplevel=$PWD/../..
+
+# source our common variables and functions
+. $toplevel/utils/bootstrap-early/functions
+
+# extra variables for the final bootstrap stage
+export CC="${MACHTYPE_TARGET}-gcc"
+export CXX="${MACHTYPE_TARGET}-g++"
+export AR="${MACHTYPE_TARGET}-ar"
+export AS="${MACHTYPE_TARGET}-as"
+export RANLIB="${MACHTYPE_TARGET}-ranlib"
+export LD="${MACHTYPE_TARGET}-ld"
+export STRIP="${MACHTYPE_TARGET}-strip"
+
+
+build()
+{
+    case "$1" in
+	gmp)
+	    HOST_CC=gcc CPPFLAGS=-fexceptions CC="${CC} ${BUILD64}" \
+		CXX="${CXX} ${BUILD64}" \
+		build_generic $1 --prefix=$PREFIX_FINAL \
+		--build=${MACHTYPE_HOST} \
+		--host=${MACHTYPE_TARGET} \
+		--libdir=$PREFIX_FINAL/lib64 \
+		--enable-cxx || exit 1
+	    ;;
+
+	mpfr)
+	    CC="${CC} ${BUILD64}" \
+		build_generic $1 --prefix=$PREFIX_FINAL \
+		--build=${MACHTYPE_HOST} \
+		--host=${MACHTYPE_TARGET} \
+		--libdir=/tools/lib64 \
+		--enable-shared || exit 1
+	    ;;
+
+	mpc)
+	    CC="${CC} ${BUILD64}" \
+		build_generic --prefix=$PREFIX_FINAL \
+		--build=${MACHTYPE_HOST} \
+		--host=${MACHTYPE_TARGET} \
+		--libdir=/tools/lib64 || exit 1
+	    ;;
+
+	*)
+	    # FIXME: maybe we should use a better default rule here...?
+	    build_generic $1 --prefix=$PREFIX_CROSS
+	    ;;
+    esac
+}
+
+
+packages=""
+packages+=" gmp"
+packages+=" mpfr"
+packages+=" mpc"
+#packages+=" ppl"
+#packages+=" cloog-ppl"
+#packages+=" zlib"
+#packages+=" binutils"
+#packages+=" gcc"
+#packages+=" ncurses"
+
+mkdir -p $PWD/.build
+
+for p in $packages; do
+    echo "building cross package: $p"
+    build $p || exit 1
+done
