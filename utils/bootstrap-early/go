@@ -91,7 +91,6 @@ if [ "`readlink $PREFIX_CROSS 2>/dev/null`" != "$BABY$PREFIX_CROSS" ]; then
     echo "need root priveledges to create $PREFIX_CROSS symlink"
     su -c "ln -s $BABY$PREFIX_CROSS $PREFIX_CROSS" || exit 1
 fi
-exit 0
 
 # build and install each package in our /ruckus/staging tree
 for p in $packages; do

@@ -45,7 +45,7 @@ export MACHTYPE_HOST="i686-cross-linux-gnu"
 
 export MACHTYPE_TARGET="x86_64-ruckus-linux-gnu"
 
-export MACHTYPE_TARGET32="i686-ruckus-linux-gnu"
+export MACHTYPE_TARGET32="i686-pc-linux-gnu"
 
 # these should also get determined by autoconf
 export ARCH_TARGET=x86_64
@@ -83,13 +83,14 @@ setup_generic()
 	echo "using source tarball"
 	# using tarball.  need to modify some variables and extract the
 	# source tree
-	pushd $builddir
+	mkdir -p $builddir/source || exit 1
+	pushd $builddir/source
 	echo checking for previously extracted source tree...
-	if ! $(cd ./$p*); then
+	if ! $(cd ./*); then
 	    echo extracting...
 	    tar jxf $packagedir/$p/*.tar.bz2 || exit 1
 	fi
-	pushd ./$p* &&
+	pushd ./* &&
 	sourcedir=$PWD &&
 	configure=$sourcedir/configure &&
 	popd &&

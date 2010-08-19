@@ -179,6 +179,16 @@ build()
 		popd
 	    fi
 
+	    # the following lines need to be added to config.cache (in
+	    # $builddir!) for EGLIBC to support NPTL.  without this,
+	    # compilation fails.
+	    pushd $builddir
+	    echo libc_cv_forced_unwind=yes > config.cache
+	    echo libc_cv_c_cleanup=yes >> config.cache
+	    echo libc_cv_gnu89_inline=yes >> config.cache
+	    echo libc_cv_ssp=no >> config.cache
+	    popd
+
 	    BUILD_CC="gcc" CC="${MACHTYPE_TARGET}-gcc ${BUILD32}" \
 		AR="${MACHTYPE_TARGET}-ar" RANLIB="${MACHTYPE_TARGET}-ranlib" \
 		CFLAGS="-march=$(cut -d- -f1 <<< $MACHTYPE_TARGET32) -mtune=generic -g -O2" \
@@ -199,9 +209,101 @@ build()
 	    ;;
 
 	eglibc-64bit)
+	    # assuming that eglibc-32bit has already been run, we already
+	    # have a fully patched source tree, so setup_generic should just
+	    # verify that the source tree exists and setup all our build
+	    # variables.
+	    setup_generic eglibc &&
+	    if [ ! -f $builddir/Makefile ]; then
+		pushd $sourcedir || exit 1
+		for p in $toplevel/utils/bootstrap-cross/patches/eglibc/*.patch; do
+		    patch -Np1 < $p || exit 1
+		done
+		popd
+	    fi
+
+	    # however, we do have to adjust some variables
+	    builddir=$PWD/.build/eglibc64
+	    mkdir -p $builddir
+	    echo "builddir: $builddir"
+
+	    # the following lines need to be added to config.cache (in
+	    # $builddir!) for EGLIBC to support NPTL.  without this,
+	    # compilation fails.
+	    pushd $builddir
+	    echo libc_cv_forced_unwind=yes > config.cache
+	    echo libc_cv_c_cleanup=yes >> config.cache
+	    echo libc_cv_gnu89_inline=yes >> config.cache
+	    echo libc_cv_ssp=no >> config.cache
+	    popd
+
+	    # install 64-bit libraries in lib64
+	    pushd $builddir
+	    echo "slibdir=$PREFIX_FINAL/lib64" >> configparms
+	    popd
+
+	    BUILD_CC="gcc" CC="${MACHTYPE_TARGET}-gcc ${BUILD64}" \
+		AR="${MACHTYPE_TARGET}-ar" RANLIB="${MACHTYPE_TARGET}-ranlib" \
+		configure_generic eglibc --prefix=$PREFIX_FINAL \
+		--host=${MACHTYPE_TARGET} \
+		--build=${MACHTYPE_HOST} \
+		--libdir=$PREFIX_FINAL/lib64 \
+		--disable-profile \
+		--enable-add-ons \
+		--with-tls \
+		--enable-kernel=2.6.0 \
+		--with-__thread \
+		--with-binutils=$PREFIX_CROSS/bin \
+		--with-headers=$PREFIX_FINAL/include \
+		--cache-file=config.cache || exit 1
+
+	    compile_generic eglibc || exit 1
+
 	    ;;
 
 	gcc)
+	    # assuming that gcc-static has already been run, we already have
+	    # a fully patched source tree, so setup_generic should just
+	    # verify that the source tree exists and setup all our build
+	    # variables.
+	    setup_generic gcc &&
+	    if [ ! -f $builddir/Makefile ]; then
+		pushd $sourcedir || exit 1
+		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
+		    patch -Np1 < $p || exit 1
+		done
+		popd
+	    fi
+
+	    # however, we do have to adjust some variables
+	    builddir=$PWD/.build/gcc-final
+	    mkdir -p $builddir
+	    echo "builddir: $builddir"
+
+	    AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+		configure_generic gcc --prefix=$PREFIX_CROSS \
+		--build=${MACHTYPE_HOST} \
+		--target=${MACHTYPE_TARGET} \
+		--host=${MACHTYPE_HOST} \
+		--with-sysroot=${BABY} \
+		--with-local-prefix=$PREFIX_FINAL \
+		--disable-nls \
+		--enable-shared \
+		--enable-languages=c,c++ \
+		--enable-__cxa_atexit \
+		--with-mpfr=$PREFIX_CROSS \
+		--with-gmp=$PREFIX_CROSS \
+		--enable-c99 \
+		--with-ppl=$PREFIX_CROSS \
+		--with-cloog=$PREFIX_CROSS \
+		--enable-long-long \
+		--enable-threads=posix || exit 1
+
+	    pushd $builddir || exit 1
+	    make -j3 AS_FOR_TARGET="${MACHTYPE_TARGET}-as" \
+		LD_FOR_TARGET="${MACHTYPE_TARGET}-ld" &&
+	    make install || exit 1
+	    popd
 	    ;;
 
 	*)
@@ -212,19 +314,19 @@ build()
 
 
 packages=""
-#packages+=" linux_headers"
-#packages+=" file"
-#packages+=" ncurses"
-#packages+=" gmp"
-#packages+=" mpfr"
-#packages+=" mpc"
-#packages+=" ppl"
-#packages+=" cloog-ppl"
-#packages+=" binutils"
-#packages+=" gcc-static"
+packages+=" linux_headers"
+packages+=" file"
+packages+=" ncurses"
+packages+=" gmp"
+packages+=" mpfr"
+packages+=" mpc"
+packages+=" ppl"
+packages+=" cloog-ppl"
+packages+=" binutils"
+packages+=" gcc-static"
 packages+=" eglibc-32bit"
-#packages+=" eglibc-64bit"
-#packages+=" gcc"
+packages+=" eglibc-64bit"
+packages+=" gcc"
 
 mkdir -p $PWD/.build
 
