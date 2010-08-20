@@ -97,6 +97,51 @@ build()
 	    popd || exit 1
 	    ;;
 
+	gcc)
+	    setup_generic gcc || exit 1
+
+	    if [ ! -f $builddir/Makefile ]; then
+		pushd $sourcedir || exit 1
+		# apply bootstrap patches from the bootstrap-cross stage.
+		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
+		    patch -Np1 < $p || exit 1
+		done
+
+		# revert this one bootstrap-cross patch
+		patch -R -Np1 < $toplevel/utils/bootstrap-cross/patches/gcc/0003-set-CROSS_SYSTEM_HEADER_DIR.patch || exit 1
+
+		# and apply final bootstrap patches
+		for p in $toplevel/utils/bootstrap/patches/gcc/*.patch; do
+		    patch -Np1 < $p || exit 1
+		done
+		popd
+	    fi
+
+	    configure_generic $1 $OPTS \
+		--target=${MACHTYPE_TARGET} \
+		--with-local-prefix=$PREFIX_FINAL \
+		--enable-long-long \
+		--enable-c99 \
+		--enable-shared \
+		--enable-threads=posix \
+		--enable-__cxa_atexit \
+		--disable-nls \
+		--enable-languages=c,c++ \
+		--disable-libstdcxx-pch || exit 1
+
+	    pushd $builddir || exit 1
+	    #  The following will prevent GCC from looking in the wrong
+	    #  directories for headers and libraries
+	    sed -i "/^HOST_\(GMP\|PPL\|CLOOG\)\(LIBS\|INC\)/s:-[IL]/\(lib\|include\)::" Makefile || exit 1
+
+	    make -j3 AS_FOR_TARGET="${AS}" LD_FOR_TARGET="${LD}" &&
+	    make install &&
+	    popd || exit 1
+	    ;;
+
+	ncurses)
+	    ;;
+
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
@@ -105,14 +150,14 @@ build()
 
 
 packages=""
-packages+=" gmp"
-packages+=" mpfr"
-packages+=" mpc"
-packages+=" ppl"
-packages+=" cloog-ppl"
-packages+=" zlib"
-packages+=" binutils"
-#packages+=" gcc"
+#packages+=" gmp"
+#packages+=" mpfr"
+#packages+=" mpc"
+#packages+=" ppl"
+#packages+=" cloog-ppl"
+#packages+=" zlib"
+#packages+=" binutils"
+packages+=" gcc"
 #packages+=" ncurses"
 
 mkdir -p $PWD/.build
