@@ -66,6 +66,22 @@ build()
 		--with-ppl=$PREFIX_FINAL || exit 1
 	    ;;
 
+	zlib)
+	    # zlib doesn't support out-of-tree builds...
+	    setup_generic $1 || exit 1
+	    export builddir=$sourcedir
+
+	    # and it doesn't use autotools... despite the "configure" script
+	    # and autotool-ish configure flags
+	    OPTS="--prefix=$PREFIX_FINAL"
+	    OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+	    pushd $builddir &&
+	    ./configure $OPTS &&
+	    popd || exit 1
+
+	    compile_generic $1 || exit 1
+	    ;;
+
 	binutils)
 	    setup_generic $1 &&
 	    configure_generic $1 $OPTS \
