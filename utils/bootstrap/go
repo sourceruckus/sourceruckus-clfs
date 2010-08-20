@@ -18,37 +18,71 @@ export STRIP="${MACHTYPE_TARGET}-strip"
 
 build()
 {
+    # set some common variables for all targets
+    CC="${CC} ${BUILD64}"
+    CXX="${CXX} ${BUILD64}"
+    OPTS="--prefix=$PREFIX_FINAL"
+    OPTS+=" --build=${MACHTYPE_HOST}"
+    OPTS+=" --host=${MACHTYPE_TARGET}"
+    OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+
     case "$1" in
 	gmp)
-	    HOST_CC=gcc CPPFLAGS=-fexceptions CC="${CC} ${BUILD64}" \
-		CXX="${CXX} ${BUILD64}" \
-		build_generic $1 --prefix=$PREFIX_FINAL \
-		--build=${MACHTYPE_HOST} \
-		--host=${MACHTYPE_TARGET} \
-		--libdir=$PREFIX_FINAL/lib64 \
+	    HOST_CC=gcc CPPFLAGS=-fexceptions \
+		build_generic $1 $OPTS \
 		--enable-cxx || exit 1
 	    ;;
 
 	mpfr)
-	    CC="${CC} ${BUILD64}" \
-		build_generic $1 --prefix=$PREFIX_FINAL \
-		--build=${MACHTYPE_HOST} \
-		--host=${MACHTYPE_TARGET} \
-		--libdir=/tools/lib64 \
+	    build_generic $1 $OPTS \
 		--enable-shared || exit 1
 	    ;;
 
-	mpc)
-	    CC="${CC} ${BUILD64}" \
-		build_generic --prefix=$PREFIX_FINAL \
-		--build=${MACHTYPE_HOST} \
-		--host=${MACHTYPE_TARGET} \
-		--libdir=/tools/lib64 || exit 1
+	ppl)
+	    setup_generic $1 &&
+	    configure_generic $1 $OPTS \
+		--enable-interfaces="c,cxx" \
+		--enable-shared \
+		--disable-optimization \
+		--with-libgmp-prefix=$PREFIX_FINAL \
+		--with-libgmpxx-prefix=$PREFIX_FINAL || exit 1
+
+	    pushd $builddir || exit 1
+	    # CLFS: Wwhen PPL is cross-compiled, it does not check whether
+	    # GMP was compiled with support for exceptions, and simply
+	    # assumes it was not. This assumption is incorrect, so we will
+	    # fix that:
+	    echo '#define PPL_GMP_SUPPORTS_EXCEPTIONS 1' >> confdefs.h &&
+	    popd || exit 1
+	    
+	    compile_generic $1 || exit 1
+	    ;;
+
+	cloog-ppl)
+	    build_generic $1 $OPTS \
+		--with-bits=gmp \
+		--enable-shared \
+		--with-gmp=$PREFIX_FINAL \
+		--with-ppl=$PREFIX_FINAL || exit 1
+	    ;;
+
+	binutils)
+	    setup_generic $1 &&
+	    configure_generic $1 $OPTS \
+		--with-lib-path=$PREFIX_FINAL/lib64:$PREFIX_FINAL/lib \
+		--disable-nls \
+		--enable-shared \
+		--enable-64-bit-bfd || exit 1
+
+	    pushd $builddir &&
+	    make configure-host &&
+	    make -j3 &&
+	    make install &&
+	    popd || exit 1
 	    ;;
 
 	*)
-	    # FIXME: maybe we should use a better default rule here...?
-	    build_generic $1 --prefix=$PREFIX_CROSS
+	    build_generic $1 $OPTS || exit 1
 	    ;;
     esac
 }
@@ -58,10 +92,10 @@ packages=""
 packages+=" gmp"
 packages+=" mpfr"
 packages+=" mpc"
-#packages+=" ppl"
-#packages+=" cloog-ppl"
-#packages+=" zlib"
-#packages+=" binutils"
+packages+=" ppl"
+packages+=" cloog-ppl"
+packages+=" zlib"
+packages+=" binutils"
 #packages+=" gcc"
 #packages+=" ncurses"
 
