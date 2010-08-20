@@ -115,10 +115,13 @@ build()
 	    make -j3 &&
 	    make install || exit 1
 
-	    # copy libiberty.h to $PREFIX_FINAL/include directory
+	    # Copy libiberty.h to $PREFIX_FINAL/include directory.
 	    #
-	    # FIXME: not sure why the CLFS book used /tools instead of
-	    #        /cross-tools here... should look into it later on.
+	    # NOTE: This file is being installed in $PREFIX_FINAL now
+	    #       instead of in $PREFIX_CROSS because it's just a header
+	    #       file and has to eventually be in PREFIX_FINAL.  Putting
+	    #       it there now just makes the the final bootstrap binutils
+	    #       target simpler.
 	    mkdir -p $PREFIX_FINAL/include &&
 	    cp -v $sourcedir/include/libiberty.h $PREFIX_FINAL/include || exit 1
 	    popd
