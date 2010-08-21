@@ -1,0 +1,63 @@
+From bc017ec460cf32383b0a96d2ddacd91e5ec6d39a Mon Sep 17 00:00:00 2001
+From: Michael D Labriola <mdlabriola@yahoo.com>
+Date: Sat, 21 Aug 2010 08:51:20 -0400
+Subject: [PATCH] use NCURSES_PREFIX to find ncurses
+
+This commit adds code to check-lxdialog.sh to help locate ncurses when it's
+installed in non-standard locations.  Otherwise, if ncurses isn't installed
+in /usr, we can't run 'make menuconfig'
+---
+ scripts/kconfig/lxdialog/check-lxdialog.sh |   29 +++++++++++++++++----------
+ 1 files changed, 18 insertions(+), 11 deletions(-)
+
+diff --git a/scripts/kconfig/lxdialog/check-lxdialog.sh b/scripts/kconfig/lxdialog/check-lxdialog.sh
+index d34dfd4..29ce8ce 100644
+--- a/scripts/kconfig/lxdialog/check-lxdialog.sh
++++ b/scripts/kconfig/lxdialog/check-lxdialog.sh
+@@ -4,6 +4,10 @@
+ # What library to link
+ ldflags()
+ {
++	if [ -n "$NCURSES_PREFIX" ]; then
++	    echo "-L$NCURSES_PREFIX/lib -lncurses"
++	    exit
++	fi
+ 	for ext in so a dylib ; do
+ 		for lib in ncursesw ncurses curses ; do
+ 			$cc -print-file-name=lib${lib}.${ext} | grep -q /
+@@ -19,18 +23,21 @@ ldflags()
+ # Where is ncurses.h?
+ ccflags()
+ {
+-	if [ -f /usr/include/ncursesw/ncurses.h ]; then
+-		echo '-I/usr/include/ncursesw -DCURSES_LOC="<ncurses.h>"'
+-	elif [ -f /usr/include/ncursesw/curses.h ]; then
+-		echo '-I/usr/include/ncursesw -DCURSES_LOC="<ncursesw/curses.h>"'
+-	elif [ -f /usr/include/ncurses/ncurses.h ]; then
+-		echo '-I/usr/include/ncurses -DCURSES_LOC="<ncurses.h>"'
+-	elif [ -f /usr/include/ncurses/curses.h ]; then
+-		echo '-I/usr/include/ncurses -DCURSES_LOC="<ncurses/curses.h>"'
+-	elif [ -f /usr/include/ncurses.h ]; then
+-		echo '-DCURSES_LOC="<ncurses.h>"'
++	if [ -z "$NCURSES_PREFIX" ]; then
++	    NCURSES_PREFIX=/usr
++	fi
++	if [ -f $NCURSES_PREFIX/include/ncursesw/ncurses.h ]; then
++		echo "-I$NCURSES_PREFIX/include/ncursesw -I$NCURSES_PREFIX/include -DCURSES_LOC=\"<ncurses.h>\""
++	elif [ -f $NCURSES_PREFIX/include/ncursesw/curses.h ]; then
++		echo "-I$NCURSES_PREFIX/include/ncursesw -I$NCURSES_PREFIX/include -DCURSES_LOC=\"<ncursesw/curses.h>\""
++	elif [ -f $NCURSES_PREFIX/include/ncurses/ncurses.h ]; then
++		echo "-I$NCURSES_PREFIX/include/ncurses -I$NCURSES_PREFIX/include -DCURSES_LOC=\"<ncurses.h>\""
++	elif [ -f $NCURSES_PREFIX/include/ncurses/curses.h ]; then
++		echo "-I$NCURSES_PREFIX/include/ncurses -I$NCURSES_PREFIX/include -DCURSES_LOC=\"<ncurses/curses.h>\""
++	elif [ -f $NCURSES_PREFIX/include/ncurses.h ]; then
++		echo "-I$NCURSES_PREFIX/include -DCURSES_LOC=\"<ncurses.h>\""
+ 	else
+-		echo '-DCURSES_LOC="<curses.h>"'
++		echo "-DCURSES_LOC=\"<curses.h>\""
+ 	fi
+ }
+ 
+-- 
+1.7.1.1
+

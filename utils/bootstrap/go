@@ -140,6 +140,42 @@ build()
 	    ;;
 
 	ncurses)
+	    build_generic $1 $OPTS \
+		--with-shared \
+		--without-debug \
+		--without-ada \
+		--enable-overwrite \
+		--with-build-cc=gcc || exit 1
+		;;
+
+	busybox)
+	    setup_generic $1 || exit 1
+
+	    pushd $builddir || exit 1
+
+	    # create .config
+	    #
+	    # FIXME: we probably want to not build e2fsprogs, iproute, etc.
+	    #        maybe not util-linux-ng, too...
+	    #
+	    # NOTE: if you want to do a make menuconfig to tweak .config,
+	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL.
+	    cp $packagedir/config-bootstrap .config &&
+	    make KBUILD_SRC=$sourcedir -f $sourcedir/Makefile oldconfig || exit 1
+
+	    # build
+	    make -j3 ARCH=${ARCH_TARGET} \
+		CROSS_COMPILE="${MACHTYPE_TARGET}-" || exit 1
+
+	    # install
+	    make ARCH=${ARCH_TARGET} \
+		CROSS_COMPILE="${MACHTYPE_TARGET}-" \
+		CONFIG_PREFIX=$PREFIX_FINAL install &&
+	    cp $sourcedir/examples/depmod.pl $PREFIX_FINAL/bin &&
+	    chmod 755 $PREFIX_FINAL/bin/depmod.pl|| exit 1
+
+	    popd
+
 	    ;;
 
 	*)
@@ -150,15 +186,26 @@ build()
 
 
 packages=""
-#packages+=" gmp"
-#packages+=" mpfr"
-#packages+=" mpc"
-#packages+=" ppl"
-#packages+=" cloog-ppl"
-#packages+=" zlib"
-#packages+=" binutils"
+packages+=" gmp"
+packages+=" mpfr"
+packages+=" mpc"
+packages+=" ppl"
+packages+=" cloog-ppl"
+packages+=" zlib"
+packages+=" binutils"
 packages+=" gcc"
-#packages+=" ncurses"
+packages+=" ncurses"
+#packages+=" busybox"
+
+# NOTE: busybox builds equivilent tools from the following packages
+#
+#packages+=" bash"
+#packages+=" coreutils"
+#packages+=" findutils"
+#packages+=" awk"
+#packages+=" modutils"
+#packages+=" util-linux"
+
 
 mkdir -p $PWD/.build
 
