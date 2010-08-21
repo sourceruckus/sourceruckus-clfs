@@ -205,6 +205,65 @@ build()
 	    compile_generic $1 || exit 1
 	    ;;
 
+	gettext)
+	    setup_generic $1 || exit
+
+	    # Only the programs in the gettext-tools directory need to be
+	    # installed for the temp-system
+	    sourcedir=$sourcedir/gettext-tools
+	    configure=$sourcedir/configure
+
+	    # When cross-compiling the Gettext configure script assumes we
+	    # don't have a working wcwidth when we do. The following will
+	    # fix possible compilation errors because of this assumption
+	    pushd $builddir &&
+	    echo "gl_cv_func_wcwidth_works=yes" > config.cache &&
+	    popd || exit 1
+
+	    configure_generic $1 $OPTS \
+		--disable-shared \
+		--cache-file=config.cache || exit 1
+
+	    pushd $builddir &&
+	    make -j3 -C gnulib-lib &&
+	    make -j3 -C src msgfmt &&
+	    cp -v src/msgfmt $PREFIX_FINAL/bin &&
+	    popd || exit 1
+	    ;;
+
+	m4)
+	    setup_generic $1 || exit 1
+
+	    # Configure can not properly determine the results of the
+	    # following tests
+	    pushd $builddir &&
+	    echo gl_cv_func_btowc_eof=yes > config.cache &&
+	    echo gl_cv_func_mbrtowc_incomplete_state=yes >> config.cache &&
+	    echo gl_cv_func_mbrtowc_sanitycheck=yes >> config.cache &&
+	    echo gl_cv_func_mbrtowc_null_arg=yes >> config.cache &&
+	    echo gl_cv_func_mbrtowc_retval=yes >> config.cache &&
+	    echo gl_cv_func_mbrtowc_nul_retval=yes >> config.cache &&
+	    echo gl_cv_func_wcrtomb_retval=yes >> config.cache &&
+	    echo gl_cv_func_wctob_works=yes >> config.cache &&
+	    popd || exit 1
+
+	    configure_generic $1 $OPTS \
+		--cache-file=config.cache &&
+	    compile_generic || exit 1
+	    ;;
+
+	texinfo)
+	    setup_generic $1 &&
+	    configure_generic $1 $OPTS || exit 1
+
+	    pushd $builddir &&
+	    make -j3 -C tools/gnulib/lib &&
+	    make -j3 -C tools &&
+	    make -j3 &&
+	    make install &&
+	    popd || exit 1
+	    ;;
+
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
@@ -225,10 +284,10 @@ packages=""
 #packages+=" busybox"
 #packages+=" bison"
 #packages+=" file"
-packages+=" flex"
-#packages+=" gettext"
-#packages+=" m4"
-#packages+=" make"
+#packages+=" flex"
+packages+=" gettext"
+packages+=" m4"
+packages+=" make"
 #packages+=" texinfo"
 
 # boot packages
