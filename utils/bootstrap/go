@@ -158,9 +158,11 @@ build()
 	    # FIXME: we probably want to not build e2fsprogs, iproute, etc.
 	    #        maybe not util-linux-ng, too...
 	    #
+	    # FIXME: we're not using PAM... might want to add this in here
+	    #
 	    # NOTE: if you want to do a make menuconfig to tweak .config,
 	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL.
-	    cp $packagedir/config-bootstrap .config &&
+	    cp $packagedir/$1/config-bootstrap .config &&
 	    make KBUILD_SRC=$sourcedir -f $sourcedir/Makefile oldconfig || exit 1
 
 	    # build
@@ -170,9 +172,12 @@ build()
 	    # install
 	    make ARCH=${ARCH_TARGET} \
 		CROSS_COMPILE="${MACHTYPE_TARGET}-" \
-		CONFIG_PREFIX=$PREFIX_FINAL install &&
-	    cp $sourcedir/examples/depmod.pl $PREFIX_FINAL/bin &&
-	    chmod 755 $PREFIX_FINAL/bin/depmod.pl|| exit 1
+		CONFIG_PREFIX=$PREFIX_FINAL install || exit 1
+
+	    # FIXME: there are a bunch of config files in
+	    #        $sourcedir/examples that we might want installed too
+	    #cp $sourcedir/examples/depmod.pl $PREFIX_FINAL/bin &&
+	    #chmod 755 $PREFIX_FINAL/bin/depmod.pl|| exit 1
 
 	    popd
 
@@ -186,26 +191,71 @@ build()
 
 
 packages=""
-packages+=" gmp"
-packages+=" mpfr"
-packages+=" mpc"
-packages+=" ppl"
-packages+=" cloog-ppl"
-packages+=" zlib"
-packages+=" binutils"
-packages+=" gcc"
-packages+=" ncurses"
-#packages+=" busybox"
+#packages+=" gmp"
+#packages+=" mpfr"
+#packages+=" mpc"
+#packages+=" ppl"
+#packages+=" cloog-ppl"
+#packages+=" zlib"
+#packages+=" binutils"
+#packages+=" gcc"
+#packages+=" ncurses"
+packages+=" busybox"
+#packages+=" bison"
+#packages+=" file"
+#packages+=" flex"
+#packages+=" gettext"
+#packages+=" m4"
+#packages+=" make"
+#packages+=" texinfo"
 
-# NOTE: busybox builds equivilent tools from the following packages
+# boot packages
+#packages+=" e2fsprogs"
+#packages+=" udev"
+#packages+=" grub"
+
+# NOTE: The following CLFS /tools packages are replaced by our busybox
+#       package's equivilent tools
 #
 #packages+=" bash"
 #packages+=" coreutils"
-#packages+=" findutils"
-#packages+=" awk"
-#packages+=" modutils"
-#packages+=" util-linux"
+#packages+=" diffutils"
+#packages+=" findutils" # missing locate...
+#packages+=" gawk"
+#packages+=" grep"
+#packages+=" gzip"
+#packages+=" patch"
+#packages+=" sed"
+#packages+=" tar"
+#packages+=" vim"
+#packages+=" xz-utils"
 
+# NOTE: The following CLFS /tools packages (for booting) are currently
+#       replaced by our busybox package... but we might want to actually
+#       install the real versions.  util-linux-ng, for example, installs
+#       pkg-config files that are searched for when building udev and/or hal
+#       later on...
+#
+#packages+=" util-linux-ng"
+#packages+=" sysvinit"
+#packages+=" module-init-tools"
+
+# NOTE: The following CLFS final system packages are replaced by our busybox
+#       package's equivilent tools
+#
+#packages+=" inetd"
+#packages+=" less/more"
+#packages+=" iproute2"
+
+# NOTE: The following non-CLFS packages are also replaced by our busybox
+#       setup
+#
+#packages+=" cpio"
+#packages+=" rpm"
+#packages+=" httpd"
+#packages+=" dhcpd"
+#packages+=" dhcpclient"
+#pacakges+=" bind"
 
 mkdir -p $PWD/.build
 
