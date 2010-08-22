@@ -86,8 +86,8 @@ setup_generic()
 	mkdir -p $builddir/source || exit 1
 	pushd $builddir/source
 	echo checking for previously extracted source tree...
-	if ! $(cd ./*); then
-	    echo extracting...
+	if ! $(cd ./* 2>/dev/null); then
+	    echo "extracting..."
 	    tar jxf $packagedir/$p/*.tar.bz2 || exit 1
 	fi
 	pushd ./* &&
@@ -101,11 +101,11 @@ setup_generic()
 	pushd $sourcedir
 	# only do this if we haven't previously configured
 	if [ ! -f $builddir/Makefile ]; then
-	    if [ -f $packagedir/$p/*.patch ]; then
-		for p in $packagedir/$p/*.patch; do
-		    patch -Np1 < $p || exit 1
-		done
-	    fi
+	    patches=$(ls $packagedir/$p/*.patch 2>/dev/null)
+	    for p in $packagedir/$p/*.patch; do
+		echo "applying patch: $p"
+		patch -Np1 < $p || exit 1
+	    done
 	fi
 	popd
     fi

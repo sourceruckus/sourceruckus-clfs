@@ -1,0 +1,26 @@
+From 9abb83b1dcf555f1e6aa8ddf0ea1b237827b35e5 Mon Sep 17 00:00:00 2001
+From: Michael D Labriola <mdlabriola@yahoo.com>
+Date: Sat, 21 Aug 2010 20:03:49 -0400
+Subject: [PATCH 2/2] pass LDFLAGS to sub-configure
+
+This patch makes configure pass the LDFLAGS variable into its sub-configure
+(for the native bootstrap tools compile when cross-compiling)
+---
+ configure.ac |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index aeb39dc..3df48a7 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -117,6 +117,7 @@ else
+   # consequently, we have to re-initialize $PATH.
+   env -i CC="$BUILD_CC" AR="$BUILD_AR" RANLIB="$BUILD_RANLIB" \
+       PATH="$PATH" \
++      LDFLAGS="$LDFLAGS" \
+       tools_only=1 \
+     ${confdir}/configure --build=${build} --host=${build} \
+                          --disable-rpath --disable-nls
+-- 
+1.7.1.1
+

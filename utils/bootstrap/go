@@ -253,8 +253,17 @@ build()
 	    ;;
 
 	texinfo)
-	    setup_generic $1 &&
-	    configure_generic $1 $OPTS || exit 1
+	    setup_generic $1 || exit 1
+
+	    # rm configure to force configure_generic to run autoreconf.  we
+	    # patch configure.ac, so this is needed.
+	    rm -f $sourcedir/configure || exit 1
+	    
+	    # need to set LDFLAGS like this so that texinfo's bootstrap
+	    # native build can find our bootstrap-early stuff (ncurses,
+	    # specifically)
+	    LDFLAGS=-L$PREFIX_EARLY/lib \
+		configure_generic $1 $OPTS || exit 1
 
 	    pushd $builddir &&
 	    make -j3 -C tools/gnulib/lib &&
@@ -285,10 +294,10 @@ packages=""
 #packages+=" bison"
 #packages+=" file"
 #packages+=" flex"
-packages+=" gettext"
-packages+=" m4"
-packages+=" make"
-#packages+=" texinfo"
+#packages+=" gettext"
+#packages+=" m4"
+#packages+=" make"
+packages+=" texinfo"
 
 # boot packages
 #packages+=" e2fsprogs"

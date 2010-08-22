@@ -37,7 +37,10 @@ packages+=" git"
 # might also want to make sure that the host system has a usable ncurses
 # (and ncurses-devel) library.  otherwise we can't run the 'menuconfig'
 # target for kernel and busybox configuration
-#packages+=" ncurses"
+packages+=" ncurses"
+
+# help2man is needed to build man pages for texinfo after running autoreconf
+packages+=" help2man"
 
 
 build_srp()
@@ -72,7 +75,10 @@ build()
 	    build_git
 	    ;;
 	ncurses)
-	    biuld_generic $1 --prefix=$PREFIX_EARLY --with-shared
+	    build_generic $1 --prefix=$PREFIX_EARLY --with-shared
+	    ;;
+	help2man)
+	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls
 	    ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_EARLY
