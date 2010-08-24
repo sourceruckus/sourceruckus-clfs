@@ -273,6 +273,78 @@ build()
 	    popd || exit 1
 	    ;;
 
+	create-dirs)
+	    mkdir -pv ${BABY}/{bin,boot,dev,{etc/,}opt,home,lib{,64},mnt}
+	    mkdir -pv ${BABY}/{proc,media/{floppy,cdrom},sbin,srv,sys}
+	    mkdir -pv ${BABY}/var/{lock,log,mail,run,spool}
+	    mkdir -pv ${BABY}/var/{opt,cache,lib{,64}/{misc,locate},local}
+	    install -dv ${BABY}/root -m 0750
+	    install -dv ${BABY}{/var,}/tmp -m 1777
+	    mkdir -pv ${BABY}/usr/{,local/}{bin,include,lib{,64},sbin,src}
+	    mkdir -pv ${BABY}/usr/{,local/}share/{doc,info,locale,man}
+	    mkdir -pv ${BABY}/usr/{,local/}share/{misc,terminfo,zoneinfo}
+	    mkdir -pv ${BABY}/usr/{,local/}share/man/man{1,2,3,4,5,6,7,8}
+	    for dir in ${BABY}/usr{,/local}; do
+		ln -sv share/{man,doc,info} $dir 2>/dev/null
+	    done
+	    install -dv ${BABY}/usr/lib/locale
+	    ln -sv ../lib/locale ${BABY}/usr/lib64 2>/dev/null
+	    echo done
+	    ;;
+
+	create-symlinks)
+	    ln -sv $PREFIX_FINAL/bin/{bash,cat,echo,grep,pwd,sleep,stty} ${BABY}/bin 2>/dev/null
+	    ln -sv $PREFIX_FINAL/bin/file ${BABY}/usr/bin 2>/dev/null
+	    ln -sv $PREFIX_FINAL/lib/libgcc_s.so{,.1} ${BABY}/usr/lib 2>/dev/null
+	    ln -sv $PREFIX_FINAL/lib64/libgcc_s.so{,.1} ${BABY}/usr/lib64 2>/dev/null
+	    ln -sv $PREFIX_FINAL/lib/libstd*so* ${BABY}/usr/lib 2>/dev/null
+	    ln -sv $PREFIX_FINAL/lib64/libstd*so* ${BABY}/usr/lib64 2>/dev/null
+
+	    # CLFS used bash for this one, but we're using busybox's ash
+	    # instead.  in case we change this later, we just symlink our
+	    # bootstrap sh symlink to our baby system's /bin/sh
+	    ln -sv $PREFIX_FINAL/bin/sh ${BABY}/bin/sh 2>/dev/null
+
+	    # we've got some more symlinks to make, because we use our
+	    # boostrap busybox install in place of a bunch of extra packages
+	    # that CLFS installs directly in the baby system.  the easiest
+	    # thing to do here, is just make symlinks to all the busybox
+	    # symlinks in the baby system by parsing busybox.links in
+	    # busybox's builddir
+	    for x in $(cat .build/busybox/build/busybox.links); do
+		ln -sv $PREFIX_FINAL$x $BABY$x 2>/dev/null
+	    done
+	    
+	    echo done
+	    ;;
+
+	e2fsprogs)
+	    setup_generic $1 || exit 1
+
+	    # Change the library directory to lib64
+	    pushd $sourcedir &&
+	    sed -i '/libdir.*=.*\/lib/s@/lib@/lib64@g' configure &&
+	    popd || exit 1
+
+	    PKG_CONFIG=true configure_generic $1 $OPTS \
+		 --enable-elf-shlibs \
+		--with-linker=${LD} \
+		--disable-libblkid \
+		--disable-libuuid \
+		--disable-fsck \
+		--disable-uuidd || exit 1
+
+	    pushd $builddir &&
+	    make -j3 LIBUUID="-luuid" STATIC_LIBUUID="-luuid" \
+		LIBBLKID="-lblkid" STATIC_LIBBLKID="-lblkid" &&
+	    make install &&
+	    make install-libs || exit 1
+	    
+	    # make needed symlinks in baby
+	    ln -sv $PREFIX_FINAL/sbin/{fsck.ext2,fsck.ext3,fsck.ext4,e2fsck} ${BABY}/sbin 2>/dev/null
+	    echo done
+	    ;;
+
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
@@ -297,11 +369,56 @@ packages=""
 #packages+=" gettext"
 #packages+=" m4"
 #packages+=" make"
-packages+=" texinfo"
+#packages+=" texinfo"
 
-# boot packages
-#packages+=" e2fsprogs"
+
+# FIXME: hmm... not sure how i'm gonna do this...  CLFS builds a bunch of
+#        basic utils, udev, and a stripped down kernel in the target
+#        filesystem (ie, not /bootstrap) to make a bootable system.  Then
+#        the next chapter in CLFS overwrites the installed files with the
+#        final versions.  I guess this is doable...  The final system
+#        packages are going to be packaged and installed with SRP, so we'll
+#        have backup files all over the place that need to be remove.
+#        Additionally, it would be nice if we could guarantee that there are
+#        no bootstrap files left over.  Not sure how important that is,
+#        though.
+#
+# FIXME: CLFS installs util-linux-ng at this point... we're using busybox as
+#        a replacement and it's already installed in /bootstrap...  Do the
+#        util-linux portions of it really need to be in the proper places?
+#        or will /bootstrap do?  If /bootstrap isn't good enough for that
+#        part of busybox, why not just install the whole darn thing in the
+#        baby filesystem and let it all be overwritten by the busybox srp
+#        later on...?
+#
+#        Actually, it might be simpler (at least for now) to install
+#        symlinks for all the busybox binaries that got intsalled in
+#        /bootstrap in /bin, /sbin, etc.
+#
+# FIXME: hey, busybox installs a udev replacement called 'mdev'... should we
+#        use that instead of udev for our bootstrap boot?  we could either
+#        not compile it later on (and make sure we remove the bootstrap
+#        version), or just leave it and make sure out bootscripts use udev
+#        intead.  using mdev instead of udev will probably not fly well down
+#        the road if we really want our development desktops to be built on
+#        top of our base-most image...  maybe the final dev image switches
+#        over to udev.  or it might be simpler to use udev all the way
+#        through... it can't add that much space
+
+
+# boot prep
+packages+=" create-dirs"
+packages+=" create-symlinks"
+
+# more boot packages
+packages+=" e2fsprogs"
 #packages+=" udev"
+#packages+=" kernel"
+
+# CLFS doesn't install grub at this point, but if we're going to automate
+# the whole build process (ie, automaticaly reboot into the baby system),
+# we'll need to not only install it on the system, we'll have to actually
+# install it in the MBR and configure it appropriately...
 #packages+=" grub"
 
 # NOTE: The following CLFS /tools packages are replaced by our busybox
@@ -350,6 +467,6 @@ packages+=" texinfo"
 mkdir -p $PWD/.build
 
 for p in $packages; do
-    echo "building cross package: $p"
+    echo "building final bootstrap package: $p"
     build $p || exit 1
 done

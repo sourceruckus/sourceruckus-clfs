@@ -42,6 +42,12 @@ packages+=" ncurses"
 # help2man is needed to build man pages for texinfo after running autoreconf
 packages+=" help2man"
 
+# might need to add perl and texinfo, too
+#packages+=" perl"
+#packages+=" texinfo"
+
+# FIXME: actually, I think python and srp need to be in /bootstrap... and
+#        git doesn't really seem all that necesary either.
 
 build_srp()
 {
