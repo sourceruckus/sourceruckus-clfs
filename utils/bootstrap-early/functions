@@ -55,6 +55,12 @@ export ARCH_TARGET=x86_64
 export BUILD32="-m32"
 export BUILD64="-m64"
 
+# make sure nullglob is turned on.  this makes a glob that doesn't match any
+# files expand to '' rather than the glob pattern itself.
+#
+# FIXME: I think this command is bash specific... zsh does this by default
+shopt -s nullglob
+
 
 # define generic builder method.  this does some magic to set up a build
 # tree based on what's stored in packagedir (ie, a source tree or a source
@@ -85,8 +91,8 @@ setup_generic()
 	# source tree
 	mkdir -p $builddir/source || exit 1
 	pushd $builddir/source
-	echo checking for previously extracted source tree...
-	if ! $(cd ./* 2>/dev/null); then
+	echo "checking for previously extracted source tree..."
+	if [ "." == "`ls -d ./*`" ]; then
 	    echo "extracting..."
 	    tar jxf $packagedir/$p/*.tar.bz2 || exit 1
 	fi
