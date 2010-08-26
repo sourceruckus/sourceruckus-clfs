@@ -155,10 +155,15 @@ build()
 
 	    # create .config
 	    #
-	    # FIXME: we probably want to not build e2fsprogs, iproute, etc.
-	    #        maybe not util-linux-ng, too...
+	    # NOTE: planning on using the busybox variants of everything
+	    #       possible except for programs provided by the following
+	    #       packages:
 	    #
-	    # FIXME: we're not using PAM... might want to add this in here
+	    #       - e2fsprogs (blkid, findfs, fsck.ext2, mkfs.ext2, etc)
+	    #
+	    # NOTE: We're not using PAM here... might want to add this into
+	    #       our final busybox config (assuming we actually compile
+	    #       the PAM libs first).
 	    #
 	    # NOTE: if you want to do a make menuconfig to tweak .config,
 	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL.
@@ -327,18 +332,17 @@ build()
 	    popd || exit 1
 
 	    PKG_CONFIG=true configure_generic $1 $OPTS \
-		 --enable-elf-shlibs \
-		--with-linker=${LD} \
-		--disable-libblkid \
-		--disable-libuuid \
-		--disable-fsck \
-		--disable-uuidd || exit 1
+		--disable-fsck || exit 1
 
 	    pushd $builddir &&
-	    make -j3 LIBUUID="-luuid" STATIC_LIBUUID="-luuid" \
-		LIBBLKID="-lblkid" STATIC_LIBBLKID="-lblkid" &&
-	    make install &&
-	    make install-libs || exit 1
+	    make -j3 &&
+	    make install || exit 1
+
+	    # NOTE: we don't compile/install the libblkid, libuuid, etc,
+	    #       shared libs here.  I ran into cross-compilation problems
+	    #       here, and they're not needed.  We'll build and install
+	    #       them when we do our final e2fsprogs build later on.
+	    #make install-libs || exit 1
 	    
 	    # make needed symlinks in baby
 	    ln -sv $PREFIX_FINAL/sbin/{fsck.ext2,fsck.ext3,fsck.ext4,e2fsck} ${BABY}/sbin 2>/dev/null
@@ -353,23 +357,23 @@ build()
 
 
 packages=""
-#packages+=" gmp"
-#packages+=" mpfr"
-#packages+=" mpc"
-#packages+=" ppl"
-#packages+=" cloog-ppl"
-#packages+=" zlib"
-#packages+=" binutils"
-#packages+=" gcc"
-#packages+=" ncurses"
-#packages+=" busybox"
-#packages+=" bison"
-#packages+=" file"
-#packages+=" flex"
-#packages+=" gettext"
-#packages+=" m4"
-#packages+=" make"
-#packages+=" texinfo"
+packages+=" gmp"
+packages+=" mpfr"
+packages+=" mpc"
+packages+=" ppl"
+packages+=" cloog-ppl"
+packages+=" zlib"
+packages+=" binutils"
+packages+=" gcc"
+packages+=" ncurses"
+packages+=" busybox"
+packages+=" bison"
+packages+=" file"
+packages+=" flex"
+packages+=" gettext"
+packages+=" m4"
+packages+=" make"
+packages+=" texinfo"
 
 
 # FIXME: hmm... not sure how i'm gonna do this...  CLFS builds a bunch of
@@ -412,7 +416,18 @@ packages+=" create-symlinks"
 
 # more boot packages
 packages+=" e2fsprogs"
+
+# FIXME: mdev vs udev.  I suspect that if we base our desktop image on our
+#        embedded image, parts of the desktop (GNOME, KDE, etc) are going to
+#        require udev.  Modern versions of udev, however, don't appear to
+#        play well with busybox's (or e2fsprogs') versions of blkid and
+#        libuuid.  So, our final system might want to use util-linux-ng and
+#        udev instead of busybox's mdev setup.  Not really sure how best to
+#        handle this yet.  Anyway, it's probably simpler for our bootable
+#        bootstrap system to just use busybox's mdev for now.
 #packages+=" udev"
+
+
 #packages+=" kernel"
 
 # CLFS doesn't install grub at this point, but if we're going to automate
