@@ -427,8 +427,12 @@ packages+=" e2fsprogs"
 #        bootstrap system to just use busybox's mdev for now.
 #packages+=" udev"
 
+# this will handle config files for init, mdev, users/groups, logfiles,
+# login scripts, fstab, needed device nodes, etc
+packages+=" create-conf"
 
-#packages+=" kernel"
+packages+=" bootscripts"
+packages+=" kernel"
 
 # CLFS doesn't install grub at this point, but if we're going to automate
 # the whole build process (ie, automaticaly reboot into the baby system),
