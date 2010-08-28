@@ -7,3 +7,6 @@
 [submodule "packages/kernel"]
 	path = packages/kernel
 	url = git://labriola.dyndns.org/linux-2.6-mdl.git
+[submodule "packages/bootscripts"]
+	path = packages/bootscripts
+	url = git://labriola.dyndns.org/bootscripts.git
