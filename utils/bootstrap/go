@@ -419,6 +419,19 @@ build()
 	    popd || exit 1
 	    ;;
 
+	bootscripts)
+	    setup_generic $1 || exit 1
+
+	    # install the scripts
+	    pushd $builddir &&
+	    make SOURCEDIR=$sourcedir -f $sourcedir/Makefile \
+		DESTDIR=$BABY install-minimal &&
+	    popd || exit 1
+
+	    # groom them a bit
+	    echo "UTC=1" > $BABY/etc/sysconfig/clock || exit 1
+	    ;;
+
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
@@ -528,7 +541,7 @@ packages+=" e2fsprogs"
 # login scripts, fstab, needed device nodes, etc
 packages+=" create-conf"
 
-packages+=" kernel"
+#packages+=" kernel"
 packages+=" bootscripts"
 
 # FIXME: CLFS doesn't install grub at this point, but if we're going to
