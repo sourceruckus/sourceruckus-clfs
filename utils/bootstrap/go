@@ -349,6 +349,44 @@ build()
 	    echo done
 	    ;;
 
+	create-conf)
+	    # this will handle config files for init, mdev, users/groups,
+            # logfiles, login scripts, fstab, needed device nodes, etc
+	    
+	    # copy inittab and mdev.conf from busybox's examples dir
+	    busydir=.build/busybox/source/*/examples
+	    mkdir -p $BABY/etc &&
+	    cp -v $busydir/inittab $BABY/etc &&
+	    cp -v $busydir/mdev_fat.conf $BABY/etc/mdev.conf || exit 1
+
+	    # copy passwd and group files into etc
+	    cp -v config/{passwd,group} $BABY/etc || exit 1
+	    
+	    # initialize login related log files.
+	    #
+	    # NOTE: busybox's init replacement might not use these, but if
+	    #       switch over to the real sysvinit later on we'll want
+	    #       these files
+	    touch ${BABY}/var/run/utmp ${BABY}/var/log/{btmp,lastlog,wtmp} &&
+	    chmod -v 664 ${BABY}/var/run/utmp ${BABY}/var/log/lastlog &&
+	    chmod -v 600 ${BABY}/var/log/btmp || exit 1
+	    
+	    # copy bash_profile into root's homedir
+	    cp -v config/bash_profile $BABY/root/.bash_profile
+
+	    # make sure these build variables are set
+	    echo export BUILD32=\"$BUILD32\" >> $BABY/root/.bash_profile
+	    echo export BUILD64=\"$BUILD64\" >> $BABY/root/.bash_profile
+	    echo export MACHTYPE_TARGET32=\"$MACHTYPE_TARGET32\" >> $BABY/root/.bash_profile
+	    
+	    # copy fstab into etc
+	    #
+	    # FIXME: this needs to have appropriate device name and
+	    #        filesystem types inserted in it.
+	    cp -v config/fstab $BABY/etc || exit 1
+
+	    ;;
+
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
@@ -367,6 +405,23 @@ packages+=" binutils"
 packages+=" gcc"
 packages+=" ncurses"
 packages+=" busybox"
+
+# NOTE: The following CLFS /tools packages are replaced by our busybox
+#       package's equivilent tools
+#
+#packages+=" bash"
+#packages+=" coreutils"
+#packages+=" diffutils"
+#packages+=" findutils" # missing locate...
+#packages+=" gawk"
+#packages+=" grep"
+#packages+=" gzip"
+#packages+=" patch"
+#packages+=" sed"
+#packages+=" tar"
+#packages+=" vim"
+#packages+=" xz-utils"
+
 packages+=" bison"
 packages+=" file"
 packages+=" flex"
@@ -375,7 +430,8 @@ packages+=" m4"
 packages+=" make"
 packages+=" texinfo"
 
-
+# boot prep
+#
 # FIXME: hmm... not sure how i'm gonna do this...  CLFS builds a bunch of
 #        basic utils, udev, and a stripped down kernel in the target
 #        filesystem (ie, not /bootstrap) to make a bootable system.  Then
@@ -408,9 +464,18 @@ packages+=" texinfo"
 #        top of our base-most image...  maybe the final dev image switches
 #        over to udev.  or it might be simpler to use udev all the way
 #        through... it can't add that much space
+#
+# NOTE: The following CLFS /tools packages (for booting) are currently
+#       replaced by our busybox package... but we might want to actually
+#       install the real versions.  util-linux-ng, for example, installs
+#       pkg-config files that are searched for when building udev and/or hal
+#       later on...
+#
+#packages+=" util-linux-ng"
+#packages+=" sysvinit"
+#packages+=" module-init-tools"
+#packages+=" udev"
 
-
-# boot prep
 packages+=" create-dirs"
 packages+=" create-symlinks"
 
@@ -434,37 +499,33 @@ packages+=" create-conf"
 packages+=" bootscripts"
 packages+=" kernel"
 
-# CLFS doesn't install grub at this point, but if we're going to automate
-# the whole build process (ie, automaticaly reboot into the baby system),
-# we'll need to not only install it on the system, we'll have to actually
-# install it in the MBR and configure it appropriately...
+# FIXME: CLFS doesn't install grub at this point, but if we're going to
+#        automate the whole build process (ie, automaticaly reboot into the
+#        baby system), we'll need to not only install it on the system,
+#        we'll have to actually install it in the MBR and configure it
+#        appropriately...
+#
+# FIXME: some of this will have to be done as root, and there will have to
+#        be some variable substitution in the grub.conf file
+#
 #packages+=" grub"
+#packages+=" grub-mbr"
+#packages+=" grub-conf"
 
-# NOTE: The following CLFS /tools packages are replaced by our busybox
-#       package's equivilent tools
-#
-#packages+=" bash"
-#packages+=" coreutils"
-#packages+=" diffutils"
-#packages+=" findutils" # missing locate...
-#packages+=" gawk"
-#packages+=" grep"
-#packages+=" gzip"
-#packages+=" patch"
-#packages+=" sed"
-#packages+=" tar"
-#packages+=" vim"
-#packages+=" xz-utils"
+# this stage will set the ownership of our baby filesystem to root instead
+# of our build user
+packages+=" fix-perms"
 
-# NOTE: The following CLFS /tools packages (for booting) are currently
-#       replaced by our busybox package... but we might want to actually
-#       install the real versions.  util-linux-ng, for example, installs
-#       pkg-config files that are searched for when building udev and/or hal
-#       later on...
-#
-#packages+=" util-linux-ng"
-#packages+=" sysvinit"
-#packages+=" module-init-tools"
+
+
+mkdir -p $PWD/.build
+
+for p in $packages; do
+    echo "building final bootstrap package: $p"
+    build $p || exit 1
+done
+
+
 
 # NOTE: The following CLFS final system packages are replaced by our busybox
 #       package's equivilent tools
@@ -472,6 +533,7 @@ packages+=" kernel"
 #packages+=" inetd"
 #packages+=" less/more"
 #packages+=" iproute2"
+
 
 # NOTE: The following non-CLFS packages are also replaced by our busybox
 #       setup
@@ -482,10 +544,3 @@ packages+=" kernel"
 #packages+=" dhcpd"
 #packages+=" dhcpclient"
 #pacakges+=" bind"
-
-mkdir -p $PWD/.build
-
-for p in $packages; do
-    echo "building final bootstrap package: $p"
-    build $p || exit 1
-done

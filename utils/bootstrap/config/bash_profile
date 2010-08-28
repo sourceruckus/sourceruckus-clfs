@@ -1,0 +1,7 @@
+# -*- mode: sh -*-
+set +h
+PS1='\u:\w\$ '
+LC_ALL=POSIX
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/bootstrap/bin:/bootstrap/sbin
+export LC_ALL PATH PS1
+
