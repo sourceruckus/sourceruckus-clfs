@@ -83,9 +83,9 @@ setup_generic()
     mkdir -p $builddir
 
     # figure out if we're using a source tarball or an already unpacked
-    # source tree.  we do this by looking for configure, configure.ac, or
-    # configure.in in the packagedir
-    if [ ! -x $configure ] && [ ! -f $configure.ac ] && [ ! -f $configure.in ]; then
+    # source tree.  we do this by looking for Makefile, configure,
+    # configure.ac, or configure.in in the packagedir
+    if [ ! -f $sourcedir/Makefile ] && [ ! -x $configure ] && [ ! -f $configure.ac ] && [ ! -f $configure.in ]; then
 	echo "using source tarball"
 	# using tarball.  need to modify some variables and extract the
 	# source tree

@@ -387,6 +387,38 @@ build()
 
 	    ;;
 
+	kernel)
+	    setup_generic $1 || exit 1
+
+	    # get ready
+	    MAKE="make KBUILD_SRC=$sourcedir -f $sourcedir/Makefile"
+	    MAKE+=" ARCH=$ARCH_TARGET CROSS_COMPILE=$MACHTYPE_TARGET-"
+	    pushd $builddir &&
+	    $MAKE mrproper &&
+	    popd || exit 1
+
+	    # get set
+	    cp -v config/kernel-config $builddir/.config &&
+	    pushd $builddir &&
+	    $MAKE oldconfig &&
+	    popd || exit 1
+
+	    # NOTE: if you want to do a make menuconfig to tweak .config,
+	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL.
+
+	    # go!
+	    pushd $builddir &&
+	    $MAKE -j6 &&
+	    popd || exit 1
+
+	    # now actually install the resulting kernel files
+	    pushd $builddir &&
+	    cp -v arch/$ARCH_TARGET/boot/bzImage $BABY/boot/vmlinuz-ruckus-bootstrap &&
+	    cp -v System.map $BABY/boot/System.map-ruckus-bootstrap &&
+	    cp -v .config $BABY/boot/config-ruckus-bootstrap &&
+	    popd || exit 1
+	    ;;
+
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
@@ -496,8 +528,8 @@ packages+=" e2fsprogs"
 # login scripts, fstab, needed device nodes, etc
 packages+=" create-conf"
 
-packages+=" bootscripts"
 packages+=" kernel"
+packages+=" bootscripts"
 
 # FIXME: CLFS doesn't install grub at this point, but if we're going to
 #        automate the whole build process (ie, automaticaly reboot into the
