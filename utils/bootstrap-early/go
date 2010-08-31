@@ -66,7 +66,7 @@ build_git()
     pushd $builddir
     autoreconf &&
     ./configure --prefix=$PREFIX_EARLY &&
-    make -j3 install || exit 1
+    make -j$JOBCOUNT install || exit 1
     popd
 }
 

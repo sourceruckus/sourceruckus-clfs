@@ -55,6 +55,14 @@ export ARCH_TARGET=x86_64
 export BUILD32="-m32"
 export BUILD64="-m64"
 
+# this variable will be used by default to determine the number of jobs to
+# pass into make.
+#
+# FIXME: this should be configurable via autoconf?
+export CPUCOUNT=$(grep "^processor" /proc/cpuinfo | wc -l)
+export JOBCOUNT=$((CPUCOUNT+1))
+export JOBCOUNT_KBUILD=$((CPUCOUNT*4))
+
 # make sure nullglob is turned on.  this makes a glob that doesn't match any
 # files expand to '' rather than the glob pattern itself.
 #
@@ -154,6 +162,6 @@ compile_generic()
     #mkdir -p $builddir
 
     pushd $builddir &&
-    make -j3 && make install &&
+    make -j$JOBCOUNT && make install &&
     popd || exit 1
 }

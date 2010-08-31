@@ -92,7 +92,7 @@ build()
 
 	    pushd $builddir &&
 	    make configure-host &&
-	    make -j3 &&
+	    make -j$JOBCOUNT &&
 	    make install &&
 	    popd || exit 1
 	    ;;
@@ -134,7 +134,7 @@ build()
 	    #  directories for headers and libraries
 	    sed -i "/^HOST_\(GMP\|PPL\|CLOOG\)\(LIBS\|INC\)/s:-[IL]/\(lib\|include\)::" Makefile || exit 1
 
-	    make -j3 AS_FOR_TARGET="${AS}" LD_FOR_TARGET="${LD}" &&
+	    make -j$JOBCOUNT AS_FOR_TARGET="${AS}" LD_FOR_TARGET="${LD}" &&
 	    make install &&
 	    popd || exit 1
 	    ;;
@@ -171,7 +171,7 @@ build()
 	    make KBUILD_SRC=$sourcedir -f $sourcedir/Makefile oldconfig || exit 1
 
 	    # build
-	    make -j3 ARCH=${ARCH_TARGET} \
+	    make -j$JOBCOUNT_KBUILD ARCH=${ARCH_TARGET} \
 		CROSS_COMPILE="${MACHTYPE_TARGET}-" || exit 1
 
 	    # install
@@ -230,8 +230,8 @@ build()
 		--cache-file=config.cache || exit 1
 
 	    pushd $builddir &&
-	    make -j3 -C gnulib-lib &&
-	    make -j3 -C src msgfmt &&
+	    make -j$JOBCOUNT -C gnulib-lib &&
+	    make -j$JOBCOUNT -C src msgfmt &&
 	    cp -v src/msgfmt $PREFIX_FINAL/bin &&
 	    popd || exit 1
 	    ;;
@@ -271,9 +271,9 @@ build()
 		configure_generic $1 $OPTS || exit 1
 
 	    pushd $builddir &&
-	    make -j3 -C tools/gnulib/lib &&
-	    make -j3 -C tools &&
-	    make -j3 &&
+	    make -j$JOBCOUNT -C tools/gnulib/lib &&
+	    make -j$JOBCOUNT -C tools &&
+	    make -j$JOBCOUNT &&
 	    make install &&
 	    popd || exit 1
 	    ;;
@@ -335,7 +335,7 @@ build()
 		--disable-fsck || exit 1
 
 	    pushd $builddir &&
-	    make -j3 &&
+	    make -j$JOBCOUNT &&
 	    make install || exit 1
 
 	    # NOTE: we don't compile/install the libblkid, libuuid, etc,
@@ -355,7 +355,7 @@ build()
 	    
 	    # copy inittab and mdev.conf from busybox's examples dir
 	    busydir=.build/busybox/source/*/examples
-	    mkdir -p $BABY/etc &&
+	    mkdir -vp $BABY/etc &&
 	    cp -v $busydir/inittab $BABY/etc &&
 	    cp -v $busydir/mdev_fat.conf $BABY/etc/mdev.conf || exit 1
 
@@ -408,7 +408,7 @@ build()
 
 	    # go!
 	    pushd $builddir &&
-	    $MAKE -j6 &&
+	    $MAKE -j$JOBCOUNT_KBUILD &&
 	    popd || exit 1
 
 	    # now actually install the resulting kernel files

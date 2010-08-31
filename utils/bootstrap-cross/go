@@ -49,8 +49,8 @@ build()
 
 	    # now go into the builddir and use custom build/install commands
 	    pushd $builddir &&
-	    make -j3 -C include && 
-	    make -j3 -C progs tic &&
+	    make -j$JOBCOUNT -C include && 
+	    make -j$JOBCOUNT -C progs tic &&
 	    install -m755 progs/tic $PREFIX_CROSS/bin &&
 	    popd || exit 1
 	    ;;
@@ -112,7 +112,7 @@ build()
 
 	    pushd $builddir &&
 	    make configure-host &&
-	    make -j3 &&
+	    make -j$JOBCOUNT &&
 	    make install || exit 1
 
 	    # Copy libiberty.h to $PREFIX_FINAL/include directory.
@@ -167,7 +167,7 @@ build()
 		--enable-languages=c || exit 1
 
 	    pushd $builddir || exit 1
-	    make -j3 all-gcc all-target-libgcc &&
+	    make -j$JOBCOUNT all-gcc all-target-libgcc &&
 	    make install-gcc install-target-libgcc || exit 1
 	    popd
 	    ;;
@@ -303,7 +303,7 @@ build()
 		--enable-threads=posix || exit 1
 
 	    pushd $builddir || exit 1
-	    make -j3 AS_FOR_TARGET="${MACHTYPE_TARGET}-as" \
+	    make -j$JOBCOUNT_KBUILD AS_FOR_TARGET="${MACHTYPE_TARGET}-as" \
 		LD_FOR_TARGET="${MACHTYPE_TARGET}-ld" &&
 	    make install || exit 1
 	    popd
