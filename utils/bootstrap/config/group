@@ -17,6 +17,7 @@ cdrom:x:15:
 adm:x:16:root,adm,daemon
 console:x:17:
 cdrw:x:18:
+uucp:x:19:
 mail:x:30:mail
 news:x:31:news
 users:x:1000:

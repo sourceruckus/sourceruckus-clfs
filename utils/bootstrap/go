@@ -353,11 +353,10 @@ build()
 	    # this will handle config files for init, mdev, users/groups,
             # logfiles, login scripts, fstab, needed device nodes, etc
 	    
-	    # copy inittab and mdev.conf from busybox's examples dir
-	    busydir=.build/busybox/source/*/examples
+	    # copy inittab and mdev.conf into etc
 	    mkdir -vp $BABY/etc &&
-	    cp -v $busydir/inittab $BABY/etc &&
-	    cp -v $busydir/mdev_fat.conf $BABY/etc/mdev.conf || exit 1
+	    cp -v config/inittab $BABY/etc &&
+	    cp -v config/mdev.conf $BABY/etc || exit 1
 
 	    # copy passwd and group files into etc
 	    cp -v config/{passwd,group} $BABY/etc || exit 1
@@ -371,13 +370,13 @@ build()
 	    chmod -v 664 ${BABY}/var/run/utmp ${BABY}/var/log/lastlog &&
 	    chmod -v 600 ${BABY}/var/log/btmp || exit 1
 	    
-	    # copy bash_profile into root's homedir
-	    cp -v config/bash_profile $BABY/root/.bash_profile
+	    # copy profile into root's homedir
+	    cp -v config/profile $BABY/root/.profile
 
 	    # make sure these build variables are set
-	    echo export BUILD32=\"$BUILD32\" >> $BABY/root/.bash_profile
-	    echo export BUILD64=\"$BUILD64\" >> $BABY/root/.bash_profile
-	    echo export MACHTYPE_TARGET32=\"$MACHTYPE_TARGET32\" >> $BABY/root/.bash_profile
+	    echo export BUILD32=\"$BUILD32\" >> $BABY/root/.profile
+	    echo export BUILD64=\"$BUILD64\" >> $BABY/root/.profile
+	    echo export MACHTYPE_TARGET32=\"$MACHTYPE_TARGET32\" >> $BABY/root/.profile
 	    
 	    # copy fstab into etc
 	    #
@@ -541,7 +540,7 @@ packages+=" e2fsprogs"
 # login scripts, fstab, needed device nodes, etc
 packages+=" create-conf"
 
-#packages+=" kernel"
+packages+=" kernel"
 packages+=" bootscripts"
 
 # FIXME: CLFS doesn't install grub at this point, but if we're going to
@@ -589,3 +588,21 @@ done
 #packages+=" dhcpd"
 #packages+=" dhcpclient"
 #pacakges+=" bind"
+
+
+
+
+# hmm, might want full versions of these:
+#
+# fsck (from e2fsprogs? or coreutils?)
+# mount, losetup (for cryptoloop)
+# bash (for script compatability (maybe zsh can pretend to be bash?))
+# sysvinit (for actual runlevels)
+# udev (for HAL (and X and GNOME))
+# bind
+# dhcpd
+# ntpd
+# httpd
+# inetd
+# iproute
+# less

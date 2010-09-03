@@ -1,0 +1,10 @@
+# -*- mode: sh -*-
+PS1='\u:\w\$ '
+LC_ALL=POSIX
+PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/bootstrap/bin:/bootstrap/sbin
+export LC_ALL PATH PS1
+
+alias ls='ls -FC --color'
+alias ll='ls -l'
+alias lla='ls -la'
+
