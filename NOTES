@@ -22,6 +22,25 @@ RUCKUS/utils
 ...
 
 
+-- RUCKUS/src/pkgname --
+
+These directories will either contain controlled source tar.bz2s, or a
+source tree with a make target to create a tar.bz2 archive.
+
+Each of these directories is UNDER ITS OWN LICENSE!
+
+-- RUCKUS/packages/pkgname --
+
+These directories will contain our SRP package files for creating
+installable packages.
+
+The contents of these directories is licensed under the GPL just like the
+rest of Source Ruckus (See COPYING).  However, installation scripts for
+proprietary packages don't make a whole lot of sense w/out the actual source
+code... so contributions for installation scripts for proprietary software
+probably won't be accepted for mainline inclusion.
+
+
 * build user
 The LFS books to the build as a non-privileged 'lfs' user.  I don't really
 like this very much, as I'd rather preserve the history of who did a
