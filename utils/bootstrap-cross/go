@@ -112,6 +112,9 @@ build()
 		--with-lib-path=$PREFIX_FINAL/lib \
 		--enable-64-bit-bfd || exit 1
 
+	    # FIXME: should the --enable-64-bit-bfd flag be used on 32bit
+	    #        systems?
+
 	    pushd $builddir &&
 	    make configure-host &&
 	    make -j$JOBCOUNT &&
@@ -354,7 +357,11 @@ packages+=" cloog-ppl"
 packages+=" binutils"
 packages+=" gcc-static"
 packages+=" eglibc-32bit"
-packages+=" eglibc-64bit"
+
+if [ -n "$BUILD64" ]; then
+    packages+=" eglibc-64bit"
+fi
+
 packages+=" gcc"
 
 mkdir -p $PWD/.build
