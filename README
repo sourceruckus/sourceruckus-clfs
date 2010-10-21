@@ -22,6 +22,24 @@ etc) and if the target system isn't bootable on the build hardware (ie,
 building sparc on an x86 machine), the second half of the build will have to
 be done elsewhere.
 
+configure opts
+
+  --target-arch={x86, x86_64, etc}
+
+  --no-multilib
+
+
+The --no-multilib flag should disable any multilib stuff in all the build
+scripts and notes files (lib64, 2nd compilation, etc).
+
+If building for 32bit, --no-multilib will automatically be set.
+
+Using --target-arch=x86_64 with --no-multilib should result in a pure64
+system (64bit libs in /lib), but grub won't work...  So lilo or
+syslinux/isolinux will have to be used to boot (although this would be fine
+for a xen domU that doesn't use pvgrub).
+
+
 ** Hard-realtime Scheduling
 
 Using CONFIG_PREEMPT gives us soft-realtime scheduling.  Hard-realtime
