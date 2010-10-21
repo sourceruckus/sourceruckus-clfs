@@ -13,7 +13,11 @@ build()
     OPTS="--prefix=$PREFIX_FINAL"
     OPTS+=" --build=${MACHTYPE_HOST}"
     OPTS+=" --host=${MACHTYPE_TARGET}"
-    OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+
+    if [ -n "$BUILD64" ]; then
+	OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+    fi
+
     OPTS+=" --disable-static"
     OPTS+=" --enable-shared"
     OPTS+=" --disable-nls"
@@ -64,7 +68,11 @@ build()
 	    # and it doesn't use autotools... despite the "configure" script
 	    # and autotool-ish configure flags
 	    OPTS="--prefix=$PREFIX_FINAL"
-	    OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+
+	    if [ -n "$BUILD64" ]; then
+		OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+	    fi
+
 	    pushd $builddir &&
 	    ./configure $OPTS &&
 	    popd || exit 1
@@ -73,6 +81,9 @@ build()
 	    ;;
 
 	binutils)
+	    # FIXME: does the lib-path and 64-bit-bfd stuff have to be
+	    #        conditional for 64 bit systems?  i'm thinking it might
+	    #        be ok to compile on 32bit systems, but we'll see...
 	    setup_generic $1 &&
 	    configure_generic $1 $OPTS \
 		--with-lib-path=$PREFIX_FINAL/lib64:$PREFIX_FINAL/lib \
@@ -275,14 +286,14 @@ build()
 	    ;;
 
 	create-dirs)
-	    mkdir -pv ${BABY}/{bin,boot,dev,{etc/,}opt,home,lib{,64},mnt}
+	    mkdir -pv ${BABY}/{bin,boot,dev,{etc/,}opt,home,lib,mnt}
 	    mkdir -pv $BABY/mnt/{cdrom,flash,floppy,crypt}
 	    mkdir -pv ${BABY}/{proc,media/{floppy,cdrom},sbin,srv,sys}
 	    mkdir -pv ${BABY}/var/{lock,log,mail,run,spool}
-	    mkdir -pv ${BABY}/var/{opt,cache,lib{,64}/{misc,locate},local}
+	    mkdir -pv ${BABY}/var/{opt,cache,lib/{misc,locate},local}
 	    install -dv ${BABY}/root -m 0750
 	    install -dv ${BABY}{/var,}/tmp -m 1777
-	    mkdir -pv ${BABY}/usr/{,local/}{bin,include,lib{,64},sbin,src}
+	    mkdir -pv ${BABY}/usr/{,local/}{bin,include,lib,sbin,src}
 	    mkdir -pv ${BABY}/usr/{,local/}share/{doc,info,locale,man}
 	    mkdir -pv ${BABY}/usr/{,local/}share/{misc,terminfo,zoneinfo}
 	    mkdir -pv ${BABY}/usr/{,local/}share/man/man{1,2,3,4,5,6,7,8}
@@ -290,7 +301,14 @@ build()
 		ln -sv share/{man,doc,info} $dir 2>/dev/null
 	    done
 	    install -dv ${BABY}/usr/lib/locale
-	    ln -sv ../lib/locale ${BABY}/usr/lib64 2>/dev/null
+
+	    if [ -n "$BUILD64" ]; then
+		mkdir -pv ${BABY}/lib64
+		mkdir -pv ${BABY}/var/lib64/{misc,locate}
+		mkdir -pv ${BABY}/usr/{,local/}lib64
+		ln -sv ../lib/locale ${BABY}/usr/lib64 2>/dev/null
+	    fi
+
 	    echo done
 	    ;;
 
@@ -299,9 +317,12 @@ build()
 	    ln -sv $PREFIX_FINAL/sbin/{swapon,swapoff} $BABY/sbin 2>/dev/null
 	    ln -sv $PREFIX_FINAL/bin/file ${BABY}/usr/bin 2>/dev/null
 	    ln -sv $PREFIX_FINAL/lib/libgcc_s.so{,.1} ${BABY}/usr/lib 2>/dev/null
-	    ln -sv $PREFIX_FINAL/lib64/libgcc_s.so{,.1} ${BABY}/usr/lib64 2>/dev/null
 	    ln -sv $PREFIX_FINAL/lib/libstd*so* ${BABY}/usr/lib 2>/dev/null
-	    ln -sv $PREFIX_FINAL/lib64/libstd*so* ${BABY}/usr/lib64 2>/dev/null
+
+	    if [ -n "$BUILD64" ]; then
+		ln -sv $PREFIX_FINAL/lib64/libgcc_s.so{,.1} ${BABY}/usr/lib64 2>/dev/null
+		ln -sv $PREFIX_FINAL/lib64/libstd*so* ${BABY}/usr/lib64 2>/dev/null
+	    fi
 
 	    # CLFS used bash for this one, but we're using busybox's ash
 	    # instead.  in case we change this later, we just symlink our
@@ -354,10 +375,12 @@ build()
 	e2fsprogs)
 	    setup_generic $1 || exit 1
 
-	    # Change the library directory to lib64
-	    pushd $source &&
-	    sed -i.bak '/libdir.*=.*\/lib/s@/lib@/lib64@g' configure &&
-	    popd || exit 1
+	    if [ -n "$BUILD64" ]; then
+	        # Change the library directory to lib64
+		pushd $source &&
+		sed -i.bak '/libdir.*=.*\/lib/s@/lib@/lib64@g' configure &&
+		popd || exit 1
+	    fi
 
 	    # NOTE: PKG_CONFIG variable is used by e2fsprogs build scripts,
 	    #       it's not something I added.
@@ -369,11 +392,13 @@ build()
 	    make install &&
 	    popd || exit 1
 
-	    # NOTE: we need to undo the lib64 sed we did above, since we
-	    #       could be working in-tree.
-	    pushd $source &&
-	    mv -v configure.bak configure &&
-	    popd || exit 1
+	    if [ -n "$BUILD64" ]; then
+	        # NOTE: we need to undo the lib64 sed we did above, since we
+	        #       could be working in-tree.
+		pushd $source &&
+		mv -v configure.bak configure &&
+		popd || exit 1
+	    fi
 
 	    # NOTE: we don't compile/install the libblkid, libuuid, etc,
 	    #       shared libs here.  I ran into cross-compilation problems
@@ -450,6 +475,12 @@ build()
 	kernel)
 	    setup_generic $1 || exit 1
 
+	    if [ -n "$BUILD64" ]; then
+		kernel_config=kernel-config-64bit
+	    else
+		kernel_config=kernel-config-32bit
+	    fi
+
 	    # get ready
 	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
 	    MAKE+=" ARCH=$ARCH_TARGET CROSS_COMPILE=$MACHTYPE_TARGET-"
@@ -458,7 +489,7 @@ build()
 	    popd || exit 1
 
 	    # get set
-	    cp -v config/kernel-config $builddir/.config &&
+	    cp -v config/$kernel_config $builddir/.config &&
 	    pushd $builddir &&
 	    $MAKE oldconfig &&
 	    popd || exit 1
