@@ -1,6 +1,7 @@
 # -*- mode: sh -*-
 
 packagedir=$toplevel/packages
+sourcedir=$toplevel/src
 
 INSTALLROOT=$HOME/RUCKUS
 PREFIX_EARLY=$INSTALLROOT/bootstrap-early
@@ -71,7 +72,7 @@ shopt -s nullglob
 
 
 # define generic builder method.  this does some magic to set up a build
-# tree based on what's stored in packagedir (ie, a source tree or a source
+# tree based on what's stored in sourcedir (ie, a source tree or a source
 # tarball).  first arg is package name, the rest are passed on to configure.
 build_generic()
 {
@@ -86,14 +87,14 @@ setup_generic()
     p=$1
     shift
     builddir=$PWD/.build/$p
-    sourcedir=$packagedir/$p
-    configure=$sourcedir/configure
+    source=$sourcedir/$p
+    configure=$source/configure
     mkdir -p $builddir
 
     # figure out if we're using a source tarball or an already unpacked
     # source tree.  we do this by looking for Makefile, configure,
-    # configure.ac, or configure.in in the packagedir
-    if [ ! -f $sourcedir/Makefile ] && [ ! -x $configure ] && [ ! -f $configure.ac ] && [ ! -f $configure.in ]; then
+    # configure.ac, or configure.in in the sourcedir
+    if [ ! -f $source/Makefile ] && [ ! -x $configure ] && [ ! -f $configure.ac ] && [ ! -f $configure.in ]; then
 	echo "using source tarball"
 	# using tarball.  need to modify some variables and extract the
 	# source tree
@@ -102,28 +103,28 @@ setup_generic()
 	echo "checking for previously extracted source tree..."
 	if [ "." == "`ls -d ./*`" ]; then
 	    echo "extracting..."
-	    tar jxf $packagedir/$p/*.tar.bz2 || exit 1
+	    tar jxf $source/*.tar.bz2 || exit 1
 	fi
 	pushd ./* &&
-	sourcedir=$PWD &&
-	configure=$sourcedir/configure &&
+	source=$PWD &&
+	configure=$source/configure &&
 	popd &&
 	builddir=$builddir/build &&
 	mkdir -p $builddir || exit 1
 	popd
-	# also apply any patches in the packagedir
-	pushd $sourcedir
+	# also apply any patches in the sourcedir
+	pushd $source
 	# only do this if we haven't previously configured
 	if [ ! -f $builddir/Makefile ]; then
-	    patches=$(ls $packagedir/$p/*.patch 2>/dev/null)
-	    for p in $packagedir/$p/*.patch; do
+	    patches=$(ls $source/*.patch 2>/dev/null)
+	    for p in $source/*.patch; do
 		echo "applying patch: $p"
 		patch -Np1 < $p || exit 1
 	    done
 	fi
 	popd
     fi
-    echo sourcedir: $sourcedir
+    echo source: $source
     echo builddir:  $builddir
     echo configure: $configure
 }
@@ -134,7 +135,7 @@ configure_generic()
     p=$1
     shift
     #builddir=.build/$p
-    #configure=$packagedir/$p/configure
+    #configure=$sourcedir/$p/configure
     #mkdir -p $builddir
 
     # go guild it!
@@ -158,7 +159,7 @@ compile_generic()
     p=$1
     shift
     #builddir=.build/$p
-    #configure=$packagedir/$p/configure
+    #configure=$sourcedir/$p/configure
     #mkdir -p $builddir
 
     pushd $builddir &&

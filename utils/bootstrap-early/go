@@ -52,7 +52,7 @@ packages+=" help2man"
 build_srp()
 {
     builddir=$PWD/.build/srp
-    rsync -a --exclude .git $packagedir/srp/ $builddir || exit 1
+    rsync -a --exclude .git $sourcedir/srp/ $builddir || exit 1
     pushd $builddir
     make PREFIX=$PREFIX_EARLY install || exit 1
     popd
@@ -62,7 +62,7 @@ build_srp()
 build_git()
 {
     builddir=$PWD/.build/git
-    rsync -a --exclude .git $packagedir/git/ $builddir || exit 1
+    rsync -a --exclude .git $sourcedir/git/ $builddir || exit 1
     pushd $builddir
     autoreconf &&
     ./configure --prefix=$PREFIX_EARLY &&

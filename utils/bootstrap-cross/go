@@ -12,7 +12,7 @@ build_linux_headers()
 {
     builddir=$PWD/.build/kernel
     # get the source tree into our build dir
-    rsync -a --exclude .git $packagedir/kernel/ $builddir || exit 1
+    rsync -a --exclude .git $sourcedir/kernel/ $builddir || exit 1
     pushd $builddir
     make mrproper &&
     make ARCH=$ARCH_TARGET headers_check &&
