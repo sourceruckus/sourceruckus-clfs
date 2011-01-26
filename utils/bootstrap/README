@@ -34,3 +34,13 @@ NOTE: I should eventually automate the process by which $BABY actually
       2. Restore from bootstrap-cross.img and bootstrap-final.img
       3. Generate /etc/fstab so the rootfs and swap devices are correct
       4. Update host system's GRUB config to make the new partition bootable
+
+NOTE: What if I created a bootable DVD for the bootable bootstrap
+      environment...?  This might be an option, but it will further lock us
+      into whatever architectures are supported by isolinux.  That being
+      said, this project really just aims to support x86 and x86_64, so this
+      might be a good plan.  It's definately more complicated, though,
+      because the create a partition plan can actually go and build right in
+      the bootstrap environment... but the bootable DVD option will need to
+      then go and create a partition, filesystem, etc, to do the building
+      in... maybe someday.
