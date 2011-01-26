@@ -336,7 +336,8 @@ build()
 
 	    pushd $builddir &&
 	    make -j$JOBCOUNT &&
-	    make install || exit 1
+	    make install &&
+	    popd || exit 1
 
 	    # NOTE: we don't compile/install the libblkid, libuuid, etc,
 	    #       shared libs here.  I ran into cross-compilation problems
@@ -429,6 +430,13 @@ build()
 
 	    # groom them a bit
 	    echo "UTC=1" > $BABY/etc/sysconfig/clock || exit 1
+	    ;;
+
+	fix-perms)
+	    # this has to chown everything to root, so root permissions are required...
+	    # FIXME: might have to create /dev/{null,console} here, too
+	    echo "need root priveledges to change ownership of $BABY"
+	    su -c "chown -Rv 0:0 $BABY && chgrp -v 13 $BABY/var/{run/utmp,log/lastlog}" || exit 1
 	    ;;
 
 	*)
