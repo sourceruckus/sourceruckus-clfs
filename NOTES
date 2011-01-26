@@ -104,11 +104,11 @@ don't want ebedded.img or server.img to have debug enabled.
 - dump embedded-with-debug.img
 - strip --strip-unneeded
 - dump embedded.img
+- restore from embedded-with-debug.img
 - build server
 - dump server-with-debug.img
 - strip --strip-unneeded
 - dump server.img
-- restore from embedded-with-debug.img
 - restore from server-with-debug.img
 - build workstation
 - dump workstation.img

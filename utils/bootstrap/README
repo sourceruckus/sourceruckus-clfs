@@ -2,6 +2,35 @@
 
 README - utils/bootstrap
 
-This is where the build scripts for a native bootstrap system will live.
-This might get merged into utils/bootstrap-cross if that's easier to
-maintain, but we'll see.
+This is the final bootstrap stage.  This stage is built using the toolchain
+provided by the bootstrap-cross stage.  The end result is a bootable
+bootstrap system used to build the rest of the system.
+
+After this step is complete, the resulting $BABY dir can be used to populate
+a seperate filesystem, which can then be made bootable by editing the
+host system's bootloader configuration (e.g., /boot/grub/menu.lst).
+
+
+NOTE: I got a little inconsistent with the name of this stage... some places
+      refer to this as bootstrap-final, others just call it bootstrap.  And
+      the PREFIX_FINAL variable expands to $BABY/bootstrap.  I should either
+      rename this whole directory 'bootstrap-final' or maybe just try and
+      clear it up in the docs.
+
+NOTE: I should come up with a better privilege escalation scheme than using
+      'su -c' all the time.  How many times must the user really type in the
+      root password...?  Maybe set up ssh keys with authorized_keys allowing
+      the build user to log in as root w/out a password?
+
+NOTE: Also, we should do an incremental dump of $BABY after this so we can
+      rebuild $BABY from bootstrap-cross.img and bootstrap-final.img.
+
+NOTE: I should eventually automate the process by which $BABY actually
+      becomes bootable... but it might involve toasting the host machine.
+      This is unacceptable in my home environment, so for now I'll manually
+      set up a dual boot.  The process will eventually be:
+
+      1. Create ext4 rootfs on given partition
+      2. Restore from bootstrap-cross.img and bootstrap-final.img
+      3. Generate /etc/fstab so the rootfs and swap devices are correct
+      4. Update host system's GRUB config to make the new partition bootable

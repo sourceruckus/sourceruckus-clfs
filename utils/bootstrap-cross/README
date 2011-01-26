@@ -9,3 +9,14 @@ architecture.
 All the packages built in this section will get compiled and installed in
 $HOME/RUCKUS/bootstrap-cross.  Actually using them will require tweaking of
 your user's environment.
+
+
+NOTE: This is all actually getting installed in $BABY/bootstrap-cross at the
+      moment, but I don't remember why I implemented it that way... might
+      have been a mistake... but I seem to remember there being some reason
+      why I had to do it that way.
+
+NOTE: If this really does have to go inside $BABY, we should dump and image
+      when we're done.  This stage takes almost 2 hours to build on my
+      netbook, even on subsequent runs that are mostly just doing 'make
+      install'.
