@@ -1,12 +1,30 @@
-[submodule "packages/git"]
-	path = packages/git
-	url = git://git.kernel.org/pub/scm/git/git.git
-[submodule "packages/srp"]
-	path = packages/srp
-	url = git://labriola.dyndns.org/srp2
 [submodule "packages/kernel"]
 	path = packages/kernel
 	url = git://labriola.dyndns.org/linux-2.6-mdl.git
 [submodule "packages/bootscripts"]
 	path = packages/bootscripts
 	url = git://labriola.dyndns.org/bootscripts.git
+[submodule "src/autoconf"]
+	path = src/autoconf
+	url = git://git.sv.gnu.org/autoconf.git
+[submodule "src/automake"]
+	path = src/automake
+	url = git://git.sv.gnu.org/automake.git
+[submodule "src/libtool"]
+	path = src/libtool
+	url = git://git.sv.gnu.org/libtool.git
+[submodule "src/rsync"]
+	path = src/rsync
+	url = git://git.samba.org/rsync.git
+[submodule "src/e2fsprogs"]
+	path = src/e2fsprogs
+	url = git://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git
+[submodule "src/bison"]
+	path = src/bison
+	url = git://git.sv.gnu.org/bison.git
+[submodule "src/srp"]
+	path = src/srp
+	url = git://labriola.dyndns.org/srp2
+[submodule "src/git"]
+	path = src/git
+	url = git://git.kernel.org/pub/scm/git/git.git
