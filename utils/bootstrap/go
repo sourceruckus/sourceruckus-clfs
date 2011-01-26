@@ -436,7 +436,7 @@ build()
 	    # this has to chown everything to root, so root permissions are required...
 	    # FIXME: might have to create /dev/{null,console} here, too
 	    echo "need root priveledges to change ownership of $BABY"
-	    su -c "chown -Rv 0:0 $BABY && chgrp -v 13 $BABY/var/{run/utmp,log/lastlog}" || exit 1
+	    su -c "chown -Rv 0:0 $BABY && chgrp -v 13 $BABY/var/{run/utmp,log/lastlog} && mknod -m 600 $BABY/dev/console c 5 1 && mknod -m 666 $BABY/dev/null c 1 3" || exit 1
 	    ;;
 
 	*)
