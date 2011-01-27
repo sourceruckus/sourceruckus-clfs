@@ -15,8 +15,7 @@ your user's environment (PATH, LD_LIBRARY_PATH, etc).
 * Need
 ** bison (don't remember why)
 ** e2fsprogs
-** Python
-** SRP
+** rsync
 
 * Might need
 ** autoconf

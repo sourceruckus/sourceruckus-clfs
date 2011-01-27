@@ -22,6 +22,9 @@ NOTE: I should come up with a better privilege escalation scheme than using
       root password...?  Maybe set up ssh keys with authorized_keys allowing
       the build user to log in as root w/out a password?
 
+NOTE: Maybe we can accomplish the above by configuring sudo during
+      bootstrap-early...
+
 NOTE: Also, we should do an incremental dump of $BABY after this so we can
       rebuild $BABY from bootstrap-cross.img and bootstrap-final.img.
 
