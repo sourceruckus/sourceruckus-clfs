@@ -51,23 +51,10 @@ packages+=" help2man"
 
 build_srp()
 {
-    builddir=$PWD/.build/srp
-    rsync -a --exclude .git $sourcedir/srp/ $builddir || exit 1
-    pushd $builddir
-    make PREFIX=$PREFIX_EARLY install || exit 1
-    popd
-}
-
-
-build_git()
-{
-    builddir=$PWD/.build/git
-    rsync -a --exclude .git $sourcedir/git/ $builddir || exit 1
-    pushd $builddir
-    autoreconf &&
-    ./configure --prefix=$PREFIX_EARLY &&
-    make -j$JOBCOUNT install || exit 1
-    popd
+    setup_generic srp &&
+    pushd $builddir &&
+    make PREFIX=$PREFIX_EARLY install &&
+    popd || exit 1
 }
 
 
@@ -75,22 +62,25 @@ build()
 {
     case "$1" in
 	srp)
-	    build_srp
-	    ;;
-	git)
-	    build_git
+	    build_srp || exit 1
 	    ;;
 	ncurses)
-	    build_generic $1 --prefix=$PREFIX_EARLY --with-shared
+	    build_generic $1 --prefix=$PREFIX_EARLY --with-shared || exit 1
 	    ;;
 	help2man)
-	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls
+	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
 	    ;;
+	autoconf)
+	    sourcedir=$PWD/src \
+		build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+
 	*)
-	    build_generic $1 --prefix=$PREFIX_EARLY
+	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
     esac
 }
 
+# FIXME: add code here to configure sudo. for now, I've set up my host
+#        system to give my user unlimited unpassword root access...
 
 
 # create a /bootstrap symlink on the host system pointing to $BABY/bootstrap
@@ -104,12 +94,12 @@ build()
 mkdir -p $BABY$PREFIX_FINAL || exit 1
 if [ "`readlink $PREFIX_FINAL 2>/dev/null`" != "$BABY$PREFIX_FINAL" ]; then
     echo "need root priveledges to create $PREFIX_FINAL symlink"
-    su -c "ln -s $BABY$PREFIX_FINAL $PREFIX_FINAL" || exit 1
+    sudo ln -s $BABY$PREFIX_FINAL $PREFIX_FINAL || exit 1
 fi
 mkdir -p $BABY$PREFIX_CROSS || exit 1
 if [ "`readlink $PREFIX_CROSS 2>/dev/null`" != "$BABY$PREFIX_CROSS" ]; then
     echo "need root priveledges to create $PREFIX_CROSS symlink"
-    su -c "ln -s $BABY$PREFIX_CROSS $PREFIX_CROSS" || exit 1
+    sudo ln -s $BABY$PREFIX_CROSS $PREFIX_CROSS || exit 1
 fi
 
 # build and install each package in our /ruckus/staging tree
