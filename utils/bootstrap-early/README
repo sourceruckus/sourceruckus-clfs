@@ -10,22 +10,16 @@ All the packages built in this section will get compiled and installed in
 $HOME/RUCKUS/Bootstrap-early.  Actually using them will require tweaking of
 your user's environment (PATH, LD_LIBRARY_PATH, etc).
 
+Note that this stage assumes the host system at least has git (to get this),
+autotools (to configure this), and a sane compilation toolchain (make, gcc,
+glibc, etc).
 
 
 * Need
-** bison (don't remember why)
-** e2fsprogs
-** rsync
+** e2fsprogs (make sure created rootfs doesn't use vendor extensions)
+** help2man (needed for texinfo in bootstrap)
 
 * Might need
-** autoconf
-** automake
-** libtool
-** m4
-** make
+** rsync
 ** dump/restore
-
-* Might be nice to have
-** zsh
-** emacs
-** git
+** ncurses

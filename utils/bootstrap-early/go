@@ -11,28 +11,13 @@ toplevel=$PWD/../..
 
 pacakges=""
 
-# might need autotools
-packages+=" autoconf automake libtool"
-
 # add rsync so we can use it to copy source trees for packages that don't
 # support out-of-tree builds
 #packages+=" rsync"
 
-# don't remember why
-packages+=" bison"
-
 # to ensure that we don't inadvertantly use a modified version with
 # non-standard extensions to build our filesystems
 packages+=" e2fsprogs"
-
-# a lot of the build tools are written in python
-packages+=" python"
-
-# the Source Ruckus Packager
-packages+=" srp"
-
-# might want to make sure we have the worlds greatest scm tool
-packages+=" git"
 
 # might also want to make sure that the host system has a usable ncurses
 # (and ncurses-devel) library.  otherwise we can't run the 'menuconfig'
@@ -42,38 +27,16 @@ packages+=" ncurses"
 # help2man is needed to build man pages for texinfo after running autoreconf
 packages+=" help2man"
 
-# might need to add perl and texinfo, too
-#packages+=" perl"
-#packages+=" texinfo"
-
-# FIXME: actually, I think python and srp need to be in /bootstrap... and
-#        git doesn't really seem all that necesary either.
-
-build_srp()
-{
-    setup_generic srp &&
-    pushd $builddir &&
-    make PREFIX=$PREFIX_EARLY install &&
-    popd || exit 1
-}
-
 
 build()
 {
     case "$1" in
-	srp)
-	    build_srp || exit 1
-	    ;;
 	ncurses)
 	    build_generic $1 --prefix=$PREFIX_EARLY --with-shared || exit 1
 	    ;;
 	help2man)
 	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
 	    ;;
-	autoconf)
-	    sourcedir=$PWD/src \
-		build_generic $1 --prefix=$PREFIX_EARLY || exit 1
-
 	*)
 	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
     esac
