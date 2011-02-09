@@ -28,3 +28,6 @@
 [submodule "src/git"]
 	path = src/git
 	url = git://git.kernel.org/pub/scm/git/git.git
+[submodule "src/kernel"]
+	path = src/kernel
+	url = git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
