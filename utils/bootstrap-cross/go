@@ -75,20 +75,13 @@ build()
 	    ;;
 
 	ppl)
-	    # we don't use build_generic here so that we can override the
-	    # autoreconf variable.  this is needed because we have a patch
-	    # that directly modifies the configure script, and autoreconf
-	    # after patch will overwrite our changes
-	    setup_generic $1 &&
-	    autoreconf=no &&
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		configure_generic $1 --prefix=$PREFIX_CROSS \
+		build_generic $1 --prefix=$PREFIX_CROSS \
 		--enable-shared \
 		--enable-interfaces="c,cxx" \
 		--disable-optimization \
 		--with-libgmp-prefix=$PREFIX_CROSS \
-		--with-libgmpxx-prefix=$PREFIX_CROSS &&
-	    compile_generic $1
+		--with-libgmpxx-prefix=$PREFIX_CROSS
 	    ;;
 
 	cloog-ppl)
