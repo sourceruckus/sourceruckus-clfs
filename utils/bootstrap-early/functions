@@ -118,8 +118,9 @@ setup_generic()
 	pushd $source
 	# only do this if we haven't previously configured
 	if [ ! -f $builddir/Makefile ]; then
-	    patches=$(ls $source/*.patch 2>/dev/null)
-	    for p in $source/*.patch; do
+	    patches=$(ls $sourcedir/$p/*.patch 2>/dev/null)
+	    echo patches: $patches
+	    for p in $patches; do
 		autoreconf="yes"
 		echo "applying patch: $p"
 		patch -Np1 < $p || exit 1
@@ -148,6 +149,7 @@ configure_generic()
     if [ ! -f Makefile ]; then
 	if [ ! -x $configure ] || [ "$autoreconf" != "no" ]; then
 	    pushd $(dirname $configure)
+	    echo "autoreconf..."
 	    autoreconf || exit 1
 	    popd
 	fi
