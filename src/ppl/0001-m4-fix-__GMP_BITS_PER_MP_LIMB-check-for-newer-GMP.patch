@@ -1,0 +1,28 @@
+From b0172e0c66b1ca714ae3afb3507fc4d14ef15b76 Mon Sep 17 00:00:00 2001
+From: Michael D Labriola <mdlabriola@yahoo.com>
+Date: Tue, 15 Feb 2011 11:06:26 -0500
+Subject: [PATCH] m4: fix __GMP_BITS_PER_MP_LIMB check for newer GMP
+
+The CLFS book patches configure like this to help find newer versions of
+GMP properly.  This patch is against the offending m4 macro file instead,
+so we can autoreconf and still have the change in place.
+---
+ m4/ac_check_gmp.m4 |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/m4/ac_check_gmp.m4 b/m4/ac_check_gmp.m4
+index 4dc3bc8..dbce33a 100644
+--- a/m4/ac_check_gmp.m4
++++ b/m4/ac_check_gmp.m4
+@@ -84,7 +84,7 @@ main() {
+       || GMP_LIMB_BITS != mp_bits_per_limb) {
+     std::cerr
+       << "GMP header (gmp.h) and library (ligmp.*) bits-per-limb mismatch:\n"
+-      << "header gives " << __GMP_BITS_PER_MP_LIMB << ";\n"
++      << "header gives " << GMP_LIMB_BITS << ";\n"
+       << "library gives " << mp_bits_per_limb << ".\n"
+       << "This probably means you are on a bi-arch system and\n"
+       << "you are compiling with the wrong header or linking with\n"
+-- 
+1.7.1.1
+
