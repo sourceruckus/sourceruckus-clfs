@@ -89,7 +89,7 @@ setup_generic()
     builddir=$PWD/.build/$p
     source=$sourcedir/$p
     configure=$source/configure
-    autoreconf="no"
+    #autoreconf="no"
     mkdir -p $builddir
 
     # figure out if we're using a source tarball or an already unpacked
@@ -99,7 +99,7 @@ setup_generic()
 	echo "using source tarball"
 	# using tarball.  need to modify some variables and extract the
 	# source tree
-	autoreconf="no"
+	#autoreconf="no"
 	mkdir -p $builddir/source || exit 1
 	pushd $builddir/source
 	echo "checking for previously extracted source tree..."
@@ -118,10 +118,8 @@ setup_generic()
 	pushd $source
 	# only do this if we haven't previously configured
 	if [ ! -f $builddir/Makefile ]; then
-	    patches=$(ls $sourcedir/$p/*.patch 2>/dev/null)
-	    echo patches: $patches
-	    for p in $patches; do
-		autoreconf="yes"
+	    for p in $sourcedir/$p/*.patch; do
+		#autoreconf="yes"
 		echo "applying patch: $p"
 		patch -Np1 < $p || exit 1
 	    done
@@ -131,7 +129,6 @@ setup_generic()
     echo source: $source
     echo builddir:  $builddir
     echo configure: $configure
-    echo autoreconf: $autoreconf
 }
 
 
@@ -142,15 +139,21 @@ configure_generic()
     #builddir=.build/$p
     #configure=$sourcedir/$p/configure
     #mkdir -p $builddir
+    echo autoreconf: $autoreconf
 
     # go guild it!
     pushd $builddir || exit 1
     # only explicitly run configure the first time
     if [ ! -f Makefile ]; then
-	if [ ! -x $configure ] || [ "$autoreconf" != "no" ]; then
+	if [ ! -x $configure ] || [ -n "$autoreconf" ]; then
 	    pushd $(dirname $configure)
-	    echo "autoreconf..."
-	    autoreconf || exit 1
+	    if [ -x ./autogen.sh ]; then
+		echo "./autogen.sh..."
+		./autogen.sh || exit 1
+	    else
+		echo "autoreconf..."
+		autoreconf || exit 1
+	    fi
 	    popd
 	fi
 	$configure $* || exit 1

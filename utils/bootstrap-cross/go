@@ -75,6 +75,9 @@ build()
 	    ;;
 
 	ppl)
+	    # we have patches for the autoconf files, so lets make sure
+	    # autoreconf gets called
+	    autoreconf=yes
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 --prefix=$PREFIX_CROSS \
 		--enable-shared \
@@ -85,6 +88,8 @@ build()
 	    ;;
 
 	cloog-ppl)
+	    # we patch the autoconf files
+	    autoreconf=yes
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 --prefix=$PREFIX_CROSS \
 		--enable-shared \
