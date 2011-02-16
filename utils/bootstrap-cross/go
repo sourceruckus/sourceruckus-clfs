@@ -128,14 +128,14 @@ build()
 	    #       it there now just makes the the final bootstrap binutils
 	    #       target simpler.
 	    mkdir -p $PREFIX_FINAL/include &&
-	    cp -v $sourcedir/include/libiberty.h $PREFIX_FINAL/include || exit 1
+	    cp -v $source/include/libiberty.h $PREFIX_FINAL/include || exit 1
 	    popd
 	    ;;
 
 	gcc-static)
 	    setup_generic gcc &&
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $sourcedir || exit 1
+		pushd $source || exit 1
 		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
 		    patch -Np1 < $p || exit 1
 		done
@@ -180,7 +180,7 @@ build()
 	eglibc-32bit)
 	    setup_generic eglibc &&
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $sourcedir || exit 1
+		pushd $source || exit 1
 		for p in $toplevel/utils/bootstrap-cross/patches/eglibc/*.patch; do
 		    patch -Np1 < $p || exit 1
 		done
@@ -223,7 +223,7 @@ build()
 	    # variables.
 	    setup_generic eglibc &&
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $sourcedir || exit 1
+		pushd $source || exit 1
 		for p in $toplevel/utils/bootstrap-cross/patches/eglibc/*.patch; do
 		    patch -Np1 < $p || exit 1
 		done
@@ -276,7 +276,7 @@ build()
 	    # variables.
 	    setup_generic gcc &&
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $sourcedir || exit 1
+		pushd $source || exit 1
 		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
 		    patch -Np1 < $p || exit 1
 		done
