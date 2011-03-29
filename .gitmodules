@@ -28,3 +28,12 @@
 [submodule "src/kernel"]
 	path = src/kernel
 	url = git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
+[submodule "src/busybox"]
+	path = src/busybox
+	url = git://git.busybox.net/busybox
+[submodule "src/gettext"]
+	path = src/gettext
+	url = git://git.sv.gnu.org/gettext.git
+[submodule "src/m4"]
+	path = src/m4
+	url = git://git.sv.gnu.org/m4.git
