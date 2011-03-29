@@ -346,3 +346,7 @@ for p in $packages; do
     echo "building cross package: $p"
     build $p || exit 1
 done
+
+# make a backup?  can't use dump for incrementals unless we do the whole
+# filesystem...
+tar -vcf $INSTALLROOT/baby-bootstrap-cross.tar -g $INSTALLROOT/baby.snar -C $BABY .
