@@ -77,8 +77,7 @@ build()
 	ppl)
 	    # we have patches for the autoconf files, so lets make sure
 	    # autoreconf gets called
-	    autoreconf=yes
-	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+	    autoreconf=yes LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 --prefix=$PREFIX_CROSS \
 		--enable-shared \
 		--enable-interfaces="c,cxx" \
@@ -89,8 +88,7 @@ build()
 
 	cloog-ppl)
 	    # we patch the autoconf files
-	    autoreconf=yes
-	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+	    autoreconf=yes LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 --prefix=$PREFIX_CROSS \
 		--enable-shared \
 		--with-bits=gmp \
@@ -148,6 +146,9 @@ build()
 	    touch $PREFIX_FINAL/include/limits.h || exit 1
 
 	    # FIXME: not sure if sysroot should be BABY or INSTALLROOT...
+
+	    # FIXME: should probably rework the gcc patches to modify
+	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
 
 	    AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		configure_generic gcc --prefix=$PREFIX_CROSS \
@@ -282,6 +283,9 @@ build()
 		done
 		popd
 	    fi
+
+	    # FIXME: should probably rework the gcc patches to modify
+	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
 
 	    # however, we do have to adjust some variables
 	    builddir=$PWD/.build/gcc-final
