@@ -165,14 +165,17 @@ build()
 	    #       possible except for programs provided by the following
 	    #       packages:
 	    #
-	    #       - e2fsprogs (blkid, findfs, fsck.ext2, mkfs.ext2, etc)
+	    #       - e2fsprogs (findfs, fsck.ext2, mkfs.ext2, etc)
+	    #       - util-linux (blkid, mount, losetup, agetty, etc)
 	    #
 	    # NOTE: We're not using PAM here... might want to add this into
 	    #       our final busybox config (assuming we actually compile
 	    #       the PAM libs first).
 	    #
 	    # NOTE: if you want to do a make menuconfig to tweak .config,
-	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL.
+	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL in order
+	    #       to use the ncurses installed via bootstrap-early (and
+	    #       our KBUILD patch needs to be applied)
 	    cp $packagedir/$1/config-bootstrap .config &&
 	    make KBUILD_SRC=$source -f $source/Makefile oldconfig || exit 1
 
@@ -184,6 +187,13 @@ build()
 	    make ARCH=${ARCH_TARGET} \
 		CROSS_COMPILE="${MACHTYPE_TARGET}-" \
 		CONFIG_PREFIX=$PREFIX_FINAL install || exit 1
+
+	    # FIXME: setuid root?  install prints this warning:
+	    #  --------------------------------------------------
+	    #  You will probably need to make your busybox binary
+	    #  setuid root to ensure all configured applets will
+	    #  work properly.
+	    #  --------------------------------------------------
 
 	    # FIXME: there are a bunch of config files in
 	    #        $source/examples that we might want installed too
@@ -530,9 +540,9 @@ packages+=" texinfo"
 #       replaced by our busybox package... but we might want to actually
 #       install the real versions.  util-linux-ng, for example, installs
 #       pkg-config files that are searched for when building udev and/or hal
-#       later on...
+#       later on...  util-linux also provides us with crypto arguments for
+#       losetup and mount.
 #
-#packages+=" util-linux-ng"
 #packages+=" sysvinit"
 #packages+=" module-init-tools"
 #packages+=" udev"
@@ -541,6 +551,7 @@ packages+=" create-dirs"
 packages+=" create-symlinks"
 
 # more boot packages
+packages+=" util-linux"
 packages+=" e2fsprogs"
 
 # FIXME: mdev vs udev.  I suspect that if we base our desktop image on our
