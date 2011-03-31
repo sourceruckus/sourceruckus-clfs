@@ -266,10 +266,6 @@ build()
 	texinfo)
 	    setup_generic $1 || exit 1
 
-	    # rm configure to force configure_generic to run autoreconf.  we
-	    # patch configure.ac, so this is needed.
-	    rm -f $source/configure || exit 1
-	    
 	    # need to set LDFLAGS like this so that texinfo's bootstrap
 	    # native build can find our bootstrap-early stuff (ncurses,
 	    # specifically)
