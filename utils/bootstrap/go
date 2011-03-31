@@ -39,8 +39,10 @@ build()
 	    ;;
 
 	ppl)
+	    # we patch autoconf files, so we need to make sure autoreconf
+	    # gets called
 	    setup_generic $1 &&
-	    configure_generic $1 $OPTS \
+	    autoreconf=yes configure_generic $1 $OPTS \
 		--enable-interfaces="c,cxx" \
 		--enable-shared \
 		--disable-optimization \
@@ -59,7 +61,9 @@ build()
 	    ;;
 
 	cloog-ppl)
-	    build_generic $1 $OPTS \
+	    # we patch autoconf files, so we need to make sure autoreconf
+	    # gets called
+	    autoreconf=yes build_generic $1 $OPTS \
 		--with-bits=gmp \
 		--enable-shared \
 		--with-gmp=$PREFIX_FINAL \
@@ -117,6 +121,8 @@ build()
 		popd
 	    fi
 
+	    # FIXME: should probably rework the gcc patches to modify
+	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
 	    configure_generic $1 $OPTS \
 		--target=${MACHTYPE_TARGET} \
 		--with-local-prefix=$PREFIX_FINAL \
@@ -267,7 +273,7 @@ build()
 	    # need to set LDFLAGS like this so that texinfo's bootstrap
 	    # native build can find our bootstrap-early stuff (ncurses,
 	    # specifically)
-	    LDFLAGS=-L$PREFIX_EARLY/lib \
+	    autoreconf=yes LDFLAGS=-L$PREFIX_EARLY/lib \
 		configure_generic $1 $OPTS || exit 1
 
 	    pushd $builddir &&
@@ -456,6 +462,8 @@ packages+=" zlib"
 packages+=" binutils"
 packages+=" gcc"
 packages+=" ncurses"
+
+# FIXME: what about the ncurses patch...?
 packages+=" busybox"
 
 # NOTE: The following CLFS /tools packages are replaced by our busybox
@@ -478,8 +486,13 @@ packages+=" bison"
 packages+=" file"
 packages+=" flex"
 packages+=" gettext"
+
+# FIXME: old patch not needed any more?
 packages+=" m4"
+
+# FIXME: git repo was down...
 packages+=" make"
+
 packages+=" texinfo"
 
 # boot prep
