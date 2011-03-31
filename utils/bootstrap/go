@@ -73,7 +73,7 @@ build()
 	zlib)
 	    # zlib doesn't support out-of-tree builds...
 	    setup_generic $1 || exit 1
-	    export builddir=$sourcedir
+	    export builddir=$source
 
 	    # and it doesn't use autotools... despite the "configure" script
 	    # and autotool-ish configure flags
@@ -105,7 +105,7 @@ build()
 	    setup_generic gcc || exit 1
 
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $sourcedir || exit 1
+		pushd $source || exit 1
 		# apply bootstrap patches from the bootstrap-cross stage.
 		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
 		    patch -Np1 < $p || exit 1
@@ -174,7 +174,7 @@ build()
 	    # NOTE: if you want to do a make menuconfig to tweak .config,
 	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL.
 	    cp $packagedir/$1/config-bootstrap .config &&
-	    make KBUILD_SRC=$sourcedir -f $sourcedir/Makefile oldconfig || exit 1
+	    make KBUILD_SRC=$source -f $source/Makefile oldconfig || exit 1
 
 	    # build
 	    make -j$JOBCOUNT_KBUILD ARCH=${ARCH_TARGET} \
@@ -186,8 +186,8 @@ build()
 		CONFIG_PREFIX=$PREFIX_FINAL install || exit 1
 
 	    # FIXME: there are a bunch of config files in
-	    #        $sourcedir/examples that we might want installed too
-	    #cp $sourcedir/examples/depmod.pl $PREFIX_FINAL/bin &&
+	    #        $source/examples that we might want installed too
+	    #cp $source/examples/depmod.pl $PREFIX_FINAL/bin &&
 	    #chmod 755 $PREFIX_FINAL/bin/depmod.pl|| exit 1
 
 	    popd
@@ -199,7 +199,7 @@ build()
 
 	    # Make sure that Flex doesn't try to include headers from
 	    # /usr/include.
-	    pushd $sourcedir &&
+	    pushd $source &&
 	    sed -i "s/-I@includedir@//g" Makefile.in &&
 	    popd || exit 1
 
@@ -221,8 +221,8 @@ build()
 
 	    # Only the programs in the gettext-tools directory need to be
 	    # installed for the temp-system
-	    sourcedir=$sourcedir/gettext-tools
-	    configure=$sourcedir/configure
+	    source=$source/gettext-tools
+	    configure=$source/configure
 
 	    # When cross-compiling the Gettext configure script assumes we
 	    # don't have a working wcwidth when we do. The following will
@@ -268,7 +268,7 @@ build()
 
 	    # rm configure to force configure_generic to run autoreconf.  we
 	    # patch configure.ac, so this is needed.
-	    rm -f $sourcedir/configure || exit 1
+	    rm -f $source/configure || exit 1
 	    
 	    # need to set LDFLAGS like this so that texinfo's bootstrap
 	    # native build can find our bootstrap-early stuff (ncurses,
@@ -333,7 +333,7 @@ build()
 	    setup_generic $1 || exit 1
 
 	    # Change the library directory to lib64
-	    pushd $sourcedir &&
+	    pushd $source &&
 	    sed -i '/libdir.*=.*\/lib/s@/lib@/lib64@g' configure &&
 	    popd || exit 1
 
@@ -397,7 +397,7 @@ build()
 	    setup_generic $1 || exit 1
 
 	    # get ready
-	    MAKE="make KBUILD_SRC=$sourcedir -f $sourcedir/Makefile"
+	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
 	    MAKE+=" ARCH=$ARCH_TARGET CROSS_COMPILE=$MACHTYPE_TARGET-"
 	    pushd $builddir &&
 	    $MAKE mrproper &&
@@ -430,7 +430,7 @@ build()
 
 	    # install the scripts
 	    pushd $builddir &&
-	    make SOURCEDIR=$sourcedir -f $sourcedir/Makefile \
+	    make SOURCEDIR=$source -f $source/Makefile \
 		DESTDIR=$BABY install-minimal &&
 	    popd || exit 1
 
