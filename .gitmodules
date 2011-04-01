@@ -40,3 +40,6 @@
 [submodule "src/util-linux"]
 	path = src/util-linux
 	url = git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git
+[submodule "src/gnulib"]
+	path = src/gnulib
+	url = git://git.sv.gnu.org/gnulib.git
