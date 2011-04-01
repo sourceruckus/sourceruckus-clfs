@@ -23,3 +23,39 @@ glibc, etc).
 ** rsync
 ** dump/restore
 ** ncurses
+
+
+
+* Bootstrap nightmare
+
+Ok, I can't seem to get some of the git checkouts to bootstrap properly...
+there's cyclic dependencies all over.  If I install the following from dist
+tarballs:
+
+  - autoconf-2.68.tar.bz2
+  - automake-1.11.1.tar.bz2
+  - bison-2.4.3.tar.bz2
+  - gettext-0.18.1.1.tar.bz2
+  - gperf-3.0.4.tar.bz2
+  - libtool-2.4.tar.bz2
+  - m4-1.4.15.tar.bz2
+  - make-3.82.tar.bz2
+  - pkg-config-0.25.tar.bz2
+
+then I can successfully bootstrap the following source trees:
+
+  - bison (bootstrap*)
+  - m4 (bootstrap*)
+  - automake (bootstrap)
+  - libtool (bootstrap)
+  - util-linux (autogen.sh)
+  - gettext (autogen.sh*)
+
+like this:
+
+# ./autogen.sh
+
+or like this:
+
+# export $toplevel=$PWD/../..
+# GNULIB_SRCDIR=$toplevel/src/gnulib ./bootstrap
