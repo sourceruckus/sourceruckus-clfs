@@ -1,45 +1,48 @@
-[submodule "packages/bootscripts"]
-	path = packages/bootscripts
-	url = git://labriola.dyndns.org/bootscripts.git
 [submodule "src/autoconf"]
 	path = src/autoconf
-	url = git://git.sv.gnu.org/autoconf.git
+	url = ../autoconf.git
 [submodule "src/automake"]
 	path = src/automake
-	url = git://git.sv.gnu.org/automake.git
+	url = ../automake.git
 [submodule "src/libtool"]
 	path = src/libtool
-	url = git://git.sv.gnu.org/libtool.git
+	url = ../libtool.git
 [submodule "src/rsync"]
 	path = src/rsync
-	url = git://git.samba.org/rsync.git
+	url = ../rsync.git
 [submodule "src/e2fsprogs"]
 	path = src/e2fsprogs
-	url = git://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git
+	url = ../e2fsprogs.git
 [submodule "src/bison"]
 	path = src/bison
-	url = git://git.sv.gnu.org/bison.git
+	url = ../bison.git
 [submodule "src/srp"]
 	path = src/srp
-	url = git://labriola.dyndns.org/srp2
+	url = ../srp2.git
 [submodule "src/git"]
 	path = src/git
-	url = git://git.kernel.org/pub/scm/git/git.git
-[submodule "src/kernel"]
-	path = src/kernel
-	url = git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
+	url = ../git.git
+#[submodule "src/kernel"]
+#	path = src/kernel
+#	url = git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
 [submodule "src/busybox"]
 	path = src/busybox
-	url = git://git.busybox.net/busybox
+	url = ../busybox.git
 [submodule "src/gettext"]
 	path = src/gettext
-	url = git://git.sv.gnu.org/gettext.git
+	url = ../gettext.git
 [submodule "src/m4"]
 	path = src/m4
-	url = git://git.sv.gnu.org/m4.git
+	url = ../m4.git
 [submodule "src/util-linux"]
 	path = src/util-linux
-	url = git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git
+	url = ../util-linux.git
 [submodule "src/gnulib"]
 	path = src/gnulib
-	url = git://git.sv.gnu.org/gnulib.git
+	url = ../gnulib.git
+[submodule "src/bootscripts"]
+	path = src/bootscripts
+	url = ../bootscripts.git
+[submodule "src/kernel"]
+	path = src/kernel
+	url = ../linux-2.6-mdl.git
