@@ -15,6 +15,8 @@ BABY=$INSTALLROOT/baby
 #        patches actually), so this might be non-trivial
 PREFIX_FINAL=/bootstrap
 
+export GNULIB_SRCDIR=$toplevel/src/gnulib
+
 # setup environment to use our bootstrap-early stuff
 export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
 export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH
@@ -147,12 +149,15 @@ configure_generic()
     if [ ! -f Makefile ]; then
 	if [ ! -x $configure ] || [ -n "$autoreconf" ]; then
 	    pushd $(dirname $configure)
-	    if [ -x ./autogen.sh ]; then
+	    if [ -x ./bootstrap ]; then
+		echo "./bootstrap..."
+		./bootstrap || exit 1
+	    elif [ -x ./autogen.sh ]; then
 		echo "./autogen.sh..."
-		./autogen.sh || exit 1
+		./autogen.sh && make distclean || exit 1
 	    else
 		echo "autoreconf..."
-		autoreconf || exit 1
+		autoreconf --install || exit 1
 	    fi
 	    popd
 	fi

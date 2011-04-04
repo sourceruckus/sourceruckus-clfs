@@ -13,7 +13,7 @@ pacakges=""
 
 # add rsync so we can use it to copy source trees for packages that don't
 # support out-of-tree builds
-#packages+=" rsync"
+packages+=" rsync"
 
 # to ensure that we don't inadvertantly use a modified version with
 # non-standard extensions to build our filesystems
@@ -27,6 +27,18 @@ packages+=" ncurses"
 # help2man is needed to build man pages for texinfo after running autoreconf
 packages+=" help2man"
 
+# install these to make sure the rest of the build is done using the GNU
+# build tools we test against
+packages+=" make"
+packages+=" m4"
+packages+=" autoconf"
+packages+=" automake"
+packages+=" libtool"
+packages+=" pkg-config"
+packages+=" bison"
+packages+=" gettext"
+packages+=" gperf"
+
 
 build()
 {
@@ -38,7 +50,7 @@ build()
 	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
 	    ;;
 	*)
-	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
     esac
 }
 

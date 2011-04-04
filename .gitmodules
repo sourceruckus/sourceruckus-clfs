@@ -22,9 +22,6 @@
 [submodule "src/git"]
 	path = src/git
 	url = ../git.git
-#[submodule "src/kernel"]
-#	path = src/kernel
-#	url = git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
 [submodule "src/busybox"]
 	path = src/busybox
 	url = ../busybox.git
@@ -46,3 +43,6 @@
 [submodule "src/kernel"]
 	path = src/kernel
 	url = ../linux-2.6-mdl.git
+[submodule "src/pkg-config"]
+	path = src/pkg-config
+	url = ../pkg-config.git

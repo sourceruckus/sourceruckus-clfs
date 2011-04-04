@@ -12,17 +12,36 @@ your user's environment (PATH, LD_LIBRARY_PATH, etc).
 
 Note that this stage assumes the host system at least has git (to get this),
 autotools (to configure this), and a sane compilation toolchain (make, gcc,
-glibc, etc).
+glibc, autoconf, automake, etc).
+
+Note also, that even though a sane compilation toolchain is listed as a
+requirement, we're going to immediately test this by... bootstrapping and
+installing our own GNU bootstrapping toolchain (autoconf, automake, libtool,
+etc).  You wouldn't want to find out halfway through a build that the
+version of autoconf installed on the host system actually isn't new enough
+to work for some random package...
 
 
-* Need
+* Need to always build
 ** e2fsprogs (make sure created rootfs doesn't use vendor extensions)
-** help2man (needed for texinfo in bootstrap)
+** make (ensure GNU build/bootstrap tools exist and are compatible)
+** m4
+** autoconf
+** automake
+** libtool
+** pkg-config
+** bison
+** gettext
+** gperf
 
-* Might need
-** rsync
-** dump/restore
-** ncurses
+
+* Might need (add configure check)
+** help2man (needed for texinfo in bootstrap and for bootstrapping m4)
+** rsync (need to be able to rsync source trees)
+** tar (need -g incremental support)
+
+* Optional
+** ncurses (needed for Kbuild's menuconfig)
 
 
 
