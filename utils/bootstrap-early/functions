@@ -15,7 +15,13 @@ BABY=$INSTALLROOT/baby
 #        patches actually), so this might be non-trivial
 PREFIX_FINAL=/bootstrap
 
+# this variable tells bootstrap scripts where to find gnulib, to avoid them
+# all trying to create their own local clone
 export GNULIB_SRCDIR=$toplevel/src/gnulib
+
+# this variable tells bootstrap scripts to not download new po files via
+# rsync
+export SKIP_PO=t
 
 # setup environment to use our bootstrap-early stuff
 export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
@@ -154,10 +160,13 @@ configure_generic()
 		./bootstrap || exit 1
 	    elif [ -x ./autogen.sh ]; then
 		echo "./autogen.sh..."
-		./autogen.sh && make distclean || exit 1
+		./autogen.sh || exit 1
 	    else
 		echo "autoreconf..."
 		autoreconf --install || exit 1
+	    fi
+	    if [ -f Makefile ]; then
+		make distclean
 	    fi
 	    popd
 	fi
