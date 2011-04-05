@@ -46,3 +46,6 @@
 [submodule "src/pkg-config"]
 	path = src/pkg-config
 	url = ../pkg-config.git
+[submodule "src/gperf"]
+	path = src/gperf
+	url = ../gperf.git
