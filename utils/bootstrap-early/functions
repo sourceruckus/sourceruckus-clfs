@@ -163,7 +163,7 @@ configure_generic()
 		./autogen.sh || exit 1
 	    else
 		echo "autoreconf..."
-		autoreconf --install || exit 1
+		autoreconf --force --install || exit 1
 	    fi
 	    if [ -f Makefile ]; then
 		make distclean

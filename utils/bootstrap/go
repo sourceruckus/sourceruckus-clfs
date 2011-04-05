@@ -328,7 +328,7 @@ build()
 	    # thing to do here, is just make symlinks to all the busybox
 	    # symlinks in the baby system by parsing busybox.links in
 	    # busybox's builddir
-	    for x in $(cat .build/busybox/build/busybox.links); do
+	    for x in $(cat .build/busybox/busybox.links || exit 1); do
 		ln -sv $PREFIX_FINAL$x $BABY$x 2>/dev/null
 	    done
 	    
@@ -548,6 +548,8 @@ packages+=" texinfo"
 #packages+=" udev"
 
 packages+=" create-dirs"
+
+# NOTE: create-symlinks requires .build/busybox/busybox.links...
 packages+=" create-symlinks"
 
 # more boot packages
