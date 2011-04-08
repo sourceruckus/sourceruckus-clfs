@@ -133,7 +133,26 @@ setup_generic()
 	    done
 	fi
 	popd
+
+    elif [ -n "$build_in_tree" ]; then
+	# this is a special case for source trees we have that can't handle
+	# out-of-tree builds for one reason or another.  instead of setting
+	# up for out-of-tree, it simply rsync's the source into where it
+	# would be if we were using a tarball
+	echo "copying source tree from $source to $builddir/source..."
+	rsync -a --delete $source $builddir/source || exit 1
+	source=$builddir/source
+	builddir=$builddir/build
+	mkdir -p $builddir || exit 1
     fi
+
+    if [ -n "$build_in_tree" ]; then
+	# some packages can't build out-of-tree.  we'll replace $builddir
+	# with a symlink to our local source tree
+	rmdir $builddir && ln -s $source $builddir || exit 1
+	configure=./configure
+    fi
+
     echo source: $source
     echo builddir:  $builddir
     echo configure: $configure
