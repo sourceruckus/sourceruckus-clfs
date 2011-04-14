@@ -399,6 +399,32 @@ build()
 	    echo done
 	    ;;
 
+	ntfs-3g)
+	    # set build_in_tree because we have a bootstrap patch for
+	    # configure.ac
+	    build_in_tree=yes setup_generic $1 || exit 1
+
+	    if [ ! -f $builddir/Makefile ]; then
+		pushd $source || exit 1
+		for p in $toplevel/utils/bootstrap/patches/$1/*.patch; do
+		    patch -Np1 < $p || exit 1
+		done
+		popd
+	    fi
+
+	    configure_generic $1 $OPTS \
+		--disable-ldconfig \
+		--exec-prefix=$PREFIX_FINAL || exit 1
+
+	    pushd $builddir &&
+	    make -j$JOBCOUNT &&
+	    make DESTDIR=$BABY install &&
+	    popd || exit 1
+
+	    # FIXME: this might need extra setuid magic
+
+	    ;;
+
 	create-conf)
 	    # this will handle config files for init, mdev, users/groups,
             # logfiles, login scripts, fstab, needed device nodes, etc
@@ -612,10 +638,7 @@ packages+=" e2fsprogs"
 #       gonna include propper NTFS support here as well.  Now we'll have
 #       support for ext2/3/4, vfat, and ntfs filesystems along with
 #       losetup/mount support for the kernel's cryptoloop code.
-packages=""
-#packages+=" fuse"
-packages+=" ntfs3g_ntfsprogs"
-packages+=" asdf"
+packages+=" ntfs-3g"
 
 # FIXME: mdev vs udev.  I suspect that if we base our desktop image on our
 #        embedded image, parts of the desktop (GNOME, KDE, etc) are going to
@@ -630,19 +653,20 @@ packages+=" asdf"
 # FIXME: considering including extra documentation tools in here as well, so
 #        we don't have to wory about tools not existing yet in the bootstrap
 #        environment.
-packages+=" tetex"
+#packages+=" tetex"
+#packages+=" asdf"
 #packages+=" xfig"
 #packages+=" transfig"
 #packages+=" netpbm"
-packages+=" latex2html"
+#packages+=" latex2html"
 #packages+=" graphviz"
-packages+=" doxygen"
+#packages+=" doxygen"
 #packages+=" ghostscript"
 #packages+=" gtkdoc"
 
 #packages+=" freetype"
-packages+=" docbook-xml"
-packages+=" docbook-xsl"
+#packages+=" docbook-xml"
+#packages+=" docbook-xsl"
 #packages+=" libxml2"
 #packages+=" libxslt"
 #packages+=" fontconfig"
@@ -651,10 +675,11 @@ packages+=" docbook-xsl"
 #        even more comfortable environment.  this will increase the size and
 #        time to build bootstrap, but will result in a very featureful
 #        environment
-packages+=" openssl"
-packages+=" openssh"
-packages+=" zsh"
-packages+=" emacs"
+# FIXME: does this need gnutls, or libgcrypt?
+#packages+=" openssl"
+#packages+=" openssh"
+#packages+=" zsh"
+#packages+=" emacs"
 
 # this will handle config files for init, mdev, users/groups, logfiles,
 # login scripts, fstab, needed device nodes, etc
@@ -678,7 +703,6 @@ packages+=" bootscripts"
 
 # this stage will set the ownership of our baby filesystem to root instead
 # of our build user
-packages=""
 packages+=" fix-perms"
 
 
