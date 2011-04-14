@@ -13,6 +13,7 @@ pacakges=""
 
 # add rsync so we can use it to copy source trees for packages that don't
 # support out-of-tree builds
+# FIXME: looks like rsync has a parallel build problem...
 packages+=" rsync"
 
 # to ensure that we don't inadvertantly use a modified version with
@@ -35,7 +36,16 @@ packages+=" autoconf"
 packages+=" automake"
 packages+=" libtool"
 packages+=" pkg-config"
+
+# FIXME: seem to be having bootstrap cleanliness problems with gettext... at
+#        least on my netbook.  can't seem to reproduce this anywhere else,
+#        though...  odd.  must not quite have all the bootstrapping
+#        requirements installed correctly?
+#
+# NOTES: verified.  installing all the correct versions of the GNU bootstrap
+#        tools made gettext work fine.
 packages+=" gettext"
+
 packages+=" gperf"
 packages+=" bison"
 
@@ -49,7 +59,23 @@ build()
 	help2man)
 	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
 	    ;;
-	make|m4|autoconf|automake|libtool|pkg-config|gettext|gperf|bison)
+	gperf)
+	    # setup build_in_tree because we're gonna mess with the build
+	    # system a bit
+	    build_in_tree=yes setup_generic $1 || exit 1
+	    
+	    # go tickle doc/Makefile.in so that we don't rebuild
+	    # documentation just because we regenerated configure
+	    pushd $builddir &&
+	    sed -i 's|^force.*||' doc/Makefile.in &&
+	    sed -i 's|force$||' doc/Makefile.in &&
+	    popd || exit 1
+
+	    autoreconf=yes configure_generic $1 --prefix=$PREFIX_EARLY &&
+	    compile_generic $1 || exit 1
+
+	    ;;
+	make|m4|autoconf|automake|libtool|pkg-config|gettext|bison)
 	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
 	*)
