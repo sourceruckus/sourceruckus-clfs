@@ -335,6 +335,36 @@ build()
 	    echo done
 	    ;;
 
+	util-linux)
+	    build_generic $1 $OPTS \
+		--enable-login-utils \
+		--disable-makeinstall-chown || exit 1
+	    
+	    # NOTES: CLFS excludes --prefix for this one, then has the make
+	    #        install target use a DESTDIR, then move installed files
+	    #        around by hand.  Not sure why.  I'm going to try to
+	    #        make it work like the rest of the packages (i.e., use
+	    #        --prefix=$PREFIX_FINAL combined with our /bootstrap
+	    #        symlink) so that the install target works properly.
+	    #
+	    #pushd $builddir &&
+	    #make -j$JOBCOUNT &&
+	    #make install &&
+	    #popd || exit 1
+
+	    # FIXME: In addition to rearranging where all the files were
+	    #        installed, the CLFS book also explicitly removes the
+	    #        libtool libraries.  Not sure why this is done, and it
+	    #        doesn't appear to be consistent with the handling of
+	    #        the other packages.
+	    #
+	    # FIXME: Actually, I extended this to include the removal of
+	    #        libmount.la
+	    #rm -fv ${PREFIX_FINAL}/lib64/lib{blkid,uuid,mount}.la || exit 1
+	    
+	    echo done
+	    ;;
+
 	e2fsprogs)
 	    setup_generic $1 || exit 1
 
@@ -343,6 +373,13 @@ build()
 	    sed -i '/libdir.*=.*\/lib/s@/lib@/lib64@g' configure &&
 	    popd || exit 1
 
+	    # FIXME: Woah... I don't remember what I added the
+	    #        PKG_CONFIG=true definition for, and I didn't actually
+	    #        plumb in the back half of it.  Related to libuuid
+	    #        perhaps?
+
+	    # NOTE: PKG_CONFIG variable is used by e2fsprogs build scripts,
+	    #       it's not something I added.
 	    PKG_CONFIG=true configure_generic $1 $OPTS \
 		--disable-fsck || exit 1
 
@@ -445,10 +482,25 @@ build()
 	    ;;
 
 	fix-perms)
-	    # this has to chown everything to root, so root permissions are required...
-	    # FIXME: might have to create /dev/{null,console} here, too
-	    echo "need root priveledges to change ownership of $BABY"
-	    su -c "chown -Rv 0:0 $BABY && chgrp -v 13 $BABY/var/{run/utmp,log/lastlog} && mknod -m 600 $BABY/dev/console c 5 1 && mknod -m 666 $BABY/dev/null c 1 3" || exit 1
+	    # this has to chown everything to root, so root permissions are
+	    # required...
+
+	    # NOTE: bootstrap-early already assumes sudo is configured for
+	    #       the build user, so we'll silently use it here as well.
+	    #
+	    # NOTE: using multiple sudo calls here instead of a single one
+	    #       just to make this easier to read/maintain.  assuming
+	    #       sudo is configured to work correctly, the additional
+	    #       overhead should be negligible.
+	    sudo chown -Rv 0:0 $BABY &&
+	    sudo chgrp -v 13 $BABY/var/{run/utmp,log/lastlog} &&
+	    sudo mknod -m 600 $BABY/dev/console c 5 1 &&
+	    sudo mknod -m 666 $BABY/dev/null c 1 3 || exit 1
+
+	    # FIXME: double check that files that were setuid build_user are
+	    #        now setuid root.  pretty sure this should be the case.
+	    #        $PREFIX_FINAL/bin/{mount,umount}, for example, should
+	    #        have mode of 4755
 	    ;;
 
 	*)
@@ -556,6 +608,15 @@ packages+=" create-symlinks"
 packages+=" util-linux"
 packages+=" e2fsprogs"
 
+# NOTE: We want this to be a pretty usable tiny bootstrap system, so we're
+#       gonna include propper NTFS support here as well.  Now we'll have
+#       support for ext2/3/4, vfat, and ntfs filesystems along with
+#       losetup/mount support for the kernel's cryptoloop code.
+packages=""
+#packages+=" fuse"
+packages+=" ntfs3g_ntfsprogs"
+packages+=" asdf"
+
 # FIXME: mdev vs udev.  I suspect that if we base our desktop image on our
 #        embedded image, parts of the desktop (GNOME, KDE, etc) are going to
 #        require udev.  Modern versions of udev, however, don't appear to
@@ -565,6 +626,35 @@ packages+=" e2fsprogs"
 #        handle this yet.  Anyway, it's probably simpler for our bootable
 #        bootstrap system to just use busybox's mdev for now.
 #packages+=" udev"
+
+# FIXME: considering including extra documentation tools in here as well, so
+#        we don't have to wory about tools not existing yet in the bootstrap
+#        environment.
+packages+=" tetex"
+#packages+=" xfig"
+#packages+=" transfig"
+#packages+=" netpbm"
+packages+=" latex2html"
+#packages+=" graphviz"
+packages+=" doxygen"
+#packages+=" ghostscript"
+#packages+=" gtkdoc"
+
+#packages+=" freetype"
+packages+=" docbook-xml"
+packages+=" docbook-xsl"
+#packages+=" libxml2"
+#packages+=" libxslt"
+#packages+=" fontconfig"
+
+# FIXME: also considering including openssh, zsh, and emacs, just to have an
+#        even more comfortable environment.  this will increase the size and
+#        time to build bootstrap, but will result in a very featureful
+#        environment
+packages+=" openssl"
+packages+=" openssh"
+packages+=" zsh"
+packages+=" emacs"
 
 # this will handle config files for init, mdev, users/groups, logfiles,
 # login scripts, fstab, needed device nodes, etc
@@ -588,6 +678,7 @@ packages+=" bootscripts"
 
 # this stage will set the ownership of our baby filesystem to root instead
 # of our build user
+packages=""
 packages+=" fix-perms"
 
 
