@@ -49,3 +49,6 @@
 [submodule "src/gperf"]
 	path = src/gperf
 	url = ../gperf.git
+[submodule "src/ntfs-3g"]
+	path = src/ntfs-3g
+	url = ../ntfs-3g.git
