@@ -16,6 +16,11 @@ NOTE: This is all actually getting installed in $BABY/bootstrap-cross at the
       have been a mistake... but I seem to remember there being some reason
       why I had to do it that way.
 
+NOTE: Did it that way to follow the CLFS book, which says it installs in
+      $CLFS/cross-tools just to be consistent with $CLFS/tools.  Should be
+      able to move these things around later and see what breaks.
+
+
 NOTE: If this really does have to go inside $BABY, we should dump an image
       when we're done.  This stage takes almost 2 hours to build on my
       netbook, even on subsequent runs that are mostly just doing 'make

@@ -7,6 +7,10 @@ INSTALLROOT=$HOME/RUCKUS
 PREFIX_EARLY=$INSTALLROOT/bootstrap-early
 PREFIX_CROSS=/bootstrap-cross
 
+# FIXME: PREFIX_CROSS should be $INSTALLROOT/bootstrap-cross and we probably
+#        don't need the /bootstrap-cross symlink.  Once everything works,
+#        fix this and see what breaks.
+
 # this is where our baby filesystem will eventually be mounted
 BABY=$INSTALLROOT/baby
 
