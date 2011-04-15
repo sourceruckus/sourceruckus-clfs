@@ -175,9 +175,9 @@ configure_generic()
     # go guild it!
     pushd $builddir || exit 1
     # only explicitly run configure the first time
-    if [ ! -f Makefile ]; then
+    if [ ! -f Makefile ] || [ -n "$autoreconf" ]; then
 	if [ ! -x $configure ] || [ -n "$autoreconf" ]; then
-	    pushd $(dirname $configure)
+	    pushd $source || exit 1
 	    if [ -x ./bootstrap ]; then
 		echo "./bootstrap..."
 		./bootstrap || exit 1
