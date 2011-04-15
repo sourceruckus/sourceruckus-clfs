@@ -53,6 +53,10 @@ packages+=" bison"
 build()
 {
     case "$1" in
+	rsync)
+	    # seems to have a parallel build problem...
+	    JOBCOUNT=1 build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	    ;;
 	ncurses)
 	    build_generic $1 --prefix=$PREFIX_EARLY --with-shared || exit 1
 	    ;;
