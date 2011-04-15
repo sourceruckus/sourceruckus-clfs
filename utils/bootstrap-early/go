@@ -63,23 +63,7 @@ build()
 	help2man)
 	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
 	    ;;
-	gperf)
-	    # setup build_in_tree because we're gonna mess with the build
-	    # system a bit
-	    build_in_tree=yes setup_generic $1 || exit 1
-	    
-	    # go tickle doc/Makefile.in so that we don't rebuild
-	    # documentation just because we regenerated configure
-	    pushd $builddir &&
-	    sed -i 's|^force.*||' doc/Makefile.in &&
-	    sed -i 's|force$||' doc/Makefile.in &&
-	    popd || exit 1
-
-	    autoreconf=yes configure_generic $1 --prefix=$PREFIX_EARLY &&
-	    compile_generic $1 || exit 1
-
-	    ;;
-	make|m4|autoconf|automake|libtool|pkg-config|gettext|bison)
+	make|m4|autoconf|automake|libtool|pkg-config|gettext|gperf|bison)
 	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
 	*)
