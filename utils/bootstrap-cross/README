@@ -20,8 +20,18 @@ NOTE: Did it that way to follow the CLFS book, which says it installs in
       $CLFS/cross-tools just to be consistent with $CLFS/tools.  Should be
       able to move these things around later and see what breaks.
 
+NOTE: Did some preliminary testing regarding /bootstrap-cross breakage if
+      installed outside BABY... the bootstrap-cross stage builds fine, but
+      bootstrap-final's gcc compilation fails with a zillion undefined
+      references.
 
 NOTE: If this really does have to go inside $BABY, we should dump an image
       when we're done.  This stage takes almost 2 hours to build on my
       netbook, even on subsequent runs that are mostly just doing 'make
-      install'.
+      install'.  (A full rebuild takes about 3 hours)
+
+NOTE: kernel headers and glibc (32 and 64bit) are actually installed in
+      PREFIX_FINAL (/bootstrap) here.  This is what the CLFS book does, and
+      we follow suit... even though I'm not entirely sure why this is done.
+      It does mean that the final bootstrap stage doesn't have to compile
+      eglibc at all...
