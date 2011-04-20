@@ -233,6 +233,8 @@ build()
 	    # installed for the temp-system
 	    source=$source/gettext-tools
 	    configure=$source/configure
+	    echo source: $source
+	    echo configure: $configure
 
 	    # When cross-compiling the Gettext configure script assumes we
 	    # don't have a working wcwidth when we do. The following will
@@ -569,6 +571,7 @@ packages+=" busybox"
 packages+=" bison"
 packages+=" file"
 packages+=" flex"
+packages=""
 packages+=" gettext"
 
 # FIXME: old patch not needed any more?
