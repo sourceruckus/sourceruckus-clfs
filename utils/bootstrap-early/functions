@@ -157,6 +157,11 @@ setup_generic()
 	configure=./configure
     fi
 
+    # We need to make sure the sourcetree has already been bootstrapped.
+    if [ ! -x $configure ]; then
+	autoreconf_generic || exit 1
+    fi
+
     echo source: $source
     echo builddir:  $builddir
     echo configure: $configure
@@ -177,24 +182,38 @@ configure_generic()
     # only explicitly run configure the first time
     if [ ! -f Makefile ] || [ -n "$autoreconf" ]; then
 	if [ ! -x $configure ] || [ -n "$autoreconf" ]; then
-	    pushd $source || exit 1
-	    if [ -x ./bootstrap ]; then
-		echo "./bootstrap..."
-		./bootstrap || exit 1
-	    elif [ -x ./autogen.sh ]; then
-		echo "./autogen.sh..."
-		./autogen.sh || exit 1
-	    else
-		echo "autoreconf..."
-		autoreconf --force --install || exit 1
-	    fi
-	    if [ -f Makefile ]; then
-		make distclean
-	    fi
-	    popd
+	    autoreconf_generic || exit 1
 	fi
 	$configure $* || exit 1
     fi
+    popd
+}
+
+
+autoreconf_generic()
+{
+    pushd $source || exit 1
+
+    # choose a bootstrap method
+    if [ -x ./bootstrap ]; then
+	echo "./bootstrap..."
+	./bootstrap || exit 1
+    elif [ -x ./autogen.sh ]; then
+	echo "./autogen.sh..."
+	./autogen.sh || exit 1
+    else
+	echo "autoreconf..."
+	autoreconf --force --install || exit 1
+    fi
+
+    # make sure we're unconfigured.  some bootstrap and autogen.sh scripts
+    # run configure at the end, but not all.  we have to be able to assume
+    # consistent behavior here, so do a make distclean if Makefile exists
+    # already.
+    if [ -f Makefile ]; then
+	make distclean || exit 1
+    fi
+    
     popd
 }
 
