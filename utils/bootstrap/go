@@ -10,12 +10,12 @@ toplevel=$PWD/../..
 build()
 {
     # set some common variables for all targets
-    CC="${CC} ${BUILD64}"
-    CXX="${CXX} ${BUILD64}"
     OPTS="--prefix=$PREFIX_FINAL"
     OPTS+=" --build=${MACHTYPE_HOST}"
     OPTS+=" --host=${MACHTYPE_TARGET}"
     OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+
+    set_cross_compile
 
     case "$1" in
 	gmp)
@@ -63,8 +63,7 @@ build()
 
 	zlib)
 	    # zlib doesn't support out-of-tree builds...
-	    setup_generic $1 || exit 1
-	    export builddir=$source
+	    build_in_tree=yes setup_generic $1 || exit 1
 
 	    # and it doesn't use autotools... despite the "configure" script
 	    # and autotool-ish configure flags
@@ -204,9 +203,9 @@ build()
 	    sed -i "s/-I@includedir@//g" Makefile.in &&
 	    popd || exit 1
 
-	     # When Cross Compiling the configure script does not determine
-	     # the correct values for the following, Set the values
-	     # manually
+	    # When cross-compiling, the configure script does not determine
+	    # the correct values for the following, so we'll set the values
+	    # manually
 	    pushd $builddir &&
 	    echo ac_cv_func_malloc_0_nonnull=yes > config.cache &&
 	    echo ac_cv_func_realloc_0_nonnull=yes >> config.cache &&
@@ -395,15 +394,9 @@ build()
 	ntfs-3g)
 	    # set build_in_tree because we have a bootstrap patch for
 	    # configure.ac
-	    build_in_tree=yes setup_generic $1 || exit 1
-
-	    if [ ! -f $builddir/Makefile ]; then
-		pushd $source || exit 1
-		for p in $toplevel/utils/bootstrap/patches/$1/*.patch; do
-		    patch -Np1 < $p || exit 1
-		done
-		popd
-	    fi
+	    build_in_tree=yes \
+		patches=$toplevel/utils/bootstrap/patches/$1/*.patch \
+		setup_generic $1 || exit 1
 
 	    configure_generic $1 $OPTS \
 		--disable-ldconfig \
@@ -702,36 +695,8 @@ packages+=" fix-perms"
 
 mkdir -p $PWD/.build
 
-# we need to go through and prep all the sourcetrees prior to setting all
-# our environment variables because they're messing with the bootstraping
-# (i.e., autogen.sh, autoreconf, or bootstrap needs to be done using the
-# toolchain in PREFIX_EARLY, NOT the one in PREFIX_CROSS.
-for p in $packages; do
-    case "$p" in
-	busybox|bootscripts|kernel|create-dirs|create-symlinks|create-conf|fix-perms)
-	    # these pacakges don't need any prep work
-	    ;;
-	ntfs-3g)
-
-	*)
-	    echo "setting up source tree for final bootstrap package: $p"
-	    setup_generic $p || exit 1
-    esac
-done
-
-echo blarg
-exit 1
-
 # now iterate through building for our target architecture using our
 # cross-compiler.
-export CC="${MACHTYPE_TARGET}-gcc"
-export CXX="${MACHTYPE_TARGET}-g++"
-export AR="${MACHTYPE_TARGET}-ar"
-export AS="${MACHTYPE_TARGET}-as"
-export RANLIB="${MACHTYPE_TARGET}-ranlib"
-export LD="${MACHTYPE_TARGET}-ld"
-export STRIP="${MACHTYPE_TARGET}-strip"
-
 for p in $packages; do
     echo "building final bootstrap package: $p"
     build $p || exit 1

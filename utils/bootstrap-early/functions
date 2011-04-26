@@ -88,9 +88,9 @@ shopt -s nullglob
 # tarball).  first arg is package name, the rest are passed on to configure.
 build_generic()
 {
-    setup_generic $*
-    configure_generic $*
-    compile_generic $*
+    setup_generic $* &&
+    configure_generic $* &&
+    compile_generic $* || exit 1
 }
 
 
@@ -157,6 +157,16 @@ setup_generic()
 	configure=./configure
     fi
 
+    # apply additional patches, if specified
+    if [ -n "$patches" ] && [ ! -f $builddir/Makefile ]; then
+	pushd $source || exit 1
+	for p in $patches; do
+	    echo "applying additional patch: $p"
+	    patch -Np1 < $p || exit 1
+	done
+	popd
+    fi
+
     # We need to make sure the sourcetree has already been bootstrapped.
     if [ ! -x $configure ]; then
 	autoreconf_generic || exit 1
@@ -194,6 +204,11 @@ autoreconf_generic()
 {
     pushd $source || exit 1
 
+    # make sure we're not using the cross-compiler, but keep track if we
+    # were so we can turn it back on before returning
+    should_cross_compile=$cross_compile
+    unset_cross_compile
+
     # choose a bootstrap method
     if [ -x ./bootstrap ]; then
 	echo "./bootstrap..."
@@ -213,7 +228,13 @@ autoreconf_generic()
     if [ -f Makefile ]; then
 	make distclean || exit 1
     fi
-    
+
+    # if we were previously set up to use our cross-compiler.  set it back
+    # up now
+    if [ -n "$should_cross_compile" ]; then
+	set_cross_compile
+    fi
+
     popd
 }
 
@@ -229,4 +250,34 @@ compile_generic()
     pushd $builddir &&
     make -j$JOBCOUNT && make install &&
     popd || exit 1
+}
+
+
+set_cross_compile()
+{
+    export CC="${MACHTYPE_TARGET}-gcc"
+    export CXX="${MACHTYPE_TARGET}-g++"
+    export AR="${MACHTYPE_TARGET}-ar"
+    export AS="${MACHTYPE_TARGET}-as"
+    export RANLIB="${MACHTYPE_TARGET}-ranlib"
+    export LD="${MACHTYPE_TARGET}-ld"
+    export STRIP="${MACHTYPE_TARGET}-strip"
+
+    export CC="${CC} ${BUILD64}"
+    export CXX="${CXX} ${BUILD64}"
+
+    export cross_compile=true
+}
+
+
+unset_cross_compile()
+{
+    export CC=
+    export CXX=
+    export AR=
+    export AS=
+    export RANLIB=
+    export LD=
+    export STRIP=
+    export cross_compile=
 }
