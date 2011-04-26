@@ -555,6 +555,8 @@ packages+=" busybox"
 packages+=" bison"
 packages+=" file"
 packages+=" flex"
+
+# FIXME: should gettext do ./autogen.sh --quick?
 packages+=" gettext"
 
 # FIXME: old patch not needed any more?

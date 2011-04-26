@@ -216,16 +216,19 @@ autoreconf_generic()
     elif [ -x ./autogen.sh ]; then
 	echo "./autogen.sh..."
 	./autogen.sh || exit 1
-    else
+    elif [ -f ./configure.in ] || [ -f ./configure.ac ]; then
 	echo "autoreconf..."
 	autoreconf --force --install || exit 1
+    else
+	nothing_to_do=true
+	echo "autoreconf_generic: doing nothing..."
     fi
 
     # make sure we're unconfigured.  some bootstrap and autogen.sh scripts
     # run configure at the end, but not all.  we have to be able to assume
     # consistent behavior here, so do a make distclean if Makefile exists
     # already.
-    if [ -f Makefile ]; then
+    if [ -z "$nothing_to_do" ] && [ -f Makefile ]; then
 	make distclean || exit 1
     fi
 
