@@ -6,15 +6,6 @@ toplevel=$PWD/../..
 # source our common variables and functions
 . $toplevel/utils/bootstrap-early/functions
 
-# extra variables for the final bootstrap stage
-export CC="${MACHTYPE_TARGET}-gcc"
-export CXX="${MACHTYPE_TARGET}-g++"
-export AR="${MACHTYPE_TARGET}-ar"
-export AS="${MACHTYPE_TARGET}-as"
-export RANLIB="${MACHTYPE_TARGET}-ranlib"
-export LD="${MACHTYPE_TARGET}-ld"
-export STRIP="${MACHTYPE_TARGET}-strip"
-
 
 build()
 {
@@ -571,7 +562,6 @@ packages+=" busybox"
 packages+=" bison"
 packages+=" file"
 packages+=" flex"
-packages=""
 packages+=" gettext"
 
 # FIXME: old patch not needed any more?
@@ -711,6 +701,36 @@ packages+=" fix-perms"
 
 
 mkdir -p $PWD/.build
+
+# we need to go through and prep all the sourcetrees prior to setting all
+# our environment variables because they're messing with the bootstraping
+# (i.e., autogen.sh, autoreconf, or bootstrap needs to be done using the
+# toolchain in PREFIX_EARLY, NOT the one in PREFIX_CROSS.
+for p in $packages; do
+    case "$p" in
+	busybox|bootscripts|kernel|create-dirs|create-symlinks|create-conf|fix-perms)
+	    # these pacakges don't need any prep work
+	    ;;
+	ntfs-3g)
+
+	*)
+	    echo "setting up source tree for final bootstrap package: $p"
+	    setup_generic $p || exit 1
+    esac
+done
+
+echo blarg
+exit 1
+
+# now iterate through building for our target architecture using our
+# cross-compiler.
+export CC="${MACHTYPE_TARGET}-gcc"
+export CXX="${MACHTYPE_TARGET}-g++"
+export AR="${MACHTYPE_TARGET}-ar"
+export AS="${MACHTYPE_TARGET}-as"
+export RANLIB="${MACHTYPE_TARGET}-ranlib"
+export LD="${MACHTYPE_TARGET}-ld"
+export STRIP="${MACHTYPE_TARGET}-strip"
 
 for p in $packages; do
     echo "building final bootstrap package: $p"
