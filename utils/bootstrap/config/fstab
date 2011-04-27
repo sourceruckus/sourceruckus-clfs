@@ -1,6 +1,6 @@
 # -*- mode: sh -*-
 
-/dev/VolGroup00/LogVol01 / ext3 defaults 1 1
+/dev/sda6 / ext4 defaults 1 1
 /dev/sda1 swap swap pri=1 0 0
 
 proc           /proc        proc   defaults         0     0
