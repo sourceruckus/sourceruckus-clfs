@@ -504,15 +504,21 @@ build()
 	    #       just to make this easier to read/maintain.  assuming
 	    #       sudo is configured to work correctly, the additional
 	    #       overhead should be negligible.
-	    sudo chown -Rv 0:0 $BABY &&
-	    sudo chgrp -v 13 $BABY/var/{run/utmp,log/lastlog} &&
-	    sudo mknod -m 600 $BABY/dev/console c 5 1 &&
-	    sudo mknod -m 666 $BABY/dev/null c 1 3 || exit 1
+	    sudo chown -Rc 0:0 $BABY &&
+	    sudo chgrp -c 13 $BABY/var/{run/utmp,log/lastlog} || exit 1
+	    if [ ! -c $BABY/dev/console ]; then
+		sudo mknod -m 600 $BABY/dev/console c 5 1 || exit 1
+	    fi
+	    if [ ! -c $BABY/dev/null ]; then
+		sudo mknod -m 666 $BABY/dev/null c 1 3 || exit 1
+	    fi
 
 	    # FIXME: double check that files that were setuid build_user are
 	    #        now setuid root.  pretty sure this should be the case.
 	    #        $PREFIX_FINAL/bin/{mount,umount}, for example, should
 	    #        have mode of 4755
+	    sudo chmod -c u+s $PREFIX_FINAL/bin/{mount,umount,ntfs-3g,busybox} || exit 1
+
 	    ;;
 
 	*)
@@ -741,3 +747,5 @@ done
 # inetd
 # iproute
 # less
+
+#tar -vcf $INSTALLROOT/baby-bootstrap-final.tar -g $INSTALLROOT/baby.snar -C $BABY .
