@@ -517,7 +517,43 @@ build()
 	    #        now setuid root.  pretty sure this should be the case.
 	    #        $PREFIX_FINAL/bin/{mount,umount}, for example, should
 	    #        have mode of 4755
-	    sudo chmod -c u+s $PREFIX_FINAL/bin/{mount,umount,ntfs-3g,busybox} || exit 1
+	    #
+	    # NOTE: i was right to wory about setuid stuff.  looks like
+	    #       somewhere along the line the setuid bit is getting
+	    #       dropped.
+	    setuid_list=""
+	    setuid_list+=" /bootstrap/bin/mount"
+	    setuid_list+=" /bootstrap/bin/umount"
+	    setuid_list+=" /bootstrap/bin/busybox"
+	    #setuid_list+=" /bootstrap/bin/ping" #bb
+	    #setuid_list+=" /bootstrap/bin/ping6" #bb
+	    #setuid_list+=" /bootstrap/bin/su" #bb
+	    #setuid_list+=" /bootstrap/bin/at" #at
+	    #setuid_list+=" /bootstrap/bin/chage" #shadow-utils
+	    setuid_list+=" /bootstrap/bin/chfn"
+	    setuid_list+=" /bootstrap/bin/chsh"
+	    #setuid_list+=" /bootstrap/bin/crontab" #vixie-cron
+	    #setuid_list+=" /bootstrap/bin/cu" #uucp
+	    #setuid_list+=" /bootstrap/bin/gpasswd" #shadow-utils
+	    setuid_list+=" /bootstrap/bin/newgrp"
+	    #setuid_list+=" /bootstrap/bin/newrole" #policycoreutils
+	    #setuid_list+=" /bootstrap/bin/passwd" #passwd #????
+	    #setuid_list+=" /bootstrap/bin/Xorg" #xorg-server
+	    #setuid_list+=" /bootstrap/bin/dumpcap" #wireshark
+	    #setuid_list+=" /bootstrap/bin/fusermount" #fuse
+	    setuid_list+=" /bootstrap/bin/ntfs-3g"
+	    #setuid_list+=" /bootstrap/bin/rlogin" #inetutils
+	    #setuid_list+=" /bootstrap/bin/rsh" #inetutils
+	    #setuid_list+=" /bootstrap/sbin/ccreds_validate" #pam_ccreds
+	    #setuid_list+=" /bootstrap/sbin/userhelper" #usermode
+	    #setuid_list+=" /bootstrap/sbin/uucico" #uucp
+	    #setuid_list+=" /bootstrap/sbin/uuxqt" #uucp
+	    #setuid_list+=" /bootstrap/sbin/pam_timestamp_check" #pam
+	    #setuid_list+=" /bootstrap/sbin/unix_chkpwd" #pam
+
+	    for x in $setuid_list; do
+		sudo chmod -c u+s $BABY$x || exit 1
+	    done
 
 	    ;;
 
@@ -709,6 +745,17 @@ for p in $packages; do
     echo "building final bootstrap package: $p"
     build $p || exit 1
 done
+
+
+
+# make a backup of our progress.
+#
+# NOTE: this has to be done using tar because dump can only do incrementals
+#       of an entire filesystem
+#
+# NOTE: using sudo for this to make sure our build user has appropriate
+#       permissions to read all the files we're backing up
+sudo tar -vcf $INSTALLROOT/baby-bootstrap-final.tar -g $INSTALLROOT/baby.snar -C $BABY .
 
 
 

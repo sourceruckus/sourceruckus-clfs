@@ -347,6 +347,11 @@ for p in $packages; do
     build $p || exit 1
 done
 
-# make a backup?  can't use dump for incrementals unless we do the whole
-# filesystem...
-tar -vcf $INSTALLROOT/baby-bootstrap-cross.tar -g $INSTALLROOT/baby.snar -C $BABY .
+# make a backup of our progress.
+#
+# NOTE: this has to be done using tar because dump can only do incrementals
+#       of an entire filesystem
+#
+# NOTE: using sudo for this to make sure our build user has appropriate
+#       permissions to read all the files we're backing up
+sudo tar -vcf $INSTALLROOT/baby-bootstrap-cross.tar -g $INSTALLROOT/baby.snar -C $BABY .
