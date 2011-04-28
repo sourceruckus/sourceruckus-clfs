@@ -362,13 +362,8 @@ build()
 
 	    # Change the library directory to lib64
 	    pushd $source &&
-	    sed -i '/libdir.*=.*\/lib/s@/lib@/lib64@g' configure &&
+	    sed -i.bak '/libdir.*=.*\/lib/s@/lib@/lib64@g' configure &&
 	    popd || exit 1
-
-	    # FIXME: Woah... I don't remember what I added the
-	    #        PKG_CONFIG=true definition for, and I didn't actually
-	    #        plumb in the back half of it.  Related to libuuid
-	    #        perhaps?
 
 	    # NOTE: PKG_CONFIG variable is used by e2fsprogs build scripts,
 	    #       it's not something I added.
@@ -378,6 +373,12 @@ build()
 	    pushd $builddir &&
 	    make -j$JOBCOUNT &&
 	    make install &&
+	    popd || exit 1
+
+	    # NOTE: we need to undo the lib64 sed we did above, since we
+	    #       could be working in-tree.
+	    pushd $source &&
+	    mv -v configure.bak configure &&
 	    popd || exit 1
 
 	    # NOTE: we don't compile/install the libblkid, libuuid, etc,
