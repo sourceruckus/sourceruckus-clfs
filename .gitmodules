@@ -1,12 +1,54 @@
-[submodule "packages/git"]
-	path = packages/git
-	url = git://git.kernel.org/pub/scm/git/git.git
-[submodule "packages/srp"]
-	path = packages/srp
-	url = git://labriola.dyndns.org/srp2
-[submodule "packages/kernel"]
-	path = packages/kernel
-	url = git://labriola.dyndns.org/linux-2.6-mdl.git
-[submodule "packages/bootscripts"]
-	path = packages/bootscripts
-	url = git://labriola.dyndns.org/bootscripts.git
+[submodule "src/autoconf"]
+	path = src/autoconf
+	url = ../autoconf.git
+[submodule "src/automake"]
+	path = src/automake
+	url = ../automake.git
+[submodule "src/libtool"]
+	path = src/libtool
+	url = ../libtool.git
+[submodule "src/rsync"]
+	path = src/rsync
+	url = ../rsync.git
+[submodule "src/e2fsprogs"]
+	path = src/e2fsprogs
+	url = ../e2fsprogs.git
+[submodule "src/bison"]
+	path = src/bison
+	url = ../bison.git
+[submodule "src/srp"]
+	path = src/srp
+	url = ../srp2.git
+[submodule "src/git"]
+	path = src/git
+	url = ../git.git
+[submodule "src/busybox"]
+	path = src/busybox
+	url = ../busybox.git
+[submodule "src/gettext"]
+	path = src/gettext
+	url = ../gettext.git
+[submodule "src/m4"]
+	path = src/m4
+	url = ../m4.git
+[submodule "src/util-linux"]
+	path = src/util-linux
+	url = ../util-linux.git
+[submodule "src/gnulib"]
+	path = src/gnulib
+	url = ../gnulib.git
+[submodule "src/bootscripts"]
+	path = src/bootscripts
+	url = ../bootscripts.git
+[submodule "src/kernel"]
+	path = src/kernel
+	url = ../linux-2.6-mdl.git
+[submodule "src/pkg-config"]
+	path = src/pkg-config
+	url = ../pkg-config.git
+[submodule "src/gperf"]
+	path = src/gperf
+	url = ../gperf.git
+[submodule "src/ntfs-3g"]
+	path = src/ntfs-3g
+	url = ../ntfs-3g.git

@@ -12,7 +12,7 @@ build_linux_headers()
 {
     builddir=$PWD/.build/kernel
     # get the source tree into our build dir
-    rsync -a --exclude .git $packagedir/kernel/ $builddir || exit 1
+    rsync -a --exclude .git $sourcedir/kernel/ $builddir || exit 1
     pushd $builddir
     make mrproper &&
     make ARCH=$ARCH_TARGET headers_check &&
@@ -75,7 +75,9 @@ build()
 	    ;;
 
 	ppl)
-	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+	    # we have patches for the autoconf files, so lets make sure
+	    # autoreconf gets called
+	    autoreconf=yes LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 --prefix=$PREFIX_CROSS \
 		--enable-shared \
 		--enable-interfaces="c,cxx" \
@@ -85,7 +87,8 @@ build()
 	    ;;
 
 	cloog-ppl)
-	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+	    # we patch the autoconf files
+	    autoreconf=yes LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 --prefix=$PREFIX_CROSS \
 		--enable-shared \
 		--with-bits=gmp \
@@ -123,14 +126,14 @@ build()
 	    #       it there now just makes the the final bootstrap binutils
 	    #       target simpler.
 	    mkdir -p $PREFIX_FINAL/include &&
-	    cp -v $sourcedir/include/libiberty.h $PREFIX_FINAL/include || exit 1
+	    cp -v $source/include/libiberty.h $PREFIX_FINAL/include || exit 1
 	    popd
 	    ;;
 
 	gcc-static)
 	    setup_generic gcc &&
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $sourcedir || exit 1
+		pushd $source || exit 1
 		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
 		    patch -Np1 < $p || exit 1
 		done
@@ -143,6 +146,9 @@ build()
 	    touch $PREFIX_FINAL/include/limits.h || exit 1
 
 	    # FIXME: not sure if sysroot should be BABY or INSTALLROOT...
+
+	    # FIXME: should probably rework the gcc patches to modify
+	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
 
 	    AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		configure_generic gcc --prefix=$PREFIX_CROSS \
@@ -175,7 +181,7 @@ build()
 	eglibc-32bit)
 	    setup_generic eglibc &&
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $sourcedir || exit 1
+		pushd $source || exit 1
 		for p in $toplevel/utils/bootstrap-cross/patches/eglibc/*.patch; do
 		    patch -Np1 < $p || exit 1
 		done
@@ -218,7 +224,7 @@ build()
 	    # variables.
 	    setup_generic eglibc &&
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $sourcedir || exit 1
+		pushd $source || exit 1
 		for p in $toplevel/utils/bootstrap-cross/patches/eglibc/*.patch; do
 		    patch -Np1 < $p || exit 1
 		done
@@ -271,12 +277,15 @@ build()
 	    # variables.
 	    setup_generic gcc &&
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $sourcedir || exit 1
+		pushd $source || exit 1
 		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
 		    patch -Np1 < $p || exit 1
 		done
 		popd
 	    fi
+
+	    # FIXME: should probably rework the gcc patches to modify
+	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
 
 	    # however, we do have to adjust some variables
 	    builddir=$PWD/.build/gcc-final
@@ -337,3 +346,12 @@ for p in $packages; do
     echo "building cross package: $p"
     build $p || exit 1
 done
+
+# make a backup of our progress.
+#
+# NOTE: this has to be done using tar because dump can only do incrementals
+#       of an entire filesystem
+#
+# NOTE: using sudo for this to make sure our build user has appropriate
+#       permissions to read all the files we're backing up
+sudo tar -vcf $INSTALLROOT/baby-bootstrap-cross.tar -g $INSTALLROOT/baby.snar -C $BABY .

@@ -10,23 +10,81 @@ All the packages built in this section will get compiled and installed in
 $HOME/RUCKUS/Bootstrap-early.  Actually using them will require tweaking of
 your user's environment (PATH, LD_LIBRARY_PATH, etc).
 
+Note that this stage assumes the host system at least has git (to get this),
+autotools (to configure this), and a sane compilation toolchain (make, gcc,
+glibc, autoconf, automake, etc).
+
+Note also, that even though a sane compilation toolchain is listed as a
+requirement, we're going to immediately test this by... bootstrapping and
+installing our own GNU bootstrapping toolchain (autoconf, automake, libtool,
+etc).  You wouldn't want to find out halfway through a build that the
+version of autoconf installed on the host system actually isn't new enough
+to work for some random package...
 
 
-* Need
-** bison (don't remember why)
-** e2fsprogs
-** Python
-** SRP
-
-* Might need
+* Need to always build
+** e2fsprogs (make sure created rootfs doesn't use vendor extensions)
+** make (ensure GNU build/bootstrap tools exist and are compatible)
+** m4
 ** autoconf
 ** automake
 ** libtool
-** m4
-** make
-** dump/restore
+** pkg-config
+** bison
+** gettext
+** gperf
 
-* Might be nice to have
-** zsh
-** emacs
-** git
+
+* Might need (add configure check)
+** help2man (needed for texinfo in bootstrap and for bootstrapping m4)
+** rsync (need to be able to rsync source trees)
+** tar (need -g incremental support)
+** git (submodule wasn't very good until around v1.6)
+
+* Optional
+** ncurses (needed for Kbuild's menuconfig)
+
+
+
+* Bootstrap nightmare
+
+Ok, I can't seem to get some of the git checkouts to bootstrap properly...
+there's cyclic dependencies all over.  If I install the following from dist
+tarballs:
+
+  - autoconf-2.68.tar.bz2
+  - automake-1.11.1.tar.bz2
+  - bison-2.4.3.tar.bz2
+  - gettext-0.18.1.1.tar.bz2
+  - gperf-3.0.4.tar.bz2
+  - libtool-2.4.tar.bz2
+  - m4-1.4.15.tar.bz2
+  - make-3.82.tar.bz2
+  - pkg-config-0.25.tar.bz2
+
+then I can successfully bootstrap the following source trees:
+
+  - bison (bootstrap*)
+  - m4 (bootstrap*)
+  - automake (bootstrap)
+  - libtool (bootstrap)
+  - util-linux (autogen.sh)
+  - gettext (autogen.sh*)
+
+like this:
+
+# ./autogen.sh
+
+or like this:
+
+# export $toplevel=$PWD/../..
+# GNULIB_SRCDIR=$toplevel/src/gnulib ./bootstrap
+
+
+** automate it? bootsrap-early-bootstrap?
+
+Use wget to snag all the appropriate tarballs, then iterate through the list
+doing:
+
+# ./configure && make -j$(JOBCOUNT) && \
+    sudo make install && sudo ldconfig

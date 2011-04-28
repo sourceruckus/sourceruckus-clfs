@@ -1,0 +1,44 @@
+From 29b24765a259156cf18d2a4b17757ce39df80b50 Mon Sep 17 00:00:00 2001
+From: Michael D Labriola <mdlabriola@yahoo.com>
+Date: Wed, 16 Feb 2011 09:35:35 -0500
+Subject: [PATCH] autotools: CLFS LD_LIBRARY_PATH patch
+
+The following prevents the configure script from setting LD_LIBRARY_PATH
+when it finds PPL. This will prevent any conflicts with libraries from the
+host system.
+
+NOTE: the original CLFS patch was against configure, but this is against
+configure.in, so we can autoreconf and not loose the changes.
+
+NOTE: this patch was generated against v0.15.9, but applies with offset to
+v0.15.10
+
+---
+ configure.in |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/configure.in b/configure.in
+index ecfc738..61eac4b 100644
+--- a/configure.in
++++ b/configure.in
+@@ -273,8 +273,6 @@ else
+ 		AC_MSG_RESULT(installed in $with_polylib_exec_prefix)
+ 		CPPFLAGS="-I$with_polylib_prefix/include $CPPFLAGS"
+ 		LDFLAGS="-L$with_polylib_exec_prefix/lib $LDFLAGS"
+-		LD_LIBRARY_PATH="$with_polylib_exec_prefix/lib:$LD_LIBRARY_PATH"
+-		export LD_LIBRARY_PATH
+ 	else
+ 		AC_MSG_RESULT(installed in standard location)
+ 	fi
+@@ -328,8 +326,6 @@ if test "x$with_ppl" != "x" -a "x$with_ppl" != "xno"; then
+ 	    AC_MSG_RESULT(installed in $ppl_prefix)
+ 	    CPPFLAGS="-I$ppl_prefix/include $CPPFLAGS"
+ 	    LDFLAGS="-L$ppl_prefix/lib $LDFLAGS"
+-	    LD_LIBRARY_PATH="$ppl_prefix/lib:$LD_LIBRARY_PATH"
+-	    export LD_LIBRARY_PATH
+ 	else
+ 	    AC_MSG_RESULT(installed at system prefix)
+ 	fi
+-- 
+1.7.1.1
+

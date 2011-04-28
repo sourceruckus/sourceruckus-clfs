@@ -1,0 +1,79 @@
+From dc215bdcef316676fee5430ad97411b6cc0ede8b Mon Sep 17 00:00:00 2001
+From: Michael D Labriola <mdlabriola@yahoo.com>
+Date: Sat, 21 Aug 2010 20:02:00 -0400
+Subject: [PATCH 1/2] use xz compression
+
+This was originally the new_compressors patch from CLFS.
+---
+ doc/texinfo.txi             |    5 +++--
+ info/filesys.c              |    1 +
+ install-info/install-info.c |   13 +++++++++----
+ 3 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/doc/texinfo.txi b/doc/texinfo.txi
+index 374ebfd..754091f 100644
+--- a/doc/texinfo.txi
++++ b/doc/texinfo.txi
+@@ -16488,6 +16488,7 @@ If @var{dir-file} (however specified) does not exist,
+ 
+ @cindex Compressed dir files, reading
+ @cindex Bzipped dir files, reading
++@cindex XZ-compressed dir files, reading
+ @cindex LZMA-compressed dir files, reading
+ @cindex Dir files, compressed
+ If any input file is compressed with @code{gzip} (@pxref{Top,,,gzip,
+@@ -16495,8 +16496,8 @@ Gzip}), @code{install-info} automatically uncompresses it
+ for reading.  And if @var{dir-file} is compressed, @code{install-info}
+ also automatically leaves it compressed after writing any changes.
+ If @var{dir-file} itself does not exist, @code{install-info} tries to
+-open @file{@var{dir-file}.gz}, @file{@var{dir-file}.bz2}, and 
+-@file{@var{dir-file}.lzma}, in that order.
++open @file{@var{dir-file}.gz}, @file{@var{dir-file}.bz2},
++@file{@var{dir-file}.xz} and @file{@var{dir-file}.lzma}, in that order.
+ 
+ Options:
+ 
+diff --git a/info/filesys.c b/info/filesys.c
+index dcf5c67..42860f4 100644
+--- a/info/filesys.c
++++ b/info/filesys.c
+@@ -55,6 +55,7 @@ static char *info_suffixes[] = {
+ static COMPRESSION_ALIST compress_suffixes[] = {
+   { ".gz", "gunzip" },
+   { ".bz2", "bunzip2" },
++  { ".xz", "unxz" },
+   { ".lzma", "unlzma" },
+   { ".z", "gunzip" },
+   { ".Z", "uncompress" },
+diff --git a/install-info/install-info.c b/install-info/install-info.c
+index d61697d..960c16b 100644
+--- a/install-info/install-info.c
++++ b/install-info/install-info.c
+@@ -739,15 +739,20 @@ open_possibly_compressed_file (char *filename,
+ #else
+     *compression_program = "bzip";
+ #endif
++  else if (data[0] == '\xFD' && data[1] == '7' && data[2] == 'z'
++               && data[3] == 'X' && data[4] == 'Z' && data[5] == 0x00)
++#ifndef STRIP_DOT_EXE
++    *compression_program = "xz.exe";
++#else
++    *compression_program = "xz";
++#endif
+     /* We (try to) match against old lzma format (which lacks proper
+-       header, two first matches), as well as the new format (last match).  */
++       header, two first matches). */
+   else if ((data[9] == 0x00 && data[10] == 0x00 && data[11] == 0x00
+             && data[12] == 0x00)
+            || (data[5] == '\xFF' && data[6] == '\xFF' && data[7] == '\xFF'
+                && data[8] == '\xFF' && data[9] == '\xFF' && data[10] == '\xFF'
+-               && data[11] == '\xFF' && data[12] == '\xFF') 
+-           || (data[0] == '\xFF' && data[1] == 'L' && data[2] == 'Z'
+-               && data[3] == 'M' && data[4] == 'A' && data[5] == 0x00))
++               && data[11] == '\xFF' && data[12] == '\xFF'))
+ #ifndef STRIP_DOT_EXE
+     *compression_program = "lzma.exe";
+ #else
+-- 
+1.7.1.1
+

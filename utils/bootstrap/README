@@ -22,6 +22,9 @@ NOTE: I should come up with a better privilege escalation scheme than using
       root password...?  Maybe set up ssh keys with authorized_keys allowing
       the build user to log in as root w/out a password?
 
+NOTE: Maybe we can accomplish the above by configuring sudo during
+      bootstrap-early...
+
 NOTE: Also, we should do an incremental dump of $BABY after this so we can
       rebuild $BABY from bootstrap-cross.img and bootstrap-final.img.
 
@@ -44,3 +47,14 @@ NOTE: What if I created a bootable DVD for the bootable bootstrap
       the bootstrap environment... but the bootable DVD option will need to
       then go and create a partition, filesystem, etc, to do the building
       in... maybe someday.
+
+
+NOTE: Why is it that aureconf_generic from bootstrap-early results in a good
+      gettext source tree, but using the same function from bootstrap-final
+      (assuming that gettext got reverted to a pristine git checkotu)
+      results in a borked source tree that's still got a few Makefiles in
+      it?  Trying to configure the examples dir at that point fails, because
+      it's 'already configured'.
+
+NOTE: Only diff I can see is that CC and CXX are overriden to use the
+      cross-compiler...
