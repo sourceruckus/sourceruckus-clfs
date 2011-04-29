@@ -284,6 +284,7 @@ build()
 
 	create-dirs)
 	    mkdir -pv ${BABY}/{bin,boot,dev,{etc/,}opt,home,lib{,64},mnt}
+	    mkdir -pv $BABY/mnt/{cdrom,flash,floppy,crypt}
 	    mkdir -pv ${BABY}/{proc,media/{floppy,cdrom},sbin,srv,sys}
 	    mkdir -pv ${BABY}/var/{lock,log,mail,run,spool}
 	    mkdir -pv ${BABY}/var/{opt,cache,lib{,64}/{misc,locate},local}
