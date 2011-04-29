@@ -302,7 +302,8 @@ build()
 	    ;;
 
 	create-symlinks)
-	    ln -sv $PREFIX_FINAL/bin/{bash,cat,echo,grep,pwd,sleep,stty} ${BABY}/bin 2>/dev/null
+	    ln -sv $PREFIX_FINAL/bin/{bash,cat,echo,grep,pwd,sleep,stty,mount,umount} ${BABY}/bin 2>/dev/null
+	    ln -sv $PREFIX_FINAL/sbin/{swapon,swapoff} $BABY/sbin 2>/dev/null
 	    ln -sv $PREFIX_FINAL/bin/file ${BABY}/usr/bin 2>/dev/null
 	    ln -sv $PREFIX_FINAL/lib/libgcc_s.so{,.1} ${BABY}/usr/lib 2>/dev/null
 	    ln -sv $PREFIX_FINAL/lib64/libgcc_s.so{,.1} ${BABY}/usr/lib64 2>/dev/null
