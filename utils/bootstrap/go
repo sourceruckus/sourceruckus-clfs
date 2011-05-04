@@ -14,6 +14,9 @@ build()
     OPTS+=" --build=${MACHTYPE_HOST}"
     OPTS+=" --host=${MACHTYPE_TARGET}"
     OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+    OPTS+=" --disable-static"
+    OPTS+=" --enable-shared"
+    OPTS+=" --disable-nls"
 
     set_cross_compile
 
@@ -24,18 +27,12 @@ build()
 		--enable-cxx || exit 1
 	    ;;
 
-	mpfr)
-	    build_generic $1 $OPTS \
-		--enable-shared || exit 1
-	    ;;
-
 	ppl)
 	    # we patch autoconf files, so we need to make sure autoreconf
 	    # gets called
 	    setup_generic $1 &&
 	    autoreconf=yes configure_generic $1 $OPTS \
 		--enable-interfaces="c,cxx" \
-		--enable-shared \
 		--disable-optimization \
 		--with-libgmp-prefix=$PREFIX_FINAL \
 		--with-libgmpxx-prefix=$PREFIX_FINAL || exit 1
@@ -56,7 +53,6 @@ build()
 	    # gets called
 	    autoreconf=yes build_generic $1 $OPTS \
 		--with-bits=gmp \
-		--enable-shared \
 		--with-gmp=$PREFIX_FINAL \
 		--with-ppl=$PREFIX_FINAL || exit 1
 	    ;;
@@ -80,8 +76,6 @@ build()
 	    setup_generic $1 &&
 	    configure_generic $1 $OPTS \
 		--with-lib-path=$PREFIX_FINAL/lib64:$PREFIX_FINAL/lib \
-		--disable-nls \
-		--enable-shared \
 		--enable-64-bit-bfd || exit 1
 
 	    pushd $builddir &&
@@ -118,10 +112,8 @@ build()
 		--with-local-prefix=$PREFIX_FINAL \
 		--enable-long-long \
 		--enable-c99 \
-		--enable-shared \
 		--enable-threads=posix \
 		--enable-__cxa_atexit \
-		--disable-nls \
 		--enable-languages=c,c++ \
 		--disable-libstdcxx-pch || exit 1
 
