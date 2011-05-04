@@ -1,0 +1,53 @@
+- remove /bootstrap-cross
+- strip-all in /bootstrap/{bin,sbin}
+- 229M of static libs in /bootstrap/lib{,64}
+- strip-all in /bootstrap/libexec/gcc
+- 16.4M of docs in /bootstrap/share/doc
+- removed /bootstrap/{info,man}*
+
+- there's lots of stuff in /bootstrap/share:
+
+32.0K	aclocal
+468.0K	bison
+4.0K	doc
+56.0K	gcc-4.5.2
+20.0K	getopt
+9.1M	i18n
+13.7M	info
+11.6M	locale
+3.1M	man
+1.7M	misc
+20.0K	tabset
+6.3M	terminfo
+36.0K	texinfo
+5.5M	zoneinfo
+51.7M	total
+
+- removed all info and man
+
+- there's still 30M or so of language cruft in /bootstrap/share...
+
+- removed i18n/*, locale/*, zoneinfo/*, 
+
+- that brings us to 193M, but I don't know if i've busted anything...
+
+- crud, looks like gcc is busted w/out some of the static libs... at least it needs libc_noshared.a
+
+
+- bootscript warnings are uuuugly.  lotso dots...................
+
+- 'mount -t ntfs-3g /dev/sdb1 /mnt' works, but type is required...
+
+
+- in order for the bootstrap system to really be fully-functional, we're gonna
+  need the following:
+
+  - ssh (openssl/openssh, or dropbear (the embedded alernative))
+  - python
+  - srp
+  - rsync?
+  - git?
+  - emacs?
+  - zsh?
+  - the tools added at the beginning of the next CLFS chapter (expect, etc)
+
