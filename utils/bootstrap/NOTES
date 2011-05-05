@@ -1,9 +1,9 @@
 - remove /bootstrap-cross
-- strip-all in /bootstrap/{bin,sbin}
-- 229M of static libs in /bootstrap/lib{,64}
-- strip-all in /bootstrap/libexec/gcc
-- 16.4M of docs in /bootstrap/share/doc
-- removed /bootstrap/{info,man}*
+#- strip-all in /bootstrap/{bin,sbin}
+#- 229M of static libs in /bootstrap/lib{,64}
+#- strip-all in /bootstrap/libexec/gcc
+- removed 16.4M of docs in /bootstrap/share/doc
+- removed /bootstrap/{info,man}/*
 
 - there's lots of stuff in /bootstrap/share:
 
@@ -26,10 +26,23 @@
 - removed all info and man
 
 - there's still 30M or so of language cruft in /bootstrap/share...
+- actually, looks like only libc has installed a .mo file now so locale is only 3M
 
-- removed i18n/*, locale/*, zoneinfo/*, 
+#- removed i18n/*, locale/*, zoneinfo/*, 
 
-- that brings us to 193M, but I don't know if i've busted anything...
+#- that brings us to 193M, but I don't know if i've busted anything...
+
+- that brings us to... 428M... 
+
+- strip-debug in /bootstrap/{bin,sbin}... 399M
+
+- strip-all in /boostrap/{bin,sbin}... 397.5M
+
+
+- and we can still build tcl, expect, and dejagnu!
+
+
+
 
 - crud, looks like gcc is busted w/out some of the static libs... at least it needs libc_noshared.a
 
