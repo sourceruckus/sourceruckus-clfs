@@ -31,6 +31,12 @@ build_linux_headers()
 
 build()
 {
+    # set some common variables for all targets
+    OPTS="--prefix=$PREFIX_CROSS"
+    OPTS+=" --disable-static"
+    OPTS+=" --enable-shared"
+    OPTS+=" --disable-nls"
+
     case "$1" in
 	linux_headers)
 	    build_linux_headers
@@ -43,7 +49,7 @@ build()
 
 	    # first, use the generic setup and configure
 	    setup_generic $1 &&
-	    configure_generic $1 --prefix=$PREFIX_CROSS \
+	    configure_generic $1 $OPTS \
 		--without-debug \
 		--without-shared || exit 1
 
@@ -57,19 +63,18 @@ build()
 
 	gmp)
 	    CPPFLAGS=-fexceptions \
-		build_generic $1 --prefix=$PREFIX_CROSS --enable-cxx
+		build_generic $1 $OPTS --enable-cxx
 	    ;;
 
 	mpfr)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		build_generic $1 --prefix=$PREFIX_CROSS \
-		--enable-shared \
+		build_generic $1 $OPTS \
 		--with-gmp=$PREFIX_CROSS
 	    ;;
 
 	mpc)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		build_generic $1 --prefix=$PREFIX_CROSS \
+		build_generic $1 $OPTS \
 		--with-gmp=$PREFIX_CROSS \
 		--with-mpfr=$PREFIX_CROSS
 	    ;;
@@ -78,8 +83,7 @@ build()
 	    # we have patches for the autoconf files, so lets make sure
 	    # autoreconf gets called
 	    autoreconf=yes LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		build_generic $1 --prefix=$PREFIX_CROSS \
-		--enable-shared \
+		build_generic $1 $OPTS \
 		--enable-interfaces="c,cxx" \
 		--disable-optimization \
 		--with-libgmp-prefix=$PREFIX_CROSS \
@@ -89,8 +93,7 @@ build()
 	cloog-ppl)
 	    # we patch the autoconf files
 	    autoreconf=yes LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		build_generic $1 --prefix=$PREFIX_CROSS \
-		--enable-shared \
+		build_generic $1 $OPTS \
 		--with-bits=gmp \
 		--with-gmp=$PREFIX_CROSS \
 		--with-ppl=$PREFIX_CROSS
@@ -104,13 +107,11 @@ build()
 
 	    AR=ar AS=as setup_generic $1 &&
 	    AR=ar AS=as \
-		configure_generic $1 --prefix=$PREFIX_CROSS \
+		configure_generic $1 $OPTS \
 		--host=${MACHTYPE_HOST} \
 		--target=${MACHTYPE_TARGET} \
 		--with-sysroot=${BABY} \
 		--with-lib-path=$PREFIX_FINAL/lib \
-		--disable-nls \
-		--enable-shared \
 		--enable-64-bit-bfd || exit 1
 
 	    pushd $builddir &&
@@ -149,6 +150,11 @@ build()
 
 	    # FIXME: should probably rework the gcc patches to modify
 	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
+
+	    # NOTE: gcc-static, eglibc32, and eglibc64 should NOT use our
+	    #       common OPTS.  these packages are VERY important and so
+	    #       we're going to follow the CLFS book exactly.
+	    OPTS=
 
 	    AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		configure_generic gcc --prefix=$PREFIX_CROSS \
@@ -198,6 +204,13 @@ build()
 	    echo libc_cv_ssp=no >> config.cache
 	    popd
 
+	    # NOTE: eglibc builds and installs in PREFIX_FINAL on purpose.
+	    #       this package can safely be built now and installed in
+	    #       /bootstrap so we don't have to build it again during the
+	    #       final bootstrap stage.  this is the way the CLFS book
+	    #       does it, so we're following suit.
+	    OPTS=""
+
 	    BUILD_CC="gcc" CC="${MACHTYPE_TARGET}-gcc ${BUILD32}" \
 		AR="${MACHTYPE_TARGET}-ar" RANLIB="${MACHTYPE_TARGET}-ranlib" \
 		CFLAGS="-march=$(cut -d- -f1 <<< $MACHTYPE_TARGET32) -mtune=generic -g -O2" \
@@ -246,6 +259,13 @@ build()
 	    echo libc_cv_ssp=no >> config.cache
 	    popd
 
+	    # NOTE: eglibc builds and installs in PREFIX_FINAL on purpose.
+	    #       this package can safely be built now and installed in
+	    #       /bootstrap so we don't have to build it again during the
+	    #       final bootstrap stage.  this is the way the CLFS book
+	    #       does it, so we're following suit.
+	    OPTS=""
+
 	    # install 64-bit libraries in lib64
 	    pushd $builddir
 	    echo "slibdir=$PREFIX_FINAL/lib64" >> configparms
@@ -292,15 +312,16 @@ build()
 	    mkdir -p $builddir
 	    echo "builddir: $builddir"
 
+	    # FIXME: OPTS has --disable-static... is that ok here?  CLFS
+	    #        book didn't use that flag...
+
 	    AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		configure_generic gcc --prefix=$PREFIX_CROSS \
+		configure_generic gcc $OPTS \
 		--build=${MACHTYPE_HOST} \
 		--target=${MACHTYPE_TARGET} \
 		--host=${MACHTYPE_HOST} \
 		--with-sysroot=${BABY} \
 		--with-local-prefix=$PREFIX_FINAL \
-		--disable-nls \
-		--enable-shared \
 		--enable-languages=c,c++ \
 		--enable-__cxa_atexit \
 		--with-mpfr=$PREFIX_CROSS \
@@ -319,7 +340,7 @@ build()
 	    ;;
 
 	*)
-	    build_generic $1 --prefix=$PREFIX_CROSS
+	    build_generic $1 $OPTS
 	    ;;
     esac
 }
@@ -354,4 +375,5 @@ done
 #
 # NOTE: using sudo for this to make sure our build user has appropriate
 #       permissions to read all the files we're backing up
-sudo tar -vcf $INSTALLROOT/baby-bootstrap-cross.tar -g $INSTALLROOT/baby.snar -C $BABY .
+sudo tar -vcf $INSTALLROOT/baby-bootstrap-cross.tar \
+    -g $INSTALLROOT/baby-bootstrap-cross.snar -C $BABY . || exit 1

@@ -750,7 +750,10 @@ done
 #
 # NOTE: using sudo for this to make sure our build user has appropriate
 #       permissions to read all the files we're backing up
-sudo tar -vcf $INSTALLROOT/baby-bootstrap-final.tar -g $INSTALLROOT/baby.snar -C $BABY .
+cp $INSTALLROOT/baby-bootstrap-cross.snar \
+    $INSTALLROOT/baby-bootstrap-final.snar &&
+sudo tar -vcf $INSTALLROOT/baby-bootstrap-final.tar \
+    -g $INSTALLROOT/baby-bootstrap-final.snar -C $BABY . || exit 1
 
 
 
