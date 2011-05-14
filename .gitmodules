@@ -52,3 +52,12 @@
 [submodule "src/ntfs-3g"]
 	path = src/ntfs-3g
 	url = ../ntfs-3g.git
+[submodule "src/tcl"]
+	path = src/tcl
+	url = ../tcl.git
+[submodule "src/expect"]
+	path = src/expect
+	url = ../expect.git
+[submodule "src/dejagnu"]
+	path = src/dejagnu
+	url = ../dejagnu.git
