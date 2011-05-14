@@ -55,6 +55,9 @@
 - in order for the bootstrap system to really be fully-functional, we're gonna
   need the following:
 
+  - CLFS Chapter 9 Testsuite Tools
+  - CLFS Chapter 10, section 4 temporary perl
+
   - ssh (openssl/openssh, or dropbear (the embedded alernative))
   - python
   - srp
@@ -62,5 +65,4 @@
   - git?
   - emacs?
   - zsh?
-  - the tools added at the beginning of the next CLFS chapter (expect, etc)
-
+  - syslinux?
