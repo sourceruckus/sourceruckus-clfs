@@ -406,6 +406,45 @@ build()
 
 	    ;;
 
+	tcl)
+	    # NOTE: we can't use setup_generic here because it assumes we're
+	    #       gonna try to build in the toplevel direcory of the
+	    #       source tree...  which isn't the case for tcl.
+	    p=tcl
+	    builddir=$PWD/.build/$p
+	    source=$sourcedir/$p/unix
+	    configure=$source/configure
+	    mkdir -p $builddir
+
+	    echo source: $source
+	    echo builddir:  $builddir
+	    echo configure: $configure
+
+	    configure_generic $1 $OPTS && 
+	    compile_generic $1 || exit 1
+
+	    # and do a bit of extra work
+	    pushd $builddir &&
+	    make install-private-headers &&
+	    ln -sv tclsh8.5 $PREFIX_FINAL/bin/tclsh
+	    popd || exit 1
+
+	    ;;
+
+	expect)
+	    setup_generic $1 &&
+	    configure_generic $1 $OPTS \
+		--with-tcl=$PREFIX_FINAL/lib64 \
+		--with-tclinclude=$PREFIX_FINAL/include || exit 1
+
+	    # custom build script.  setting SCRIPTS like this causes expect
+	    # to leave out a bunch of stuff we don't need right now.
+	    pushd $builddir &&
+	    make -j$JOBCOUNT &&
+	    make SCRIPTS="" install &&
+	    popd || exit 1
+	    ;;
+
 	create-conf)
 	    # this will handle config files for init, mdev, users/groups,
             # logfiles, login scripts, fstab, needed device nodes, etc
@@ -674,6 +713,16 @@ packages+=" ntfs-3g"
 #        handle this yet.  Anyway, it's probably simpler for our bootable
 #        bootstrap system to just use busybox's mdev for now.
 #packages+=" udev"
+
+# NOTE: we're adding the testsuite tools here.  CLFS actually builds them
+#       after booting up in the bootstrap system, but it works out better
+#       for us if the bootstrap system is already completely ready to
+#       rock-n-roll after the cross-compiling stage.
+packages=""
+packages+=" tcl"
+packages+=" expect"
+packages+=" dejagnu"
+packages+=" asdf"
 
 # FIXME: considering including extra documentation tools in here as well, so
 #        we don't have to wory about tools not existing yet in the bootstrap
