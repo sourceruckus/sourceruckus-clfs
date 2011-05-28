@@ -70,8 +70,12 @@
 #tty3::askfirst:-/bin/sh
 #tty4::askfirst:-/bin/sh
 
+# NOTE: tty1 is special.  this is set up so that ruckus_bootstrap_stage2 is
+#       run, followed by getty.  the stage2 script exits immediately if
+#       /.ruckus_bootstrap_stage2 isn't present.
+tty1::respawn:/bin/sh -c "/ruckus/utils/bootstrap-stage2/go; /sbin/getty 38400 tty1"
+
 # /sbin/getty invocations for selected ttys
-tty1::respawn:/sbin/getty 38400 tty1
 tty2::respawn:/sbin/getty 38400 tty2
 tty3::respawn:/sbin/getty 38400 tty3
 tty4::respawn:/sbin/getty 38400 tty4

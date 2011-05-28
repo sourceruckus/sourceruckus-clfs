@@ -441,6 +441,10 @@ build()
 	    #        filesystem types inserted in it.
 	    cp -v config/fstab $BABY/etc || exit 1
 
+	    # NOTE: now touch /.ruckus_bootstrap_stage2, which causes init
+	    #       to run the stage2 script on tty1 at boot
+	    touch $BABY/.ruckus_bootstrap_stage2 || exit 1
+
 	    ;;
 
 	kernel)
@@ -486,12 +490,6 @@ build()
 
 	    # groom them a bit
 	    echo "UTC=1" > $BABY/etc/sysconfig/clock || exit 1
-
-	    # add a bootscript for automatically starting the stage2 builder
-	    cp ruckus_bootstrap_stage2 $BABY/etc/rc.d/init.d &&
-	    ln -fs ../init.d/ruckus_bootstrap_stage2 \
-		$BABY/etc/rc.d/rcsysinit.d/S99ruckus_bootstrap_stage2 &&
-	    touch $BABY/.ruckus_bootstrap_stage2 || exit 1
 
 	    ;;
 
@@ -777,15 +775,13 @@ sudo tar -vcf $BUILDROOT/baby-bootstrap-final.tar \
 #        has having to be included in this backup... which would kinda
 #        defeat the whole purpose of incremental backups?
 
-# FIXME: now we have to move $BABY/* to $INSTALLROOT.  we can either to a
-#        globbing mv, or we can untar our baby*.tar files... depends on how
-#        much we care about preserving the original contents of $BABY.
-#        considering that we already have the tar files backing up BABY, we
-#        might as well do a globbing mv
-
+# NOTE: now we have to move $BABY/* to $INSTALLROOT.  we can either to a
+#       globbing mv, or we can untar our baby*.tar files... depends on how
+#       much we care about preserving the original contents of $BABY.
+#       considering that we already have the tar files backing up BABY, we
+#       might as well do a globbing mv
 sudo mv $BABY/* $INSTALLROOT
 sudo rmdir $BABY
-
 
 
 

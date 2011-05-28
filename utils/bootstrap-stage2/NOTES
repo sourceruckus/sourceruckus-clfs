@@ -1,0 +1,10 @@
+- bash needed for pushd/popd and shopt (at the very least)
+
+- sudo would be nice, too
+
+- actual work should not get done by rcsysinit... it should be set to run on tty1 via init
+
+- go script must be runnable via absolute path invocation (i.e., don't use $PWD)
+
+- check inittab.  tty1 runs the stage2 script and then starts a getty.
+
