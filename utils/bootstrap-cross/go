@@ -103,8 +103,6 @@ build()
 	    # this was using /tools as apposed to /tools-cross in the CLFS
 	    # book
 	    
-	    # FIXME: not sure if sysroot should be BABY or INSTALLROOT...
-
 	    AR=ar AS=as setup_generic $1 &&
 	    AR=ar AS=as \
 		configure_generic $1 $OPTS \
@@ -145,8 +143,6 @@ build()
 	    # provided by the host distro
 	    mkdir -p $PREFIX_FINAL/include &&
 	    touch $PREFIX_FINAL/include/limits.h || exit 1
-
-	    # FIXME: not sure if sysroot should be BABY or INSTALLROOT...
 
 	    # FIXME: should probably rework the gcc patches to modify
 	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
@@ -375,5 +371,5 @@ done
 #
 # NOTE: using sudo for this to make sure our build user has appropriate
 #       permissions to read all the files we're backing up
-sudo tar -vcf $INSTALLROOT/baby-bootstrap-cross.tar \
-    -g $INSTALLROOT/baby-bootstrap-cross.snar -C $BABY . || exit 1
+sudo tar -vcf $BUILDROOT/baby-bootstrap-cross.tar \
+    -g $BUILDROOT/baby-bootstrap-cross.snar -C $BABY . || exit 1

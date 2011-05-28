@@ -3,16 +3,23 @@
 packagedir=$toplevel/packages
 sourcedir=$toplevel/src
 
-INSTALLROOT=$HOME/RUCKUS
-PREFIX_EARLY=$INSTALLROOT/bootstrap-early
+INSTALLROOT=$toplevel/..
+BUILDROOT=$toplevel/.build
+PREFIX_EARLY=$BUILDROOT/bootstrap-early
 PREFIX_CROSS=/bootstrap-cross
 
-# FIXME: PREFIX_CROSS should be $INSTALLROOT/bootstrap-cross and we probably
-#        don't need the /bootstrap-cross symlink.  Once everything works,
-#        fix this and see what breaks.
+# FIXME: PREFIX_CROSS should be $INSTALLROOT/.build/bootstrap-cross and we
+#        probably don't need the /bootstrap-cross symlink.  Once everything
+#        works, fix this and see what breaks.
+#
+# FIXME: Actually, stuff did break... but I don't remember what exactly.  it
+#        was enough to be not worth fixing, though...
 
-# this is where our baby filesystem will eventually be mounted
-BABY=$INSTALLROOT/baby
+# this is where our baby filesystem lives while we're building it.  at the
+# end of the bootstrap-stage1 stage, we'll move this to $INSTALLROOT.
+# keeping it inside a different directory until then make maintainence
+# easier (e.g., chown -R root:root $BABY won't mess with our source tree)
+BABY=$BUILDROOT/baby
 
 # FIXME: should think about defining a variable for $BABY/bootstrap.  the
 #        /bootstrap moniker is hardcoded into a bunch of source files (into
