@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if [ ! -f /.ruckus_bootstrap_stage2 ]; then
+    exit 0
+fi
+
+echo "running /ruckus/utils/bootstrap-stage2..."
+
+build_user=ruckus
+build_group=ruckus
+
+build_uid=`stat -c %u /ruckus`
+build_gid=`stat -c %g /ruckus`
+
+if ! $(grep $build_group /etc/group >/dev/null); then
+    echo "adding group '$build_group'"
+    addgroup -g $build_gid $build_group
+fi
+
+if ! $(grep $build_user /etc/passwd >/dev/null); then
+    echo "adding user '$build_user'"
+    adduser -h /ruckus -G $build_group -D -H -u $build_uid $build_user
+    passwd -d $build_user
+    cp /root/.profile /ruckus/
+    chown $build_user:$build_group /ruckus/.profile
+    chmod 664 /ruckus/.profile
+fi
+
+/ruckus/utils/bootstrap-stage2/go
+retval=$?
+if [ retval != 0 ]; then
+    echo FAILED
+    exit retval
+fi
+
+echo "all done"
+rm /.ruckus_bootstrap_stage2
+exit 0

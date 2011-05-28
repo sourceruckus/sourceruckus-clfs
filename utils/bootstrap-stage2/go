@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# should set toplevel via autoconf?
+toplevel=$PWD/../..
+
+# source our common variables and functions
+. $toplevel/utils/bootstrap-early/functions
+
+
+build()
+{
+    # set some common variables for all targets
+    OPTS="--prefix=$PREFIX_FINAL"
+    OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+    OPTS+=" --disable-static"
+    OPTS+=" --enable-shared"
+    OPTS+=" --disable-nls"
+
+    case "$1" in
+	tcl)
+	    # NOTE: we can't use setup_generic here because it assumes we're
+	    #       gonna try to build in the toplevel direcory of the
+	    #       source tree...  which isn't the case for tcl.
+	    p=tcl
+	    builddir=$PWD/.build/$p
+	    source=$sourcedir/$p/unix
+	    configure=$source/configure
+	    mkdir -p $builddir
+
+	    echo source: $source
+	    echo builddir:  $builddir
+	    echo configure: $configure
+
+	    configure_generic $1 $OPTS && 
+	    compile_generic $1 || exit 1
+
+	    # and do a bit of extra work
+	    pushd $builddir &&
+	    make install-private-headers &&
+	    ln -sv tclsh8.5 $PREFIX_FINAL/bin/tclsh
+	    popd || exit 1
+
+	    ;;
+
+	expect)
+	    setup_generic $1 &&
+	    configure_generic $1 $OPTS \
+		--with-tcl=$PREFIX_FINAL/lib64 \
+		--with-tclinclude=$PREFIX_FINAL/include || exit 1
+
+	    # custom build script.  setting SCRIPTS like this causes expect
+	    # to leave out a bunch of stuff we don't need right now.
+	    pushd $builddir &&
+	    make -j$JOBCOUNT &&
+	    make SCRIPTS="" install &&
+	    popd || exit 1
+	    ;;
+
+	*)
+	    build_generic $1 $OPTS || exit 1
+	    ;;
+    esac
+}
+
+
+packages=""
+#packages+=" tcl"
+#packages+=" expect"
+#packages+=" dejagnu"
+
+
+
+mkdir -p $PWD/.build
+
+# now iterate through building for our target architecture using our
+# cross-compiler.
+for p in $packages; do
+    echo "building final bootstrap package: $p"
+    build $p || exit 1
+done
+
+sleep 30 && exit 0
+
+# make a backup of our progress.
+#
+# NOTE: this has to be done using tar because dump can only do incrementals
+#       of an entire filesystem
+#
+# NOTE: using sudo for this to make sure our build user has appropriate
+#       permissions to read all the files we're backing up
+cp $BUILDROOT/baby-bootstrap-stage1.snar \
+    $BUILDROOT/baby-bootstrap-stage2.snar &&
+sudo tar -vcf $BUILDROOT/baby-bootstrap-stage2.tar \
+    -g $BUILDROOT/baby-bootstrap-stage2.snar -C $BABY . || exit 1

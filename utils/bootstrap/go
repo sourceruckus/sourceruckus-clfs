@@ -406,45 +406,6 @@ build()
 
 	    ;;
 
-	tcl)
-	    # NOTE: we can't use setup_generic here because it assumes we're
-	    #       gonna try to build in the toplevel direcory of the
-	    #       source tree...  which isn't the case for tcl.
-	    p=tcl
-	    builddir=$PWD/.build/$p
-	    source=$sourcedir/$p/unix
-	    configure=$source/configure
-	    mkdir -p $builddir
-
-	    echo source: $source
-	    echo builddir:  $builddir
-	    echo configure: $configure
-
-	    configure_generic $1 $OPTS && 
-	    compile_generic $1 || exit 1
-
-	    # and do a bit of extra work
-	    pushd $builddir &&
-	    make install-private-headers &&
-	    ln -sv tclsh8.5 $PREFIX_FINAL/bin/tclsh
-	    popd || exit 1
-
-	    ;;
-
-	expect)
-	    setup_generic $1 &&
-	    configure_generic $1 $OPTS \
-		--with-tcl=$PREFIX_FINAL/lib64 \
-		--with-tclinclude=$PREFIX_FINAL/include || exit 1
-
-	    # custom build script.  setting SCRIPTS like this causes expect
-	    # to leave out a bunch of stuff we don't need right now.
-	    pushd $builddir &&
-	    make -j$JOBCOUNT &&
-	    make SCRIPTS="" install &&
-	    popd || exit 1
-	    ;;
-
 	create-conf)
 	    # this will handle config files for init, mdev, users/groups,
             # logfiles, login scripts, fstab, needed device nodes, etc
@@ -525,6 +486,13 @@ build()
 
 	    # groom them a bit
 	    echo "UTC=1" > $BABY/etc/sysconfig/clock || exit 1
+
+	    # add a bootscript for automatically starting the stage2 builder
+	    cp ruckus_bootstrap_stage2 $BABY/etc/rc.d/init.d &&
+	    ln -fs ../init.d/ruckus_bootstrap_stage2 \
+		$BABY/etc/rc.d/rcsysinit.d/S99ruckus_bootstrap_stage2 &&
+	    touch $BABY/.ruckus_bootstrap_stage2 || exit 1
+
 	    ;;
 
 	fix-perms)
