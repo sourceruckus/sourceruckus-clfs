@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# should set toplevel via autoconf?
+toplevel=/ruckus
+
+# source our common variables and functions
+. $toplevel/utils/bootstrap-early/functions
+
+# check for the control file
+if [ ! -f /.ruckus_bootstrap_stage2 ]; then
+    exec /sbin/getty 38400 tty1
+    exit 0
+fi
+
+rm -f /.ruckus_bootstrap_stage2
+
+echo "running source ruckus bootstrap-stage2..."
+cd $toplevel/utils/bootstrap-stage2
+
+build_user=ruckus
+build_group=ruckus
+
+build_uid=`stat -c %u $toplevel`
+build_gid=`stat -c %g $toplevel`
+
+if ! $(grep $build_group /etc/group >/dev/null); then
+    echo "adding group '$build_group'"
+    addgroup -g $build_gid $build_group
+fi
+
+if ! $(grep $build_user /etc/passwd >/dev/null); then
+    echo "adding user '$build_user'"
+    adduser -h $toplevel -G $build_group -D -H -u $build_uid $build_user
+    passwd -d $build_user
+    cp /root/.profile $toplevel/
+    chown $build_user:$build_group $toplevel/.profile
+    chmod 664 $toplevel/.profile
+fi
+
+exec su - $build_user -c "$toplevel/utils/bootstrap-stage2/go"
