@@ -87,7 +87,31 @@ export JOBCOUNT_KBUILD=$((CPUCOUNT*4))
 # files expand to '' rather than the glob pattern itself.
 #
 # FIXME: I think this command is bash specific... zsh does this by default
-shopt -s nullglob
+#
+# FIXME: ash (busybox's shell used in stage2) doesn't like the shopt command
+#        but I don't remember exactly what type of glob I was refering to
+#        above... fingers crossed...
+shopt -s nullglob >/dev/null 2>&1
+
+# NOTE: make sure we have pushd/popd, since we use it all over the place
+#
+# FIXME: these two aliases should probably only be done if needed... but I'm
+#        not sure how to detect that.  In the stage2 ash shell, which popd
+#        returns 1.  Should compare that to what happens in bash.
+alias pushd='wd="$(pwd) ${wd}"; cd'
+alias popd='cd ${wd%% *}; wd=${wd#* }'
+
+# NOTE: and this is so we can have the illusion of sudo in stage2, via
+#       busybox's su.  note that this only works because root doesn't have a
+#       password in the bootstrap system.  the only real benefit of this
+#       really is that we can maintain consistency with the rest of the
+#       scripts, and we don't have to wory about quoting the argument to su.
+#
+#alias sudo='su -c'
+sudo()
+{
+    su - -c "$*"
+}
 
 
 # define generic builder method.  this does some magic to set up a build
