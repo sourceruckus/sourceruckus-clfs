@@ -1,6 +1,3 @@
-- bootstrap-early and bootstrap-cross need to be removed from path for
-  stage2.  they should probably be removed from the filesystem too.
-
 - /bootstrap is in ~build_user/.profile's PATH but that isn't parsed when
   started via init
 

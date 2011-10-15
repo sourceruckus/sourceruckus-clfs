@@ -34,24 +34,33 @@ export GNULIB_SRCDIR=$toplevel/src/gnulib
 # rsync
 export SKIP_PO=t
 
-# setup environment to use our bootstrap-early stuff
-export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
-export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH
-export PKG_CONFIG_PATH=$PREFIX_EARLY/lib/pkg-config:$PKG_CONFIG_PATH
-if [ -z "$LD_LIBRARY_PATH" ]; then
-    export LD_LIBRARY_PATH=$PREFIX_EARLY/lib
-else
-    export LD_LIBRARY_PATH=$PREFIX_EARLY/lib:$LD_LIBRARY_PATH
-fi
+# the presence of this file will indicate that we're running in the stage2
+# bootstrap environment (i.e., booted up into baby system building the rest
+# of the bootstrap utilities)
+RUCKUS_BOOTSTRAP_STAGE2_FILE=/.ruckus_bootstrap_stage2
 
-# and now add in the bootstrap-cross tools
-export PATH=$PREFIX_CROSS/bin:$PREFIX_CROSS/sbin:$PATH
-export MANPATH=$PREFIX_CROSS/man:$PREFIX_CROSS/share/man:$MANPATH
-export PKG_CONFIG_PATH=$PREFIX_CROSS/lib/pkg-config:$PKG_CONFIG_PATH
-if [ -z "$LD_LIBRARY_PATH" ]; then
-    export LD_LIBRARY_PATH=$PREFIX_CROSS/lib
-else
-    export LD_LIBRARY_PATH=$PREFIX_CROSS/lib:$LD_LIBRARY_PATH
+# only add BOOTSTRAP_EARLY and BOOTSTRAP_CROSS to PATH if we haven't booted
+# into the stage2 bootstrap system yet.
+if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_file ]; then
+    # setup environment to use our bootstrap-early stuff
+    export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
+    export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH
+    export PKG_CONFIG_PATH=$PREFIX_EARLY/lib/pkg-config:$PKG_CONFIG_PATH
+    if [ -z "$LD_LIBRARY_PATH" ]; then
+	export LD_LIBRARY_PATH=$PREFIX_EARLY/lib
+    else
+	export LD_LIBRARY_PATH=$PREFIX_EARLY/lib:$LD_LIBRARY_PATH
+    fi
+    
+    # and now add in the bootstrap-cross tools
+    export PATH=$PREFIX_CROSS/bin:$PREFIX_CROSS/sbin:$PATH
+    export MANPATH=$PREFIX_CROSS/man:$PREFIX_CROSS/share/man:$MANPATH
+    export PKG_CONFIG_PATH=$PREFIX_CROSS/lib/pkg-config:$PKG_CONFIG_PATH
+    if [ -z "$LD_LIBRARY_PATH" ]; then
+	export LD_LIBRARY_PATH=$PREFIX_CROSS/lib
+    else
+	export LD_LIBRARY_PATH=$PREFIX_CROSS/lib:$LD_LIBRARY_PATH
+    fi
 fi
 
 

@@ -443,7 +443,7 @@ build()
 
 	    # NOTE: now touch /.ruckus_bootstrap_stage2, which causes init
 	    #       to run the stage2 script on tty1 at boot
-	    touch $BABY/.ruckus_bootstrap_stage2 || exit 1
+	    touch $BABY$RUCKUS_BOOTSTRAP_STAGE2_FILE || exit 1
 
 	    ;;
 
@@ -757,6 +757,15 @@ for p in $packages; do
 done
 
 
+# remove the cross-compiler and it's utilities
+#
+# NOTE: we're all done cross-compiling at this point and we're about to
+#       reboot into our stage2 bootstrap environment using our new native
+#       bootstrap compiler.
+rm -rf $BABY/$PREFIX_CROSS || exit 1
+
+# remove the bootstrap and bootstrap-cross symlinks
+rm $PREFIX_CROSS $PREFIX_FINAL || exit 1
 
 # make a backup of our progress.
 #
@@ -775,7 +784,7 @@ sudo tar -vcf $BUILDROOT/baby-bootstrap-final.tar \
 #        has having to be included in this backup... which would kinda
 #        defeat the whole purpose of incremental backups?
 
-# NOTE: now we have to move $BABY/* to $INSTALLROOT.  we can either to a
+# NOTE: now we have to move $BABY/* to $INSTALLROOT.  we can either do a
 #       globbing mv, or we can untar our baby*.tar files... depends on how
 #       much we care about preserving the original contents of $BABY.
 #       considering that we already have the tar files backing up BABY, we

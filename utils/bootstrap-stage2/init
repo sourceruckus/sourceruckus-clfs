@@ -7,12 +7,12 @@ toplevel=/ruckus
 . $toplevel/utils/bootstrap-early/functions
 
 # check for the control file
-if [ ! -f /.ruckus_bootstrap_stage2 ]; then
+if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
     exec /sbin/getty 38400 tty1
     exit 0
 fi
 
-rm -f /.ruckus_bootstrap_stage2
+rm -f $RUCKUS_BOOTSTRAP_STAGE2_FILE
 
 echo "running source ruckus bootstrap-stage2..."
 cd $toplevel/utils/bootstrap-stage2
@@ -37,4 +37,7 @@ if ! $(grep $build_user /etc/passwd >/dev/null); then
     chmod 664 $toplevel/.profile
 fi
 
+# kick off the builder as build_user
+#
+# NOTE: build_user will have to use sudo to do it's installations.
 exec su - $build_user -c "$toplevel/utils/bootstrap-stage2/go"
