@@ -1,8 +1,29 @@
 - /bootstrap is in ~build_user/.profile's PATH but that isn't parsed when
   started via init
 
+  NOTE: I think this is fixed (and/or moot).
+
 - woops, we have 'make install' permissions issues because we're building as
   $build_user
 
+  NOTE: fix this by putting 'sudo' all over the place
+
 - woops, we've got some '-v' flags that don't work (e.g., ln -v)
 
+  NOTE: indeed...
+
+- test error handling for this:
+
+	    pushd $builddir &&
+	    sudo make install-private-headers &&
+	    sudo ln -sv tclsh8.5 $PREFIX_FINAL/bin/tclsh
+	    popd || exit 1
+
+  Does sudo return error if subtask returns error?  or does it only return
+  error if auth failed?
+
+  Looks like "real" sudo returns error if subtask does.  Need to double
+  check our fake version...  Looks good.
+
+
+- does busybox tar have -v? yes, it does.

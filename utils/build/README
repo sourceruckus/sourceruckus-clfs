@@ -4,8 +4,50 @@ README - utils/build
 
 This is where the build scripts for each installable image will live
 
+** bootstrap.img
+
+This should be our bootstrap system, saved for later.  Just in case.
+
+
 ** tiny.img
+
+As small as possible... just the basic CLFS system?  There's almost no point
+in this, since this image won't be very usable...  But it will give us a
+clear delineation between the core CLFS packages and Source Ruckus.
+
 
 ** base.img
 
+Add a small selection of extra things we'll want (ssh, zsh, emacs, python,
+srp) for a text-mode only basic system.  This should be fully functional, though.
+
+NOTE: I wonder if we can squeeze some basic Xlibs and latex into
+      this... might increase disk usage pretty dramatically though...
+
+NOTE: this should do almost nothing outside of providing a sane tiny system.
+
+
+** server.img
+
+This should add everything needed to be a full featured headless server.
+Maybe up to X libs, but no X server.  (that would mean no XDMCP,
+though... of course, what's the point of XDMCP support if there's no desktop
+environment installed)
+
+
+** workstation.img
+
+This should add everything needed for a tidy workstation installation (e.g.,
+LXDE, fluxbox, firefox, thunderbird, libreoffice, latex, maybe some small
+multimedia tools).
+
+
 ** extra.img
+
+Everything else.  This is the complete dev system with everything and the
+kitchen sink thrown in.
+
+Big Fat Desktop Environments (GNOME, KDE), java, seamonkey, additional
+multimedia stuff.
+
+ALL debug symbols added back in!

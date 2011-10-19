@@ -41,7 +41,7 @@ RUCKUS_BOOTSTRAP_STAGE2_FILE=/.ruckus_bootstrap_stage2
 
 # only add BOOTSTRAP_EARLY and BOOTSTRAP_CROSS to PATH if we haven't booted
 # into the stage2 bootstrap system yet.
-if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_file ]; then
+if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
     # setup environment to use our bootstrap-early stuff
     export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
     export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH
@@ -296,8 +296,15 @@ compile_generic()
     #configure=$sourcedir/$p/configure
     #mkdir -p $builddir
 
+    # if we're in the stage2 bootstrap, we need to install as root user.
+    if [ -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
+	SUDO=sudo
+    else
+	SUDO=
+    fi
+
     pushd $builddir &&
-    make -j$JOBCOUNT && make install &&
+    make -j$JOBCOUNT && $SUDO make install &&
     popd || exit 1
 }
 

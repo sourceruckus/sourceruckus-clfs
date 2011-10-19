@@ -36,8 +36,8 @@ build()
 
 	    # and do a bit of extra work
 	    pushd $builddir &&
-	    make install-private-headers &&
-	    ln -sv tclsh8.5 $PREFIX_FINAL/bin/tclsh
+	    sudo make install-private-headers &&
+	    sudo ln -s tclsh8.5 $PREFIX_FINAL/bin/tclsh
 	    popd || exit 1
 
 	    ;;
@@ -52,7 +52,7 @@ build()
 	    # to leave out a bunch of stuff we don't need right now.
 	    pushd $builddir &&
 	    make -j$JOBCOUNT &&
-	    make SCRIPTS="" install &&
+	    sudo make SCRIPTS="" install &&
 	    popd || exit 1
 	    ;;
 

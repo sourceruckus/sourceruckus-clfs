@@ -12,8 +12,6 @@ if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
     exit 0
 fi
 
-rm -f $RUCKUS_BOOTSTRAP_STAGE2_FILE
-
 echo "running source ruckus bootstrap-stage2..."
 cd $toplevel/utils/bootstrap-stage2
 
@@ -41,3 +39,6 @@ fi
 #
 # NOTE: build_user will have to use sudo to do it's installations.
 exec su - $build_user -c "$toplevel/utils/bootstrap-stage2/go"
+
+
+rm -f $RUCKUS_BOOTSTRAP_STAGE2_FILE
