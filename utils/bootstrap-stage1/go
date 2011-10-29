@@ -819,7 +819,11 @@ echo "done."
 sudo mv $BABY/* $INSTALLROOT
 sudo rmdir $BABY
 
-echo "\n\nNow it's time to boot up into the bootstrap-stage2 environment!"
+# FIXME: ownership of $BABY's new toplevel directory (which becomes / once
+#        we boot up into stage2) has not been modified by these scripts, so
+#        it's probably inappropriate (i.e., owned by non-root).
+
+echo "\n\nNow it's time to actually make the bootstrap-stage2 environment bootable!  Good luck!"
 exit 0
 
 
