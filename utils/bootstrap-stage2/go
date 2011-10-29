@@ -6,12 +6,24 @@ toplevel=/ruckus
 # source our common variables and functions
 . $toplevel/utils/bootstrap-early/functions
 
+# NOTE: The bootstrap-stage2 scripts run using busybox's ash shell.  That
+#       meens there are a few bash-isms that we MUST avoid using.  Here's a
+#       list of the ones that come to mind:
+#
+#       No += support, so OPTS+=' --foo' has to be OPTS="$OPTS --foo".
+#
+# FIXME: I don't know if nullglob or dotglob options exist in ash...
+
 
 build()
 {
     # set some common variables for all targets
     OPTS="--prefix=$PREFIX_FINAL"
-    OPTS="$OPTS --libdir=$PREFIX_FINAL/lib64"
+
+    if [ -n "$BUILD64" ]; then
+	OPTS="$OPTS --libdir=$PREFIX_FINAL/lib64"
+    fi
+
     OPTS="$OPTS --disable-static"
     OPTS="$OPTS --enable-shared"
     OPTS="$OPTS --disable-nls"
@@ -43,10 +55,16 @@ build()
 	    ;;
 
 	expect)
+
+	    if [ -n "$BUILD64" ]; then
+		OPTS="$OPTS --with-tcl=$PREFIX_FINAL/lib64"
+	    else
+		OPTS="$OPTS --with-tcl=$PREFIX_FINAL/lib"
+	    fi
+	    OPTS="$OPTS --with-tclinclude=$PREFIX_FINAL/include"
+
 	    setup_generic $1 &&
-	    configure_generic $1 $OPTS \
-		--with-tcl=$PREFIX_FINAL/lib64 \
-		--with-tclinclude=$PREFIX_FINAL/include || exit 1
+	    configure_generic $1 $OPTS || exit 1
 
 	    # custom build script.  setting SCRIPTS like this causes expect
 	    # to leave out a bunch of stuff we don't need right now.
