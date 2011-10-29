@@ -38,7 +38,13 @@ fi
 # kick off the builder as build_user
 #
 # NOTE: build_user will have to use sudo to do it's installations.
-exec su - $build_user -c "$toplevel/utils/bootstrap-stage2/go"
+su $build_user -c "$toplevel/utils/bootstrap-stage2/go"
 
+# FIXME: I took the '-' out of the above su command because it seems
+#        unnecessary, but I haven't tested that it still works yet...
 
+# NOTE: we intentionally don't check for failure here.  if we don't rm this
+#       file, init will start this script right back up again... looping
+#       infinitely.  if there was an error during the build, the user is
+#       going to have to handle kicking us back off.
 rm -f $RUCKUS_BOOTSTRAP_STAGE2_FILE
