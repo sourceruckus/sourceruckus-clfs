@@ -93,14 +93,27 @@ export JOBCOUNT=$((CPUCOUNT+1))
 export JOBCOUNT_KBUILD=$((CPUCOUNT*4))
 
 # make sure nullglob is turned on.  this makes a glob that doesn't match any
-# files expand to '' rather than the glob pattern itself.
+# files expand to '' rather than the glob pattern itself.  we want this
+# behavior so we can do the following (all over the place):
 #
-# FIXME: I think this command is bash specific... zsh does this by default
+# for p in might_be_patches_in_here/*.patch; patch -Np1 < $x
 #
-# FIXME: ash (busybox's shell used in stage2) doesn't like the shopt command
-#        but I don't remember exactly what type of glob I was refering to
-#        above... fingers crossed...
+# without nullglob turned on, that issues an error if there aren't any
+# patches.
+#
+# FIXME: shopt is bash specific...  ash (busybox's shell used in
+#        bootstrap-stage2) doesn't like the shopt command.  i don't even
+#        know if ash's default behavior is what we want... better look into
+#        it.
+#
 shopt -s nullglob >/dev/null 2>&1
+
+# turn on dotglob.  this makes globs include 'hidden' files, like .foo.  i'm
+# used to this behavior by default, so having this turned off keeps
+# introducing bugs in my scripts.
+#
+# FIXME: shopt is bash specific.  look into ash's behavior.
+shopt -s dotglob > /dev/null 2>&1
 
 # NOTE: make sure we have pushd/popd, since we use it all over the place
 #
@@ -161,6 +174,8 @@ setup_generic()
 	mkdir -p $builddir/source || exit 1
 	pushd $builddir/source
 	echo "checking for previously extracted source tree..."
+	# FIXME: I think the following check is what prompted me to globally
+	#        turn on bash's nullglob option...
 	if [ "." == "`ls -d ./*`" ]; then
 	    echo "extracting..."
 	    tar jxf $source/*.tar.bz2 || exit 1
@@ -176,6 +191,7 @@ setup_generic()
 	pushd $source
 	# only do this if we haven't previously configured
 	if [ ! -f $builddir/Makefile ]; then
+	    # FIXME: this following line also requires nullglob...
 	    for p in $sourcedir/$p/*.patch; do
 		#autoreconf="yes"
 		echo "applying patch: $p"
