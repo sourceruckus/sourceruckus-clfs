@@ -373,10 +373,8 @@ done
 
 # make a backup of our progress.
 #
-# NOTE: this has to be done using tar because dump can only do incrementals
-#       of an entire filesystem
-#
 # NOTE: using sudo for this to make sure our build user has appropriate
 #       permissions to read all the files we're backing up
-sudo tar -vcf $BUILDROOT/baby-bootstrap-cross.tar \
-    -g $BUILDROOT/baby-bootstrap-cross.snar -C $BABY . || exit 1
+echo -n "creating bootstrap-cross backup... "
+sudo tar -zcf $BUILDROOT/baby-bootstrap-cross.tar.gz -C $BABY . || exit 1
+echo "done."

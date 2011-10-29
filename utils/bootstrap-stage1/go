@@ -110,7 +110,7 @@ build()
 		patch -R -Np1 < $toplevel/utils/bootstrap-cross/patches/gcc/0003-set-CROSS_SYSTEM_HEADER_DIR.patch || exit 1
 
 		# and apply final bootstrap patches
-		for p in $toplevel/utils/bootstrap/patches/gcc/*.patch; do
+		for p in $toplevel/utils/bootstrap-stage1/patches/gcc/*.patch; do
 		    patch -Np1 < $p || exit 1
 		done
 		popd
@@ -415,7 +415,7 @@ build()
 	    # set build_in_tree because we have a bootstrap patch for
 	    # configure.ac
 	    build_in_tree=yes \
-		patches=$toplevel/utils/bootstrap/patches/$1/*.patch \
+		patches=$toplevel/utils/bootstrap-stage1/patches/$1/*.patch \
 		setup_generic $1 || exit 1
 
 	    configure_generic $1 $OPTS \
@@ -783,7 +783,7 @@ mkdir -p $PWD/.build
 # now iterate through building for our target architecture using our
 # cross-compiler.
 for p in $packages; do
-    echo "building final bootstrap package: $p"
+    echo "building bootstrap-stage1 package: $p"
     build $p || exit 1
 done
 
@@ -793,27 +793,23 @@ done
 # NOTE: we're all done cross-compiling at this point and we're about to
 #       reboot into our stage2 bootstrap environment using our new native
 #       bootstrap compiler.
-rm -rf $BABY/$PREFIX_CROSS || exit 1
+sudo rm -rf $BABY$PREFIX_CROSS || exit 1
 
 # remove the bootstrap and bootstrap-cross symlinks
-rm $PREFIX_CROSS $PREFIX_FINAL || exit 1
+sudo rm -f $PREFIX_CROSS $PREFIX_FINAL || exit 1
 
 # make a backup of our progress.
 #
-# NOTE: this has to be done using tar because dump can only do incrementals
-#       of an entire filesystem
+# NOTE: This is not an incremental backup because we've just chowned every
+#       single file since the last backup, so an incremental backup would
+#       include every single file... which would be pretty silly.
 #
 # NOTE: using sudo for this to make sure our build user has appropriate
 #       permissions to read all the files we're backing up
-cp $BUILDROOT/baby-bootstrap-cross.snar \
-    $BUILDROOT/baby-bootstrap-final.snar &&
-sudo tar -vcf $BUILDROOT/baby-bootstrap-final.tar \
-    -g $BUILDROOT/baby-bootstrap-final.snar -C $BABY . || exit 1
+echo -n "creating bootstrap-stage1 backup... "
+sudo tar -zcf $BUILDROOT/baby-bootstrap-stage1.tar.gz -C $BABY . || exit 1
+echo "done."
 
-# FIXME: might be silly to do incremental tar above... we've chowned every
-#        file since the last backup, so won't that flag every single file
-#        has having to be included in this backup... which would kinda
-#        defeat the whole purpose of incremental backups?
 
 # NOTE: now we have to move $BABY/* to $INSTALLROOT.  we can either do a
 #       globbing mv, or we can untar our baby*.tar files... depends on how
@@ -823,6 +819,8 @@ sudo tar -vcf $BUILDROOT/baby-bootstrap-final.tar \
 sudo mv $BABY/* $INSTALLROOT
 sudo rmdir $BABY
 
+echo "\n\nNow it's time to boot up into the bootstrap-stage2 environment!"
+exit 0
 
 
 
