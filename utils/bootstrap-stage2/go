@@ -86,6 +86,26 @@ packages="$packages tcl"
 packages="$packages expect"
 packages="$packages dejagnu"
 
+# CLFS Chapter 10, section 4 temporary perl
+packages="$packages perl"
+
+# sshd (openssl/openssh, or dropbear (the embedded alernative))
+packages="$packages openssl"
+packages="$packages openssh"
+
+# srp
+packages="$packages python"
+packages="$packages srp"
+
+# dev tools
+packages="$packages rsync"
+packages="$packages git"
+packages="$packages emacs"
+packages="$packages zsh"
+
+# FIXME: stage1 should have already installed syslinux
+#packages="$packages syslinux"
+
 
 cd $toplevel/utils/bootstrap-stage2
 mkdir -p $PWD/.build
