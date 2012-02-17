@@ -715,7 +715,12 @@ packages+=" ntfs-3g"
 #       after booting up in the bootstrap system, but it works out better
 #       for us if the bootstrap system is already completely ready to
 #       rock-n-roll after the cross-compiling stage.
-#packages=""
+#
+# NOTE: just kidding.  this doesn't work.  tcl install target tries to
+#       invoke the newly compiled tclsh binary, which might have been
+#       compiled for a different architecture.  these will have to go
+#       in bootstrap-stage2.
+#
 #packages+=" tcl"
 #packages+=" expect"
 #packages+=" dejagnu"
@@ -768,9 +773,14 @@ packages+=" bootscripts"
 # FIXME: some of this will have to be done as root, and there will have to
 #        be some variable substitution in the grub.conf file
 #
+# FIXME: we're actually gonna use syslinux (extlinux), which is sooo
+#        much easier.
+#
 #packages+=" grub"
 #packages+=" grub-mbr"
 #packages+=" grub-conf"
+#
+#packages+=" syslinux"
 
 # this stage will set the ownership of our baby filesystem to root instead
 # of our build user
@@ -823,7 +833,7 @@ sudo rmdir $BABY
 #        we boot up into stage2) has not been modified by these scripts, so
 #        it's probably inappropriate (i.e., owned by non-root).
 
-echo "\n\nNow it's time to actually make the bootstrap-stage2 environment bootable!  Good luck!"
+echo -e "\n\nNow it's time to actually make the bootstrap-stage2 environment bootable!  Good luck!"
 exit 0
 
 
