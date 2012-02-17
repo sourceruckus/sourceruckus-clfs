@@ -23,6 +23,12 @@ packages+=" e2fsprogs"
 # might also want to make sure that the host system has a usable ncurses
 # (and ncurses-devel) library.  otherwise we can't run the 'menuconfig'
 # target for kernel and busybox configuration
+#
+# NOTE: both the kernel and busybox fail to look for ncurses anywhere
+#       other than in /usr... so in order to actually make use of
+#       this, their source trees will need to be patched to point to
+#       our bootstrap-early libraries.
+#
 packages+=" ncurses"
 
 # help2man is needed to build man pages for texinfo after running autoreconf
