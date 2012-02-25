@@ -61,3 +61,6 @@
 [submodule "src/dejagnu"]
 	path = src/dejagnu
 	url = ../dejagnu.git
+[submodule "src/nasm"]
+	path = src/nasm
+	url = ../nasm.git
