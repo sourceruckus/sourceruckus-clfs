@@ -100,8 +100,8 @@ build()
 	    ;;
 
 	binutils)
-	    # this was using /tools as apposed to /tools-cross in the CLFS
-	    # book
+	    # FIXME: this was using /tools as apposed to /tools-cross
+	    #        in the CLFS book...  is this really correct?
 	    
 	    AR=ar AS=as setup_generic $1 &&
 	    AR=ar AS=as \
@@ -304,7 +304,8 @@ build()
 	    fi
 
 	    # FIXME: should probably rework the gcc patches to modify
-	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
+	    #        Makefile.am instead of Makefile.in and then set
+	    #        autoreconf=yes
 
 	    # however, we do have to adjust some variables
 	    builddir=$PWD/.build/gcc-final
@@ -338,9 +339,13 @@ build()
 	    popd
 	    ;;
 
-	*)
-	    build_generic $1 $OPTS
+	nasm)
+	    # NOTE: nasm-2.09.10 can't build out-of-tree
+	    build_in_tree=yes build_generic $1 $OPTS || exit 1
 	    ;;
+
+	*)
+	    build_generic $1 $OPTS || exit 1
     esac
 }
 
@@ -363,6 +368,8 @@ if [ -n "$BUILD64" ]; then
 fi
 
 packages+=" gcc"
+packages+=" nasm"
+
 
 mkdir -p $PWD/.build
 
