@@ -40,6 +40,7 @@ to work for some random package...
 ** rsync (need to be able to rsync source trees)
 ** tar (need -g incremental support)
 ** git (submodule wasn't very good until around v1.6)
+** xz (needed to build syslinux)
 
 * Optional
 ** ncurses (needed for Kbuild's menuconfig)

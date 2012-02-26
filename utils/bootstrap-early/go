@@ -34,6 +34,10 @@ packages+=" ncurses"
 # help2man is needed to build man pages for texinfo after running autoreconf
 packages+=" help2man"
 
+# xz is needed to build syslinux (and potentially for uncompressing
+# source tarballs, patches, etc)
+packages+=" xz"
+
 # install these to make sure the rest of the build is done using the GNU
 # build tools we test against
 packages+=" make"
