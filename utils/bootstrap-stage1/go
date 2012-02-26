@@ -524,6 +524,23 @@ build()
 
 	    ;;
 
+	syslinux)
+	    build_in_tree=yes setup_generic $1 || exit 1
+
+	    # NOTE: devel.mk uses sets development-only debug flags,
+	    #       which may or may not cause the build to fail
+	    #       (e.g., -Wno-clobbered doesn't seem to work with
+	    #       gcc-4.5.2
+	    rm -f $builddir/mk/devel.mk || exit 1
+
+	    pushd $builddir &&
+	    make CROSS_COMPILE=$MACHTYPE_TARGET- -j$JOBCOUNT &&
+	    install -m 755 extlinux/extlinux $PREFIX_CROSS/bin &&
+	    install -d -m 755 $PREFIX_CROSS/syslinux &&
+	    install -m 644 mbr/mbr.bin $PREFIX_CROSS/syslinux &&
+	    popd || exit 1
+	    ;;
+
 	fix-perms)
 	    # this has to chown everything to root, so root permissions are
 	    # required...
@@ -624,6 +641,10 @@ packages+=" busybox"
 #packages+=" tar"
 #packages+=" vim"
 #packages+=" xz-utils"
+#
+# NOTE: The busybox xz applet(s) only support decompressing... If we
+#       need to compress with xz from the bootstrap system, we'll need
+#       to install the real xz package.
 
 packages+=" bison"
 packages+=" file"
@@ -780,7 +801,9 @@ packages+=" bootscripts"
 #packages+=" grub-mbr"
 #packages+=" grub-conf"
 #
-#packages+=" syslinux"
+# NOTE: syslinux needs nasm in bootstrap-cross
+#
+packages+=" syslinux"
 
 # this stage will set the ownership of our baby filesystem to root instead
 # of our build user
