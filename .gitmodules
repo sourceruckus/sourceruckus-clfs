@@ -67,3 +67,6 @@
 [submodule "src/syslinux"]
 	path = src/syslinux
 	url = ../syslinux.git
+[submodule "src/xz"]
+	path = src/xz
+	url = ../xz.git
