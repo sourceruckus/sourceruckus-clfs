@@ -100,11 +100,9 @@ packages="$packages srp"
 # dev tools
 packages="$packages rsync"
 packages="$packages git"
+packages="$packages readline"
 packages="$packages emacs"
 packages="$packages zsh"
-
-# FIXME: stage1 should have already installed syslinux
-#packages="$packages syslinux"
 
 
 cd $toplevel/utils/bootstrap-stage2
