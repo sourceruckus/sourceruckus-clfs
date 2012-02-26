@@ -104,6 +104,11 @@ packages="$packages readline"
 packages="$packages emacs"
 packages="$packages zsh"
 
+# multimedia?
+packages="$packages ImageMagick"
+packages="$packages ushare"
+packages="$packages dvgrab"
+
 
 cd $toplevel/utils/bootstrap-stage2
 mkdir -p $PWD/.build
@@ -126,3 +131,32 @@ cp $BUILDROOT/baby-bootstrap-stage1.snar \
     $BUILDROOT/baby-bootstrap-stage2.snar &&
 sudo tar -vcf $BUILDROOT/baby-bootstrap-stage2.tar \
     -g $BUILDROOT/baby-bootstrap-stage2.snar -C $BABY . || exit 1
+
+
+# NOTE: if the bootstrap system is feature-complete for my embedded
+#       server, i can leave it booted up all the time (as apposed to
+#       rebooting into fedora).  here's what i would need
+#
+#       www: i don't do anything fancy here... i think the busybox
+#       httpd will suffice.  (although i'll need ImageMagick for photo
+#       thumbnail generation)
+#
+#       nfs: i think i'd have to add nfs-utils for this...  don't
+#       think busybox does nfs server.
+#
+#       dhcp: i can continue to just use the dhcp server on my wifi
+#       router.  the only way i'd use the busybox one is if i can get
+#       dynamic dns working.  alternatively, i could just add
+#       dnsmasq...
+#
+#       ssh: i need to be able to ssh into the box...  openssl/openssh
+#       or dropbear?
+#
+#       dev tools: i'm gonna need rsync and git.  would probably like
+#       to have emacs and zsh, too.
+#
+#       python: probably need this to use media_utils, etc
+#
+#       multimedia: speaking of media_utils... that would require at
+#       least having ImageMagick.  Maybe also need dvgrab and all the
+#       multimedia libs up to ffmpeg...
