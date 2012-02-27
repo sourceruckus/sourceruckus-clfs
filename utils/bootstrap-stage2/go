@@ -93,6 +93,9 @@ packages="$packages perl"
 packages="$packages openssl"
 packages="$packages openssh"
 
+# dhcp/dns
+packages="$packages dnsmasq"
+
 # srp
 packages="$packages python"
 packages="$packages srp"
@@ -144,10 +147,8 @@ sudo tar -vcf $BUILDROOT/baby-bootstrap-stage2.tar \
 #       nfs: i think i'd have to add nfs-utils for this...  don't
 #       think busybox does nfs server.
 #
-#       dhcp: i can continue to just use the dhcp server on my wifi
-#       router.  the only way i'd use the busybox one is if i can get
-#       dynamic dns working.  alternatively, i could just add
-#       dnsmasq...
+#       dhcp: busybox dhcpd/dnsd functionality isn't sufficient.
+#       we'll add dnsmasq to take care of dhcpd and dynamic dns.
 #
 #       ssh: i need to be able to ssh into the box...  openssl/openssh
 #       or dropbear?
@@ -160,3 +161,28 @@ sudo tar -vcf $BUILDROOT/baby-bootstrap-stage2.tar \
 #       multimedia: speaking of media_utils... that would require at
 #       least having ImageMagick.  Maybe also need dvgrab and all the
 #       multimedia libs up to ffmpeg...
+#
+#       syslog: can use busybox's syslogd and klogd, but have to add
+#       init scripts or something...
+
+
+# FIXME: considering including extra documentation tools in here as well, so
+#        we don't have to wory about tools not existing yet in the bootstrap
+#        environment.
+#packages+=" tetex"
+#packages+=" asdf"
+#packages+=" xfig"
+#packages+=" transfig"
+#packages+=" netpbm"
+#packages+=" latex2html"
+#packages+=" graphviz"
+#packages+=" doxygen"
+#packages+=" ghostscript"
+#packages+=" gtkdoc"
+
+#packages+=" freetype"
+#packages+=" docbook-xml"
+#packages+=" docbook-xsl"
+#packages+=" libxml2"
+#packages+=" libxslt"
+#packages+=" fontconfig"

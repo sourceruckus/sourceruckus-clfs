@@ -160,6 +160,7 @@ build()
 	    #
 	    #       - e2fsprogs (findfs, fsck.ext2, mkfs.ext2, etc)
 	    #       - util-linux (blkid, mount, losetup, agetty, etc)
+	    #       - dhcpd, dnsd (dnsmasq instead)
 	    #
 	    # NOTE: We're not using PAM here... might want to add this into
 	    #       our final busybox config (assuming we actually compile
@@ -181,12 +182,8 @@ build()
 		CROSS_COMPILE="${MACHTYPE_TARGET}-" \
 		CONFIG_PREFIX=$PREFIX_FINAL install || exit 1
 
-	    # FIXME: setuid root?  install prints this warning:
-	    #  --------------------------------------------------
-	    #  You will probably need to make your busybox binary
-	    #  setuid root to ensure all configured applets will
-	    #  work properly.
-	    #  --------------------------------------------------
+	    # NOTE: busybox binary is setuid root later on under
+	    #       fix-perms
 
 	    # FIXME: there are a bunch of config files in
 	    #        $source/examples that we might want installed too
@@ -732,52 +729,6 @@ packages+=" ntfs-3g"
 #        bootstrap system to just use busybox's mdev for now.
 #packages+=" udev"
 
-# NOTE: we're adding the testsuite tools here.  CLFS actually builds them
-#       after booting up in the bootstrap system, but it works out better
-#       for us if the bootstrap system is already completely ready to
-#       rock-n-roll after the cross-compiling stage.
-#
-# NOTE: just kidding.  this doesn't work.  tcl install target tries to
-#       invoke the newly compiled tclsh binary, which might have been
-#       compiled for a different architecture.  these will have to go
-#       in bootstrap-stage2.
-#
-#packages+=" tcl"
-#packages+=" expect"
-#packages+=" dejagnu"
-#packages+=" asdf"
-
-# FIXME: considering including extra documentation tools in here as well, so
-#        we don't have to wory about tools not existing yet in the bootstrap
-#        environment.
-#packages+=" tetex"
-#packages+=" asdf"
-#packages+=" xfig"
-#packages+=" transfig"
-#packages+=" netpbm"
-#packages+=" latex2html"
-#packages+=" graphviz"
-#packages+=" doxygen"
-#packages+=" ghostscript"
-#packages+=" gtkdoc"
-
-#packages+=" freetype"
-#packages+=" docbook-xml"
-#packages+=" docbook-xsl"
-#packages+=" libxml2"
-#packages+=" libxslt"
-#packages+=" fontconfig"
-
-# FIXME: also considering including openssh, zsh, and emacs, just to have an
-#        even more comfortable environment.  this will increase the size and
-#        time to build bootstrap, but will result in a very featureful
-#        environment
-# FIXME: does this need gnutls, or libgcrypt?
-#packages+=" openssl"
-#packages+=" openssh"
-#packages+=" zsh"
-#packages+=" emacs"
-
 # this will handle config files for init, mdev, users/groups, logfiles,
 # login scripts, fstab, needed device nodes, etc
 packages+=" create-conf"
@@ -857,6 +808,8 @@ sudo rmdir $BABY
 #        it's probably inappropriate (i.e., owned by non-root).
 
 echo -e "\n\nNow it's time to actually make the bootstrap-stage2 environment bootable!  Good luck!"
+echo -e "\n1. Install and configure bootloader (e.g., extlinux)"
+echo -e "\n2. Edit /etc/fstab rootfs and swap entries"
 exit 0
 
 
@@ -878,23 +831,3 @@ exit 0
 #packages+=" dhcpd"
 #packages+=" dhcpclient"
 #pacakges+=" bind"
-
-
-
-
-# hmm, might want full versions of these:
-#
-# fsck (from e2fsprogs? or coreutils?)
-# mount, losetup (for cryptoloop)
-# bash (for script compatability (maybe zsh can pretend to be bash?))
-# sysvinit (for actual runlevels)
-# udev (for HAL (and X and GNOME))
-# bind
-# dhcpd
-# ntpd
-# httpd
-# inetd
-# iproute
-# less
-
-#tar -vcf $BUILDROOT/baby-bootstrap-final.tar -g $BUILDROOT/baby.snar -C $BABY .
