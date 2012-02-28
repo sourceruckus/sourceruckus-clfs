@@ -64,3 +64,6 @@
 [submodule "src/nasm"]
 	path = src/nasm
 	url = ../nasm.git
+[submodule "src/syslinux"]
+	path = src/syslinux
+	url = ../syslinux.git
