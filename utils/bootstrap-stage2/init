@@ -38,10 +38,11 @@ fi
 # kick off the builder as build_user
 #
 # NOTE: build_user will have to use sudo to do it's installations.
-su $build_user -c "$toplevel/utils/bootstrap-stage2/go"
-
-# FIXME: I took the '-' out of the above su command because it seems
-#        unnecessary, but I haven't tested that it still works yet...
+#
+# NOTE: The '-' is indeed quite intentional.  It forces parsing of
+#       build_user's .profile, which is where we've already set a whole
+#       bunch of important variables.
+su - $build_user -c "$toplevel/utils/bootstrap-stage2/go"
 
 # NOTE: we intentionally don't check for failure here.  if we don't rm this
 #       file, init will start this script right back up again... looping
