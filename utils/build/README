@@ -1,12 +1,25 @@
 -*- mode: outline; mode: flyspell -*-
 
-README - utils/build
+* README - utils/build
 
 This is where the build scripts for each installable image will live
 
+
 ** bootstrap.img
 
-This should be our bootstrap system, saved for later.  Just in case.
+This should be our final bootstrap system, saved for later.  Just in case.
+
+NOTE: This should exclude the /ruckus directory.
+
+NOTE: We should double-check for remaining symlinks back into /bootstrap for
+      each of the subsequent images... we want to exclude /bootstrap and all
+      references to it.
+
+
+** embedded.img
+
+Maybe have an image that's just kernel, eglibc, and busybox (installed
+appropriately outside of /bootstrap)?
 
 
 ** tiny.img
@@ -14,6 +27,13 @@ This should be our bootstrap system, saved for later.  Just in case.
 As small as possible... just the basic CLFS system?  There's almost no point
 in this, since this image won't be very usable...  But it will give us a
 clear delineation between the core CLFS packages and Source Ruckus.
+
+NOTE: Actually, we probably won't have a pure basic CLFS system... we'll be
+      straying from the book quite frequently (e.g., busybox instead of tons
+      of stuff, zsh and ash instead of bash)
+
+NOTE: I suspect that tiny.img and base.img are going to merge together into
+      a single base.img... we'll see.
 
 
 ** base.img

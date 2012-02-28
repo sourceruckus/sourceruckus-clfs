@@ -42,7 +42,7 @@ probably won't be accepted for mainline inclusion.
 
 
 * build user
-The LFS books to the build as a non-privileged 'lfs' user.  I don't really
+The LFS books do the build as a non-privileged 'lfs' user.  I don't really
 like this very much, as I'd rather preserve the history of who did a
 particular build.  The benefit of creating an lfs user and creating its
 login scripts is that we know exactly what's in them... so using an already

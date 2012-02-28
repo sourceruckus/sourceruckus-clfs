@@ -1,0 +1,5 @@
+-*- mode: outline; mode: flyspell -*-
+
+* ISSUES
+
+** assumed that sudo is configured for build_user

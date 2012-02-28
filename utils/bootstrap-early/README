@@ -1,13 +1,13 @@
 -*- mode: outline; mode: flyspell -*-
 
-README - utils/bootstrap-early
+* README - utils/bootstrap-early
 
 This step prepares us for the bootstrap-cross step.  It installs some extra
 necessary tools on the originating host system to ensure that we have
 everything needed to complete the build.
 
 All the packages built in this section will get compiled and installed in
-$HOME/RUCKUS/Bootstrap-early.  Actually using them will require tweaking of
+$BUILDROOT/bootstrap-early.  Actually using them will require tweaking of
 your user's environment (PATH, LD_LIBRARY_PATH, etc).
 
 Note that this stage assumes the host system at least has git (to get this),

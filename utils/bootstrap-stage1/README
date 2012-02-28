@@ -1,32 +1,20 @@
 -*- mode: outline; mode: flyspell -*-
 
-README - utils/bootstrap
+* README - utils/bootstrap-stage1
 
-This is the final bootstrap stage.  This stage is built using the toolchain
-provided by the bootstrap-cross stage.  The end result is a bootable
-bootstrap system used to build the rest of the system.
+This is the first half of the final bootstrap stage.  This stage is built
+using the toolchain provided by the bootstrap-cross stage.  The end result
+is a bootable bootstrap system used to build the rest of the system.
+
+The reason behind splitting the final bootstrap stage in two is simple;
+cross-compiling is a pain.  Stage1 uses the cross-compiler and builds just
+enough to result in a bootable system.  We then boot into the baby system
+and build the rest of the bootstrap tools natively.
 
 After this step is complete, the resulting $BABY dir can be used to populate
 a seperate filesystem, which can then be made bootable by editing the
 host system's bootloader configuration (e.g., /boot/grub/menu.lst).
 
-
-NOTE: I got a little inconsistent with the name of this stage... some places
-      refer to this as bootstrap-final, others just call it bootstrap.  And
-      the PREFIX_FINAL variable expands to $BABY/bootstrap.  I should either
-      rename this whole directory 'bootstrap-final' or maybe just try and
-      clear it up in the docs.
-
-NOTE: I should come up with a better privilege escalation scheme than using
-      'su -c' all the time.  How many times must the user really type in the
-      root password...?  Maybe set up ssh keys with authorized_keys allowing
-      the build user to log in as root w/out a password?
-
-NOTE: Maybe we can accomplish the above by configuring sudo during
-      bootstrap-early...
-
-NOTE: Also, we should do an incremental dump of $BABY after this so we can
-      rebuild $BABY from bootstrap-cross.img and bootstrap-final.img.
 
 NOTE: I should eventually automate the process by which $BABY actually
       becomes bootable... but it might involve toasting the host machine.
@@ -34,7 +22,7 @@ NOTE: I should eventually automate the process by which $BABY actually
       set up a dual boot.  The process will eventually be:
 
       1. Create ext4 rootfs on given partition
-      2. Restore from bootstrap-cross.img and bootstrap-final.img
+      2. Untar baby-bootstrap-stage1.tar.gz
       3. Generate /etc/fstab so the rootfs and swap devices are correct
       4. Update host system's GRUB config to make the new partition bootable
 
@@ -48,13 +36,12 @@ NOTE: What if I created a bootable DVD for the bootable bootstrap
       then go and create a partition, filesystem, etc, to do the building
       in... maybe someday.
 
-
-NOTE: Why is it that aureconf_generic from bootstrap-early results in a good
-      gettext source tree, but using the same function from bootstrap-final
-      (assuming that gettext got reverted to a pristine git checkotu)
-      results in a borked source tree that's still got a few Makefiles in
-      it?  Trying to configure the examples dir at that point fails, because
-      it's 'already configured'.
+NOTE: Why is it that autoreconf_generic from bootstrap-early results in a
+      good gettext source tree, but using the same function from
+      bootstrap-final (assuming that gettext got reverted to a pristine git
+      checkout) results in a borked source tree that's still got a few
+      Makefiles in it?  Trying to configure the examples dir at that point
+      fails, because it's 'already configured'.
 
 NOTE: Only diff I can see is that CC and CXX are overriden to use the
-      cross-compiler...
+      cross-compiler... I don't understand why that's breaking things...

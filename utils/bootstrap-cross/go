@@ -367,7 +367,7 @@ packages+=" gcc"
 mkdir -p $PWD/.build
 
 for p in $packages; do
-    echo "building cross package: $p"
+    echo "building bootstrap-cross package: $p"
     build $p || exit 1
 done
 

@@ -1,68 +1,29 @@
-- remove /bootstrap-cross
-#- strip-all in /bootstrap/{bin,sbin}
-#- 229M of static libs in /bootstrap/lib{,64}
-#- strip-all in /bootstrap/libexec/gcc
-- removed 16.4M of docs in /bootstrap/share/doc
-- removed /bootstrap/{info,man}/*
+-*- mode: outline; mode: flyspell -*-
 
-- there's lots of stuff in /bootstrap/share:
+* ISSUES
 
-32.0K	aclocal
-468.0K	bison
-4.0K	doc
-56.0K	gcc-4.5.2
-20.0K	getopt
-9.1M	i18n
-13.7M	info
-11.6M	locale
-3.1M	man
-1.7M	misc
-20.0K	tabset
-6.3M	terminfo
-36.0K	texinfo
-5.5M	zoneinfo
-51.7M	total
+** final / ownership should be root:root
 
-- removed all info and man
+** touch /etc/mtab
 
-- there's still 30M or so of language cruft in /bootstrap/share...
-- actually, looks like only libc has installed a .mo file now so locale is only 3M
+** should remind user about correcting /etc/fstab
 
-#- removed i18n/*, locale/*, zoneinfo/*, 
+** bootscript warnings are uuuugly.  lotso dots...................
 
-#- that brings us to 193M, but I don't know if i've busted anything...
-
-- that brings us to... 428M... 
-
-- strip-debug in /bootstrap/{bin,sbin}... 399M
-
-- strip-all in /boostrap/{bin,sbin}... 397.5M
-
-
-- and we can still build tcl, expect, and dejagnu!
+** 'mount -t ntfs-3g /dev/sdb1 /mnt' works, but type is required...
 
 
 
+* ROOTFS size
 
-- crud, looks like gcc is busted w/out some of the static libs... at least it needs libc_noshared.a
+If we're concerned with rootfs size, the first thing to do is strip debug
+like this:
 
+# find $BABY -type f --exec strip --strip-debug {} \;
 
-- bootscript warnings are uuuugly.  lotso dots...................
+Do NOT do this from within the bootstrap system.  It must be done from the
+host system or strip will hose the strip binary.
 
-- 'mount -t ntfs-3g /dev/sdb1 /mnt' works, but type is required...
+This brings our rootfs size down to about 138M for 32bit builds.
 
-
-- in order for the bootstrap system to really be fully-functional, we're gonna
-  need the following:
-
-  - CLFS Chapter 9 Testsuite Tools
-  - CLFS Chapter 10, section 4 temporary perl
-
-  - ssh (openssl/openssh, or dropbear (the embedded alernative))
-  - python
-  - srp
-  - rsync?
-  - git?
-  - emacs?
-  - zsh?
-  - syslinux?
+And there's still a bunch of waste in /bootstrap/{man,info,share}

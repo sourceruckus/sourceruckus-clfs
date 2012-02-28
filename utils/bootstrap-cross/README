@@ -1,14 +1,14 @@
 -*- mode: outline; mode: flyspell -*-
 
-README - utils/bootstrap-cross
+* README - utils/bootstrap-cross
 
 This step builds a cross-compiling toolchain.  The resulting executables
-will be used to compile the bootstrap-final step for the correct
+will be used to compile the bootstrap-stage1 step for the correct
 architecture.
 
 All the packages built in this section will get compiled and installed in
-$HOME/RUCKUS/bootstrap-cross.  Actually using them will require tweaking of
-your user's environment.
+/bootstrap-cross (via the symlink created in bootstrap-early).  Actually
+using them will require tweaking of your user's environment.
 
 
 NOTE: This is all actually getting installed in $BABY/bootstrap-cross at the

@@ -1,0 +1,16 @@
+-*- mode: outline; mode: flyspell -*-
+
+* README - utils/bootstrap-stage2
+
+This is the second half of the final bootstrap stage.  As mentioned before,
+final bootstrap creation is split in half as soon as the baby system is
+bootable simply because cross-compiling is a pain.  This stage gets kicked
+off automatically by init after booting into the new baby system and will
+build the remaining bootstrap tools natively.
+
+The end result is a bootstrap system that's not only bootable, it contains
+all the tools required to successfully build Source Ruckus.
+
+After this step is complete, the toplevel Makefile can go about building and
+installing each individual package, which will eventually result in a
+complete system.

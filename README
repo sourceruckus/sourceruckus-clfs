@@ -8,12 +8,13 @@ What's a meta distro?  It's a collection of build tools, source packages,
 scripts, and documentation all ready to be built into a Linux distro.
 
 Source Ruckus Linux can be used out-of-the-box, but it's real strength lies
-in being used as a base to derive your OWN distro from.
+in being used as a base to derive your OWN distro from.  In other words, it
+exists purely to be forked, although it can be used as-is.
 
 
 * Goals
 
-** 32bit or 64bit multilib build
+** 32bit, 64bit, or 64bit multilib build
 
 At build time, the user should be able to select a specific architecture to
 cross-compile the Linux distro for (x86, x86_64 (pure64 or multilib), sparc,
@@ -48,28 +49,32 @@ patches, or by using a layered microkernel approach.  PREEMPT_RT is probably
 less likely to break things, although it might not play well with Xen or KVM
 virtual machines.  We'll see.
 
-** Xen Pvops Dom0 Kernel
-
-The Xen pvops dom0 kernel code isn't quite in upstream yet.  We should merge
-in Jeremy Fitzhardinge's xen/stable-x.y.z branch if at all possible.  It might be
-necessary to have both a PREEMPT_RT and separate Xen dom0 kernel... not sure
-yet how those two will play with each other.
+This will probably have to be added as a secondary kernel option (i.e.,
+kernel-rt package in addition to the standard kernel package).
 
 
-** Upstream DRM Kernel Code
+** Nicely integrated Xen4 virtualization
 
-Backporting the upstream DRM code from the Nouveau project's source tree
-will provide our kernel with the latest and greatest upstream DRM code
-(including development Nouveau code for Nvidia cards) while allowing us to
-hopefully co-exist with the Xen dom0 patches.
+The Xen pvops dom0 kernel is now in mainline!  The default kernel setup will
+be for a Xen pvops dom0 using the latest Xen4 hypervisor and management
+tools.
+
+Source Ruckus's use of Xen will NOT involve using 3rd party management tools
+(e.g., libvirt), but will instead concentrate on only the mainline xen
+tools (e.g, xm, libxenlight, xl).
 
 
-** tiny, base, and extra images
+** Tiered ROOTFS Images
 
 The idea here is provide a hierarchy of filesystem images to install from,
 with each image being applied on top of it's parent images.  The result of
 this will be a nice, tiered, system suited for embedded, server, or
 development environments.
+
+Using tiered fs images instead of package-by-package installations will
+speed up installation considerably (no dependency calculations).
+Package-by-package changes can be handled by modifying the build system and
+rolling your own distro!  Fork me!
 
 *** tiny
 This is for embedded systems.  No X server or libs, EGLIBC, busybox, only
@@ -78,11 +83,25 @@ break binary compatibility with the rest of the images (ie, we couldn't use
 the tiny image as a base to build the base and extra images off of).
 
 *** base
-Server, non-emedded but small (only basic X, libs, tools, daemons, etc).
+Server, non-embedded but small (only basic X, libs, tools, daemons, etc).
+
+*** server
+Adds all kinds of extra server functionality to the base system (apache,
+mysql, bugzilla, bind, dhcpd, samba, etc).
+
+*** workstation
+This should add everything needed for a tidy workstation installation (e.g.,
+LXDE, fluxbox, firefox, thunderbird, libreoffice, latex, maybe some small
+multimedia tools).
 
 *** extra
 Workstation, development and/or play environment (gnome, multimedia, debug
 symbols, extra deb libs and tools, etc).
 
+Everything else.  This is the complete dev system with everything and the
+kitchen sink thrown in.
 
+Big Fat Desktop Environments (GNOME, KDE), java, seamonkey, additional
+multimedia stuff.
 
+ALL debug symbols added back in!

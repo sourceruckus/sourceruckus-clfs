@@ -96,6 +96,6 @@ fi
 
 # build and install each package in our /ruckus/staging tree
 for p in $packages; do
-    echo "building package: $p"
+    echo "building bootstrap-early package: $p"
     build $p || exit 1
 done
