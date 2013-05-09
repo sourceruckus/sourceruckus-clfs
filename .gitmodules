@@ -1,42 +1,42 @@
 [submodule "src/autoconf"]
 	path = src/autoconf
-	url = ../autoconf.git
+	url = git://git.sv.gnu.org/autoconf.git
 [submodule "src/automake"]
 	path = src/automake
-	url = ../automake.git
+	url = git://git.sv.gnu.org/automake.git
 [submodule "src/libtool"]
 	path = src/libtool
-	url = ../libtool.git
+	url = git://git.sv.gnu.org/libtool.git
 [submodule "src/rsync"]
 	path = src/rsync
-	url = ../rsync.git
+	url = git://git.samba.org/rsync.git
 [submodule "src/e2fsprogs"]
 	path = src/e2fsprogs
-	url = ../e2fsprogs.git
+	url = git://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git
 [submodule "src/bison"]
 	path = src/bison
-	url = ../bison.git
+	url = git://git.savannah.gnu.org/bison.git
 [submodule "src/srp"]
 	path = src/srp
-	url = ../srp2.git
+	url = ../srp3.git
 [submodule "src/git"]
 	path = src/git
-	url = ../git.git
+	url = git://github.com/git/git.git
 [submodule "src/busybox"]
 	path = src/busybox
-	url = ../busybox.git
+	url = git://busybox.net/busybox.git
 [submodule "src/gettext"]
 	path = src/gettext
-	url = ../gettext.git
+	url = git://git.sv.gnu.org/gettext.git
 [submodule "src/m4"]
 	path = src/m4
-	url = ../m4.git
+	url = git://git.sv.gnu.org/m4.git
 [submodule "src/util-linux"]
 	path = src/util-linux
-	url = ../util-linux.git
+	url = git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git
 [submodule "src/gnulib"]
 	path = src/gnulib
-	url = ../gnulib.git
+	url = git://git.savannah.gnu.org/gnulib.git
 [submodule "src/bootscripts"]
 	path = src/bootscripts
 	url = ../bootscripts.git
@@ -45,13 +45,13 @@
 	url = ../linux-2.6-mdl.git
 [submodule "src/pkg-config"]
 	path = src/pkg-config
-	url = ../pkg-config.git
+	url = git://anongit.freedesktop.org/pkg-config.git
 [submodule "src/gperf"]
 	path = src/gperf
-	url = ../gperf.git
+	url = git://git.sv.gnu.org/gperf.git
 [submodule "src/ntfs-3g"]
 	path = src/ntfs-3g
-	url = ../ntfs-3g.git
+	url = git://ntfs-3g.git.sourceforge.net/gitroot/ntfs-3g/ntfs-3g
 [submodule "src/tcl"]
 	path = src/tcl
 	url = ../tcl.git
@@ -60,13 +60,13 @@
 	url = ../expect.git
 [submodule "src/dejagnu"]
 	path = src/dejagnu
-	url = ../dejagnu.git
+	url = git://git.sv.gnu.org/dejagnu.git
 [submodule "src/nasm"]
 	path = src/nasm
-	url = ../nasm.git
+	url = git://repo.or.cz/nasm.git
 [submodule "src/syslinux"]
 	path = src/syslinux
-	url = ../syslinux.git
+	url = git://git.kernel.org/pub/scm/boot/syslinux/syslinux.git
 [submodule "src/xz"]
 	path = src/xz
-	url = ../xz.git
+	url = http://git.tukaani.org/xz.git
