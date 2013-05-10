@@ -39,10 +39,10 @@
 	url = git://git.savannah.gnu.org/gnulib.git
 [submodule "src/bootscripts"]
 	path = src/bootscripts
-	url = ../bootscripts.git
+	url = ../contrib/bootscripts.git
 [submodule "src/kernel"]
 	path = src/kernel
-	url = ../linux-2.6-mdl.git
+	url = git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 [submodule "src/pkg-config"]
 	path = src/pkg-config
 	url = git://anongit.freedesktop.org/pkg-config.git
@@ -54,10 +54,10 @@
 	url = git://ntfs-3g.git.sourceforge.net/gitroot/ntfs-3g/ntfs-3g
 [submodule "src/tcl"]
 	path = src/tcl
-	url = ../tcl.git
+	url = ../contrib/tcl.git
 [submodule "src/expect"]
 	path = src/expect
-	url = ../expect.git
+	url = ../contrib/expect.git
 [submodule "src/dejagnu"]
 	path = src/dejagnu
 	url = git://git.sv.gnu.org/dejagnu.git
