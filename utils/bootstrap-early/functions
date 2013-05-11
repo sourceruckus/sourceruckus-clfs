@@ -178,7 +178,7 @@ setup_generic()
 	#        turn on bash's nullglob option...
 	if [ "." == "`ls -d ./*`" ]; then
 	    echo "extracting..."
-	    tar jxf $source/*.tar.bz2 || exit 1
+	    tar xf $source/*.tar.* || exit 1
 	fi
 	pushd ./* &&
 	source=$PWD &&
