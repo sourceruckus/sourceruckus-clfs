@@ -9,15 +9,25 @@ toplevel=$PWD/../..
 . $toplevel/utils/bootstrap-early/functions
 
 
-pacakges=""
+packages=""
 
 # add rsync so we can use it to copy source trees for packages that don't
 # support out-of-tree builds
 # FIXME: looks like rsync has a parallel build problem...
+#
+# FIXME: wait, it looks like we're using system rsync to rsync the rsync source
+#        tree... pretty sure that's stoopid.
 packages+=" rsync"
 
 # to ensure that we don't inadvertantly use a modified version with
 # non-standard extensions to build our filesystems
+#
+# NOTE: e2fsprogs > v1.41.7 may not compile on systems with really old kernel
+#       headers.  This can be worked around by hacking it's misc/Makefile.in to
+#       not compile e4defrag.  It can also be worked around by rewinding the
+#       e2fsprogs submodule to v1.41.7 prior to building bootstrap-early, then
+#       fast forwarding it back to the modern day.  ;-)
+#
 packages+=" e2fsprogs"
 
 # might also want to make sure that the host system has a usable ncurses
@@ -37,6 +47,8 @@ packages+=" help2man"
 # xz is needed to build syslinux (and potentially for uncompressing
 # source tarballs, patches, etc)
 packages+=" xz"
+
+# FIXME: should add tar here so that we can tar -xf foo.tar.xz if needed
 
 # install these to make sure the rest of the build is done using the GNU
 # build tools we test against

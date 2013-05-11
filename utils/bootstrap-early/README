@@ -38,7 +38,7 @@ to work for some random package...
 * Might need (add configure check)
 ** help2man (needed for texinfo in bootstrap and for bootstrapping m4)
 ** rsync (need to be able to rsync source trees)
-** tar (need -g incremental support)
+** tar (need -g incremental support, might also require xz support)
 ** git (submodule wasn't very good until around v1.6)
 ** xz (needed to build syslinux)
 
