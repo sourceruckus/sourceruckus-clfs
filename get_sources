@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for x in src/*/SOURCE_URL; do
+    pushd $(dirname $x) && wget $(cat $(basename $x)) && popd || break
+done
