@@ -25,9 +25,6 @@
 [submodule "src/busybox"]
 	path = src/busybox
 	url = git://busybox.net/busybox.git
-[submodule "src/gettext"]
-	path = src/gettext
-	url = git://git.sv.gnu.org/gettext.git
 [submodule "src/m4"]
 	path = src/m4
 	url = git://git.sv.gnu.org/m4.git
