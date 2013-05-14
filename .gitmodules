@@ -70,3 +70,6 @@
 [submodule "src/xz"]
 	path = src/xz
 	url = http://git.tukaani.org/xz.git
+[submodule "src/make"]
+	path = src/make
+	url = git://git.sv.gnu.org/make.git
