@@ -52,21 +52,16 @@ packages+=" xz"
 
 # install these to make sure the rest of the build is done using the GNU
 # build tools we test against
-packages+=" make"
-packages+=" m4"
-packages+=" autoconf"
-packages+=" automake"
-packages+=" libtool"
-packages+=" pkg-config"
-
-# FIXME: seem to be having bootstrap cleanliness problems with gettext... at
-#        least on my netbook.  can't seem to reproduce this anywhere else,
-#        though...  odd.  must not quite have all the bootstrapping
-#        requirements installed correctly?
 #
-# NOTES: verified.  installing all the correct versions of the GNU bootstrap
-#        tools made gettext work fine.
-packages+=" gettext"
+# installed automake-1.12.4 from source.tar.xz in /scrap/staging and edited
+# m4/bootstrap to work from within a git submodule.
+packages+=" m4" # automake 1.11.1
+packages+=" autoconf" # m4 1.4.16
+packages+=" automake" # autoconf 2.69
+packages+=" gettext" # tarball
+packages+=" libtool" # warned about libtool.m4 bootstrap failure
+packages+=" pkg-config" # glib bits need libtool, hacked glib/configure.ac
+packages+=" make" # automake 1.11.1, gettext 0.18.1, pkg-config
 
 packages+=" gperf"
 packages+=" bison"
@@ -92,9 +87,15 @@ build()
 	help2man)
 	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
 	    ;;
-	m4|autoconf|automake|libtool|pkg-config|gettext|gperf|bison)
+        # FIXME: why, again, am i forcing autoreconf on these?
+	m4|autoconf|automake|libtool|pkg-config|gperf|bison)
 	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
+        make)
+            # FIXME: did make REALLY need to be in-tree?
+            autoreconf=yes build_in_tree=yes \
+                build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+            ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
     esac

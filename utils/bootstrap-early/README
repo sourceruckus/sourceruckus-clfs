@@ -11,15 +11,39 @@ $BUILDROOT/bootstrap-early.  Actually using them will require tweaking of
 your user's environment (PATH, LD_LIBRARY_PATH, etc).
 
 Note that this stage assumes the host system at least has git (to get this),
-autotools (to configure this), and a sane compilation toolchain (make, gcc,
-glibc, autoconf, automake, etc).
+wget (to get other sources), autotools (to configure this), and a sane
+compilation toolchain (make, gcc, glibc, etc).
 
 Note also, that even though a sane compilation toolchain is listed as a
 requirement, we're going to immediately test this by... bootstrapping and
 installing our own GNU bootstrapping toolchain (autoconf, automake, libtool,
-etc).  You wouldn't want to find out halfway through a build that the
-version of autoconf installed on the host system actually isn't new enough
-to work for some random package...
+etc).  This way, we ensure that the versions of all the compile toolchain
+components are adequate for compiling our bootstrap environment.
+
+NOTE: There are cyclic dependencies that crop up when bootstrapping the
+      toolchain (i.e., running bootstrap or autogen.sh from git checkouts).  The
+      easiest way around this is to download and install the dist source tarball
+      of automake (that matches the version we're tracking in our automake git
+      submodule) on the host system (it's needed by m4 which is needed to
+      bootstrap automake).
+
+NOTE: The version of git might need to be fairly recent (submodule wasn't very
+      good until around v1.6).
+
+NOTE: The system's tar command will need to be able to transparently decrompress
+      via gzip, bzip2, and xz (i.e., tar xf foo.tar.xz needs to work).  Some
+      really old distros might not support xz yet.
+
+
+FIXME: should i build rsync, tar, or wget in here?  rsync would need to be 1st,
+       just in case any of the others can't build in-tree.  tar is going to need
+       gzip bzip and xz compression built-in.  wget is needed up front, to do
+       get_sources, which we need to do before bootstrap-early, so it doesn't
+       make much sense to build it in here.  I'm leaning towards building rsync
+       and tar (and perhaps gzip, bzip2, and xz) but not wget.
+
+       Regarding tar, gzip, bzip2, and xz...  they have to ALL be in git,
+       otherwise we'll need tar to build tar.  ;-)
 
 
 * Need to always build
@@ -38,8 +62,7 @@ to work for some random package...
 * Might need (add configure check)
 ** help2man (needed for texinfo in bootstrap and for bootstrapping m4)
 ** rsync (need to be able to rsync source trees)
-** tar (need -g incremental support, might also require xz support)
-** git (submodule wasn't very good until around v1.6)
+** tar (need -g incremental support, and xz support)
 ** xz (needed to build syslinux)
 
 * Optional
@@ -78,7 +101,7 @@ like this:
 
 or like this:
 
-# export $toplevel=$PWD/../..
+# export toplevel=$PWD/../..
 # GNULIB_SRCDIR=$toplevel/src/gnulib ./bootstrap
 
 
