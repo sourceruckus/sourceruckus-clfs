@@ -272,7 +272,10 @@ autoreconf_generic()
     unset_cross_compile
 
     # choose a bootstrap method
-    if [ -x ./bootstrap ]; then
+    if [ -x ./bootstrap.sh ]; then
+	echo "./bootstrap.sh..."
+	./bootstrap.sh || exit 1
+    elif [ -x ./bootstrap ]; then
 	echo "./bootstrap..."
 	./bootstrap || exit 1
     elif [ -x ./autogen.sh ]; then
