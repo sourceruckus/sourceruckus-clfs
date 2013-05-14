@@ -1,5 +1,44 @@
 #!/bin/bash
 
+usage="usage: $0 [--make-cache]
+
+    --make-cache         When suplied, downloaded files are archived into a
+                         tarball that future invocations will use as cache."
+
+cache="get_sources.tar"
+
+WGET=${WGET:-wget}
+MAKE_CACHE=
+
+
+# check usage
+for x in $*; do
+    if [ "$x" = "--help" ]; then
+        echo "$usage"
+        exit 0
+    elif [ "$x" = "--make-cache" ]; then
+        MAKE_CACHE=1
+        rm -f $cache
+    else
+        echo "ERROR: unknown flag '$x'"
+        echo
+        echo "$usage"
+        exit -1
+    fi
+done
+
+
+# prepopulate via cache, if available
+[ -f $cache ] && tar vxf $cache
+
+
+# go get it all via wget
+#
+# NOTE: We're using a WGET variable here, which is overridable by the user
+#       because we're just friendly like that.  ;-)
 for x in src/*/SOURCE_URL; do
-    pushd $(dirname $x) && wget $(cat $(basename $x)) && popd || break
+    pushd $(dirname $x) && $WGET -nc -i $(basename $x) && popd || break
+    if [ -n "$MAKE_CACHE" ]; then
+        tar -rf $cache $(sed "s|.*/|$(dirname $x)/|" $x)
+    fi
 done
