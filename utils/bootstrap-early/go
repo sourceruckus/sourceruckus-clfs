@@ -79,6 +79,13 @@ build()
 	    # seems to have a parallel build problem...
 	    JOBCOUNT=1 build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
+        e2fsprogs)
+            sed -i.bak 's|.*E4DEFRAG_PROG=|#FOO|' \
+                $toplevel/src/e2fsprogs/misc/Makefile.in &&
+            build_generic $1 --prefix=$PREFIX_EARLY &&
+            cp $toplevel/src/e2fsprogs/misc/Makefile.in.bak \
+                $toplevel/src/e2fsprogs/misc/Makefile.in || exit 1
+            ;;
 	ncurses)
 	    build_generic $1 --prefix=$PREFIX_EARLY --with-shared || exit 1
 	    ;;
