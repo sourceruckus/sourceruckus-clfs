@@ -27,7 +27,7 @@
 	url = git://busybox.net/busybox.git
 [submodule "src/m4"]
 	path = src/m4
-	url = git://git.sv.gnu.org/m4.git
+	url = ../contrib/m4.git
 [submodule "src/util-linux"]
 	path = src/util-linux
 	url = git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git
