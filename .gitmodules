@@ -69,4 +69,4 @@
 	url = http://git.tukaani.org/xz.git
 [submodule "src/make"]
 	path = src/make
-	url = git://git.sv.gnu.org/make.git
+	url = ../contrib/make.git
