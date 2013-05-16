@@ -13,11 +13,42 @@ packages=""
 
 # add rsync so we can use it to copy source trees for packages that don't
 # support out-of-tree builds
+#
 # FIXME: looks like rsync has a parallel build problem...
 #
 # FIXME: wait, it looks like we're using system rsync to rsync the rsync source
 #        tree... pretty sure that's stoopid.
 packages+=" rsync"
+
+# gzip is needed so we can ensure tar can extract from tar.gz files
+packages+=" gzip"
+
+# bzip2 is also needed to make sure we can extract all our source tarballs
+packages+=" bzip2"
+
+# xz is needed to build syslinux (and potentially for uncompressing
+# source tarballs, patches, etc)
+packages+=" xz"
+
+# tar is needed to make sure that we have a new enough version to extract
+# tarballs compressed with xz and lzma
+packages+=" tar"
+
+# install these to make sure the rest of the build is done using the GNU
+# build tools we test against
+#
+# installed automake-1.12.4 from source.tar.xz in /scrap/staging and edited
+# m4/bootstrap to work from within a git submodule.
+packages+=" m4" # automake 1.11.1
+packages+=" autoconf" # m4 1.4.16
+packages+=" automake" # autoconf 2.69
+packages+=" gettext" # tarball
+packages+=" libtool" # warned about libtool.m4 bootstrap failure
+packages+=" pkg-config" # glib bits need libtool, hacked glib/configure.ac
+packages+=" make" # automake 1.11.1, gettext 0.18.1, pkg-config
+
+packages+=" gperf"
+packages+=" bison"
 
 # to ensure that we don't inadvertantly use a modified version with
 # non-standard extensions to build our filesystems
@@ -44,27 +75,6 @@ packages+=" ncurses"
 # help2man is needed to build man pages for texinfo after running autoreconf
 packages+=" help2man"
 
-# xz is needed to build syslinux (and potentially for uncompressing
-# source tarballs, patches, etc)
-packages+=" xz"
-
-# FIXME: should add tar here so that we can tar -xf foo.tar.xz if needed
-
-# install these to make sure the rest of the build is done using the GNU
-# build tools we test against
-#
-# installed automake-1.12.4 from source.tar.xz in /scrap/staging and edited
-# m4/bootstrap to work from within a git submodule.
-packages+=" m4" # automake 1.11.1
-packages+=" autoconf" # m4 1.4.16
-packages+=" automake" # autoconf 2.69
-packages+=" gettext" # tarball
-packages+=" libtool" # warned about libtool.m4 bootstrap failure
-packages+=" pkg-config" # glib bits need libtool, hacked glib/configure.ac
-packages+=" make" # automake 1.11.1, gettext 0.18.1, pkg-config
-
-packages+=" gperf"
-packages+=" bison"
 
 
 build()
