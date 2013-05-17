@@ -47,7 +47,10 @@ packages+=" libtool" # warned about libtool.m4 bootstrap failure
 packages+=" pkg-config" # glib bits need libtool, hacked glib/configure.ac
 packages+=" make" # automake 1.11.1, gettext 0.18.1, pkg-config
 
-packages+=" gperf"
+# FIXME: packages+=" gperf"
+# FIXME: flex?
+# FIXME: graphviz?
+# FIXME: valgrind?
 packages+=" bison"
 
 # to ensure that we don't inadvertantly use a modified version with
@@ -98,13 +101,30 @@ build()
 	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
 	    ;;
         # FIXME: why, again, am i forcing autoreconf on these?
-	m4|autoconf|automake|libtool|pkg-config|gperf|bison)
+	m4|autoconf|automake|libtool|pkg-config)
 	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
         make)
             # FIXME: did make REALLY need to be in-tree?
             autoreconf=yes build_in_tree=yes \
                 build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+            ;;
+        bison)
+            # this guy needs to do update submodules
+            #
+            # NOTE: This is kinda involved because I don't want to have to
+            #       maintain a fork of bison just to make it find our autoconf
+            #       submodule instead of going out to gnu.org...
+            #
+            #       The sed statement replaces remote git URLs with ../ to use
+            #       our other submodules, then we explicitly only update the
+            #       autoconf module (i.e., we skip gnulib which is referenced
+            #       directly via the GNULIB_SRCDIR variable).
+            pushd $toplevel/src/bison && 
+            sed -i 's|git://.*/|../|' .gitmodules &&
+            git submodule update --init submodules/autoconf &&
+            popd &&
+	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
             ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
