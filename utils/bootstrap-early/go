@@ -88,6 +88,7 @@ build()
 	    JOBCOUNT=1 build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
         e2fsprogs)
+            # work around e4defrag problem mentioned above
             sed -i.bak 's|.*E4DEFRAG_PROG=|#FOO|' \
                 $toplevel/src/e2fsprogs/misc/Makefile.in &&
             build_generic $1 --prefix=$PREFIX_EARLY &&
@@ -125,6 +126,13 @@ build()
             git submodule update --init submodules/autoconf &&
             popd &&
 	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+            ;;
+        bzip2)
+            # Doesn't have configure
+            build_in_tree=1 setup_generic $1 &&
+            pushd $builddir &&
+            make -j$JOBCOUNT && make PREFIX=$PREFIX_EARLY install &&
+            popd || exit 1
             ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
