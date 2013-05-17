@@ -73,3 +73,6 @@
 [submodule "src/gzip"]
 	path = src/gzip
 	url = git://git.savannah.gnu.org/gzip.git
+[submodule "src/tar"]
+	path = src/tar
+	url = git://git.savannah.gnu.org/tar.git
