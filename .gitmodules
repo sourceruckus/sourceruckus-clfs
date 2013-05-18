@@ -76,3 +76,6 @@
 [submodule "src/tar"]
 	path = src/tar
 	url = git://git.savannah.gnu.org/tar.git
+[submodule "src/paxutils"]
+	path = src/paxutils
+	url = git://git.savannah.gnu.org/paxutils.git

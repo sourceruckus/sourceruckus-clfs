@@ -30,6 +30,10 @@ PREFIX_FINAL=/bootstrap
 # all trying to create their own local clone
 export GNULIB_SRCDIR=$toplevel/src/gnulib
 
+# this variable tells bootstrap scripts (probably just cpio and tar) to use
+# our paxutils submodule instead of cloning their own.
+export PAXUTILS_SRCDIR=$toplevel/src/paxutils
+
 # this variable tells bootstrap scripts to not download new po files via
 # rsync
 export SKIP_PO=t
