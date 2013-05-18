@@ -79,3 +79,6 @@
 [submodule "src/paxutils"]
 	path = src/paxutils
 	url = git://git.savannah.gnu.org/paxutils.git
+[submodule "src/curl"]
+	path = src/curl
+	url = git://github.com/bagder/curl.git
