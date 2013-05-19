@@ -116,7 +116,7 @@ build()
 	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
 	    ;;
         # FIXME: why, again, am i forcing autoreconf on these?
-	m4|autoconf|automake|libtool)
+	m4|autoconf|automake|libtool|make)
 	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
 	pkg-config)
@@ -126,11 +126,6 @@ build()
 		build_generic $1 --prefix=$PREFIX_EARLY \
 		--with-internal-glib || exit 1
 	    ;;
-        make)
-            # FIXME: did make REALLY need to be in-tree?
-            autoreconf=yes build_in_tree=yes \
-                build_generic $1 --prefix=$PREFIX_EARLY || exit 1
-            ;;
         bison)
             # this guy needs to update submodules
             #
