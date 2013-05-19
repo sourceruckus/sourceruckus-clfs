@@ -13,11 +13,6 @@ packages=""
 
 # add rsync so we can use it to copy source trees for packages that don't
 # support out-of-tree builds
-#
-# FIXME: looks like rsync has a parallel build problem...
-#
-# FIXME: wait, it looks like we're using system rsync to rsync the rsync source
-#        tree... pretty sure that's stoopid.
 packages+=" rsync"
 
 # gzip is needed so we can ensure tar can extract from tar.gz files
@@ -102,7 +97,8 @@ build()
 {
     case "$1" in
 	rsync)
-	    # seems to have a parallel build problem...
+	    # seems to have a parallel build problem... (still true as of
+	    # v3.0.9)
 	    JOBCOUNT=1 build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
         e2fsprogs)
