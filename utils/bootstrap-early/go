@@ -115,14 +115,10 @@ build()
 	help2man)
 	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
 	    ;;
-        # FIXME: why, again, am i forcing autoreconf on these?
-	m4|autoconf|automake|libtool|make)
-	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
-	    ;;
 	pkg-config)
 	    # NOTE: Some systems need march to be >= i486 to build the
 	    #       included glib bits here...
-	    CPPFLAGS=-march=i486 autoreconf=yes \
+	    CPPFLAGS=-march=i486 \
 		build_generic $1 --prefix=$PREFIX_EARLY \
 		--with-internal-glib || exit 1
 	    ;;
@@ -141,7 +137,7 @@ build()
             sed -i 's|git://.*/|../|' .gitmodules &&
             git submodule update --init submodules/autoconf &&
             popd &&
-	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
             ;;
         bzip2)
             # Doesn't have configure
