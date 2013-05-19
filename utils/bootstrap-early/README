@@ -35,80 +35,19 @@ NOTE: The system's tar command will need to be able to transparently decrompress
       really old distros might not support xz yet.
 
 
-FIXME: should i build rsync, tar, or wget in here?  rsync would need to be 1st,
-       just in case any of the others can't build in-tree.  tar is going to need
-       gzip bzip and xz compression built-in.  wget is needed up front, to do
-       get_sources, which we need to do before bootstrap-early, so it doesn't
-       make much sense to build it in here.  I'm leaning towards building rsync
-       and tar (and perhaps gzip, bzip2, and xz) but not wget.
-
-       Regarding tar, gzip, bzip2, and xz...  they have to ALL be in git,
-       otherwise we'll need tar to build tar.  ;-)
-
 
 * Need to always build
 ** e2fsprogs (make sure created rootfs doesn't use vendor extensions)
-** make (ensure GNU build/bootstrap tools exist and are compatible)
-** m4
-** autoconf
-** automake
-** libtool
-** pkg-config
-** bison
-** gettext
-** gperf
+** GNU build toolchain (e.g., autoconf, automake, libtool, make, gettext)
 
 
 * Might need (add configure check)
 ** help2man (needed for texinfo in bootstrap and for bootstrapping m4)
 ** rsync (need to be able to rsync source trees)
-** tar (need -g incremental support, and xz support)
+** gzip
+** bipz2
 ** xz (needed to build syslinux)
+** tar (need -g incremental support, and xz support)
 
 * Optional
 ** ncurses (needed for Kbuild's menuconfig)
-
-
-
-* Bootstrap nightmare
-
-Ok, I can't seem to get some of the git checkouts to bootstrap properly...
-there's cyclic dependencies all over.  If I install the following from dist
-tarballs:
-
-  - autoconf-2.68.tar.bz2
-  - automake-1.11.1.tar.bz2
-  - bison-2.4.3.tar.bz2
-  - gettext-0.18.1.1.tar.bz2
-  - gperf-3.0.4.tar.bz2
-  - libtool-2.4.tar.bz2
-  - m4-1.4.15.tar.bz2
-  - make-3.82.tar.bz2
-  - pkg-config-0.25.tar.bz2
-
-then I can successfully bootstrap the following source trees:
-
-  - bison (bootstrap*)
-  - m4 (bootstrap*)
-  - automake (bootstrap)
-  - libtool (bootstrap)
-  - util-linux (autogen.sh)
-  - gettext (autogen.sh*)
-
-like this:
-
-# ./autogen.sh
-
-or like this:
-
-# export toplevel=$PWD/../..
-# GNULIB_SRCDIR=$toplevel/src/gnulib ./bootstrap
-
-
-** automate it? bootsrap-early-bootstrap?
-
-Use wget to snag all the appropriate tarballs, then iterate through the list
-doing:
-
-# ./configure && make -j$(JOBCOUNT) && \
-    sudo make install && sudo ldconfig
