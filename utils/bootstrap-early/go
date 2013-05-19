@@ -161,8 +161,10 @@ build()
             ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	    ;;
     esac
 }
+
 
 # FIXME: add code here to configure sudo. for now, I've set up my host
 #        system to give my user unlimited unpassword root access...
@@ -192,13 +194,3 @@ for p in $packages; do
     echo "building bootstrap-early package: $p"
     build $p || exit 1
 done
-
-
-# FIXME: Last time through, at the very end, after successfully building
-#        everything, I got these errors.  I'm thinking maybe I edited the
-#        script while it was running?  I don't see what it was complaining
-#        about, but just in case it crops up again, I'm noting it here.  :-/
-#
-#        ./go: line 181: unexpected EOF while looking for matching `"'
-#
-#        ./go: line 184: syntax error: unexpected end of file
