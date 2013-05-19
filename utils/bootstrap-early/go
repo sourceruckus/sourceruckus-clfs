@@ -21,6 +21,12 @@ packages=""
 packages+=" rsync"
 
 # gzip is needed so we can ensure tar can extract from tar.gz files
+#
+# FIXME: lots of the following types of warnings, then a failure on my
+#        netbook:
+#
+#        cc1: warning: command line option "-Wabi" is valid for C++/ObjC++
+#        but not for C
 packages+=" gzip"
 
 # bzip2 is also needed to make sure we can extract all our source tarballs
@@ -34,18 +40,35 @@ packages+=" xz"
 # tarballs compressed with xz and lzma
 packages+=" tar"
 
+# help2man is needed to build man pages for libtool and texinfo after
+# running autoreconf
+packages+=" help2man"
+
 # install these to make sure the rest of the build is done using the GNU
 # build tools we test against
 #
-# installed automake-1.12.4 from source.tar.xz in /scrap/staging and edited
-# m4/bootstrap to work from within a git submodule.
-packages+=" m4" # automake 1.11.1
-packages+=" autoconf" # m4 1.4.16
-packages+=" automake" # autoconf 2.69
-packages+=" gettext" # tarball
+# NOTE: This is the bootstrap black whole mentioned elsewhere.  I have
+#       sucessfully worked around it a few different ways.
+#
+#       - Installed automake-1.12.4 from source.tar.xz in /scrap/staging and
+#         tweaked environment vars appropriately (e.g., PATH,
+#         LD_LIBRARY_PATH).
+#
+#       - My netbook already had automake 1.11.1 installed and configured
+#         properly in /usr/local (had done it via source.tar.xz a while
+#         back).  Of course, it ALSO had autoconf, m4, gettext, libtool,
+#         make, pkg-config, and bison of similar vintage installed... so
+#         just installing automake v1.11.1 might not be enough.
+#
+# NOTE: I've placed requirements in comments for each of these, for future
+#       reference.
+packages+=" m4" # automake >= 1.11.1
+packages+=" autoconf" # m4 >= 1.4.16
+packages+=" automake" # autoconf >= 2.69
+packages+=" gettext" # too painful, so we use a dist tarball
 packages+=" libtool" # warned about libtool.m4 bootstrap failure
-packages+=" pkg-config" # glib bits need libtool, hacked glib/configure.ac
-packages+=" make" # automake 1.11.1, gettext 0.18.1, pkg-config
+packages+=" pkg-config" # glib bits need libtool
+packages+=" make" # automake >= 1.11.1, gettext >= 0.18.1, pkg-config
 
 # FIXME: packages+=" gperf"
 # FIXME: flex?
@@ -61,22 +84,17 @@ packages+=" bison"
 #       not compile e4defrag.  It can also be worked around by rewinding the
 #       e2fsprogs submodule to v1.41.7 prior to building bootstrap-early, then
 #       fast forwarding it back to the modern day.  ;-)
-#
 packages+=" e2fsprogs"
 
 # might also want to make sure that the host system has a usable ncurses
 # (and ncurses-devel) library.  otherwise we can't run the 'menuconfig'
 # target for kernel and busybox configuration
 #
-# NOTE: both the kernel and busybox fail to look for ncurses anywhere
+# NOTE: Both the kernel and busybox fail to look for ncurses anywhere
 #       other than in /usr... so in order to actually make use of
 #       this, their source trees will need to be patched to point to
 #       our bootstrap-early libraries.
-#
 packages+=" ncurses"
-
-# help2man is needed to build man pages for texinfo after running autoreconf
-packages+=" help2man"
 
 
 
@@ -102,8 +120,15 @@ build()
 	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
 	    ;;
         # FIXME: why, again, am i forcing autoreconf on these?
-	m4|autoconf|automake|libtool|pkg-config)
+	m4|autoconf|automake|libtool)
 	    autoreconf=yes build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	    ;;
+	pkg-config)
+	    # NOTE: Some systems need march to be >= i486 to build the
+	    #       included glib bits here...
+	    CPPFLAGS=-march=i486 autoreconf=yes \
+		build_generic $1 --prefix=$PREFIX_EARLY \
+		--with-internal-glib || exit 1
 	    ;;
         make)
             # FIXME: did make REALLY need to be in-tree?
@@ -111,7 +136,7 @@ build()
                 build_generic $1 --prefix=$PREFIX_EARLY || exit 1
             ;;
         bison)
-            # this guy needs to do update submodules
+            # this guy needs to update submodules
             #
             # NOTE: This is kinda involved because I don't want to have to
             #       maintain a fork of bison just to make it find our autoconf
@@ -162,8 +187,18 @@ if [ "`readlink $PREFIX_CROSS 2>/dev/null`" != "$BABY$PREFIX_CROSS" ]; then
     sudo ln -s $BABY$PREFIX_CROSS $PREFIX_CROSS || exit 1
 fi
 
-# build and install each package in our /ruckus/staging tree
+# build and install each needed package
 for p in $packages; do
     echo "building bootstrap-early package: $p"
     build $p || exit 1
 done
+
+
+# FIXME: Last time through, at the very end, after successfully building
+#        everything, I got these errors.  I'm thinking maybe I edited the
+#        script while it was running?  I don't see what it was complaining
+#        about, but just in case it crops up again, I'm noting it here.  :-/
+#
+#        ./go: line 181: unexpected EOF while looking for matching `"'
+#
+#        ./go: line 184: syntax error: unexpected end of file

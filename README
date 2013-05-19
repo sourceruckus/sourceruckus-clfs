@@ -41,7 +41,20 @@ syslinux/isolinux will have to be used to boot (although this would be fine
 for a xen domU that doesn't use pvgrub).
 
 
-** Hard-realtime Scheduling
+** Support for building offline
+
+After cloning, initializing and updating submodules, and running the
+get_sources script, you should be able to unplug your ethernet cable (or
+turn off your WIFI), bring your laptop to the beach, and build the whole
+darned thing w/out any package sneaking out to the internet to download
+stuff.  I can't be the only person that this bothers... can I?  How am I
+supposed to KNOW w/out a doubt what's in my OS if half the packages just
+magically download extra things while they're building?  Hog wash, I say!
+This may be a PITB to implement, but I'm doing it because I believe it to be
+important.
+
+
+** Hard-realtime Scheduling (perhaps?)
 
 Using CONFIG_PREEMPT gives us soft-realtime scheduling.  Hard-realtime
 scheduling could be accomplished by using Ingo Molnar's CONFIG_PREEMPT_RT
