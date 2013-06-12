@@ -157,23 +157,23 @@ build()
 #        system to give my user unlimited unpassword root access...
 
 
-# create a /bootstrap symlink on the host system pointing to $BABY/bootstrap
+# create a /tools symlink on the host system pointing to $CLFS/tools
 # so that we don't have to go crazy sorting out chroot vs non-chroot paths
 # throughout.  this would probably involve having to sort out 2 sets of
 # patches for each affected package, so requiring root priveledges for just
 # this one thing seems like an ok compromise.
-#
-# FIXME: should reevaluate this later.  if sorting out /bootstrap vs
-#        $BABY/bootstrap turns out to be easy, we should take this out.
-mkdir -p $BABY$PREFIX_FINAL || exit 1
-if [ "`readlink $PREFIX_FINAL 2>/dev/null`" != "$BABY$PREFIX_FINAL" ]; then
+
+
+
+mkdir -p $CLFS$PREFIX_FINAL || exit 1
+if [ "`readlink $PREFIX_FINAL 2>/dev/null`" != "$CLFS$PREFIX_FINAL" ]; then
     echo "need root priveledges to create $PREFIX_FINAL symlink"
-    sudo ln -s $BABY$PREFIX_FINAL $PREFIX_FINAL || exit 1
+    sudo ln -s $CLFS$PREFIX_FINAL $PREFIX_FINAL || exit 1
 fi
-mkdir -p $BABY$PREFIX_CROSS || exit 1
-if [ "`readlink $PREFIX_CROSS 2>/dev/null`" != "$BABY$PREFIX_CROSS" ]; then
+mkdir -p $CLFS$PREFIX_CROSS || exit 1
+if [ "`readlink $PREFIX_CROSS 2>/dev/null`" != "$CLFS$PREFIX_CROSS" ]; then
     echo "need root priveledges to create $PREFIX_CROSS symlink"
-    sudo ln -s $BABY$PREFIX_CROSS $PREFIX_CROSS || exit 1
+    sudo ln -s $CLFS$PREFIX_CROSS $PREFIX_CROSS || exit 1
 fi
 
 # build and install each needed package

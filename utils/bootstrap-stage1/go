@@ -11,8 +11,8 @@ build()
 {
     # set some common variables for all targets
     OPTS="--prefix=$PREFIX_FINAL"
-    OPTS+=" --build=${MACHTYPE_HOST}"
-    OPTS+=" --host=${MACHTYPE_TARGET}"
+    OPTS+=" --build=${CLFS_HOST}"
+    OPTS+=" --host=${CLFS_TARGET}"
 
     if [ -n "$BUILD64" ]; then
 	OPTS+=" --libdir=$PREFIX_FINAL/lib64"
@@ -119,7 +119,7 @@ build()
 	    # FIXME: should probably rework the gcc patches to modify
 	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
 	    configure_generic $1 $OPTS \
-		--target=${MACHTYPE_TARGET} \
+		--target=${CLFS_TARGET} \
 		--with-local-prefix=$PREFIX_FINAL \
 		--enable-long-long \
 		--enable-c99 \
@@ -174,12 +174,15 @@ build()
 	    make KBUILD_SRC=$source -f $source/Makefile oldconfig || exit 1
 
 	    # build
+	    #
+	    # FIXME: current embedded CLFS book doesn't set ARCH here, but
+	    #        it does have a config patch...
 	    make -j$JOBCOUNT_KBUILD ARCH=${ARCH_TARGET} \
-		CROSS_COMPILE="${MACHTYPE_TARGET}-" || exit 1
+		CROSS_COMPILE="${CLFS_TARGET}-" || exit 1
 
 	    # install
 	    make ARCH=${ARCH_TARGET} \
-		CROSS_COMPILE="${MACHTYPE_TARGET}-" \
+		CROSS_COMPILE="${CLFS_TARGET}-" \
 		CONFIG_PREFIX=$PREFIX_FINAL install || exit 1
 
 	    # NOTE: busybox binary is setuid root later on under
@@ -283,48 +286,48 @@ build()
 	    ;;
 
 	create-dirs)
-	    mkdir -pv ${BABY}/{bin,boot,dev,{etc/,}opt,home,lib,mnt}
-	    mkdir -pv $BABY/mnt/{cdrom,flash,floppy,crypt}
-	    mkdir -pv ${BABY}/{proc,media/{floppy,cdrom},sbin,srv,sys}
-	    mkdir -pv ${BABY}/var/{lock,log,mail,run,spool}
-	    mkdir -pv ${BABY}/var/{opt,cache,lib/{misc,locate},local}
-	    install -dv ${BABY}/root -m 0750
-	    install -dv ${BABY}{/var,}/tmp -m 1777
-	    mkdir -pv ${BABY}/usr/{,local/}{bin,include,lib,sbin,src}
-	    mkdir -pv ${BABY}/usr/{,local/}share/{doc,info,locale,man}
-	    mkdir -pv ${BABY}/usr/{,local/}share/{misc,terminfo,zoneinfo}
-	    mkdir -pv ${BABY}/usr/{,local/}share/man/man{1,2,3,4,5,6,7,8}
-	    for dir in ${BABY}/usr{,/local}; do
+	    mkdir -pv ${CLFS}/{bin,boot,dev,{etc/,}opt,home,lib,mnt}
+	    mkdir -pv $CLFS/mnt/{cdrom,flash,floppy,crypt}
+	    mkdir -pv ${CLFS}/{proc,media/{floppy,cdrom},sbin,srv,sys}
+	    mkdir -pv ${CLFS}/var/{lock,log,mail,run,spool}
+	    mkdir -pv ${CLFS}/var/{opt,cache,lib/{misc,locate},local}
+	    install -dv ${CLFS}/root -m 0750
+	    install -dv ${CLFS}{/var,}/tmp -m 1777
+	    mkdir -pv ${CLFS}/usr/{,local/}{bin,include,lib,sbin,src}
+	    mkdir -pv ${CLFS}/usr/{,local/}share/{doc,info,locale,man}
+	    mkdir -pv ${CLFS}/usr/{,local/}share/{misc,terminfo,zoneinfo}
+	    mkdir -pv ${CLFS}/usr/{,local/}share/man/man{1,2,3,4,5,6,7,8}
+	    for dir in ${CLFS}/usr{,/local}; do
 		ln -sv share/{man,doc,info} $dir 2>/dev/null
 	    done
-	    install -dv ${BABY}/usr/lib/locale
+	    install -dv ${CLFS}/usr/lib/locale
 
 	    if [ -n "$BUILD64" ]; then
-		mkdir -pv ${BABY}/lib64
-		mkdir -pv ${BABY}/var/lib64/{misc,locate}
-		mkdir -pv ${BABY}/usr/{,local/}lib64
-		ln -sv ../lib/locale ${BABY}/usr/lib64 2>/dev/null
+		mkdir -pv ${CLFS}/lib64
+		mkdir -pv ${CLFS}/var/lib64/{misc,locate}
+		mkdir -pv ${CLFS}/usr/{,local/}lib64
+		ln -sv ../lib/locale ${CLFS}/usr/lib64 2>/dev/null
 	    fi
 
 	    echo done
 	    ;;
 
 	create-symlinks)
-	    ln -sv $PREFIX_FINAL/bin/{bash,cat,echo,grep,pwd,sleep,stty,mount,umount} ${BABY}/bin 2>/dev/null
-	    ln -sv $PREFIX_FINAL/sbin/{swapon,swapoff} $BABY/sbin 2>/dev/null
-	    ln -sv $PREFIX_FINAL/bin/file ${BABY}/usr/bin 2>/dev/null
-	    ln -sv $PREFIX_FINAL/lib/libgcc_s.so{,.1} ${BABY}/usr/lib 2>/dev/null
-	    ln -sv $PREFIX_FINAL/lib/libstd*so* ${BABY}/usr/lib 2>/dev/null
+	    ln -sv $PREFIX_FINAL/bin/{bash,cat,echo,grep,pwd,sleep,stty,mount,umount} ${CLFS}/bin 2>/dev/null
+	    ln -sv $PREFIX_FINAL/sbin/{swapon,swapoff} $CLFS/sbin 2>/dev/null
+	    ln -sv $PREFIX_FINAL/bin/file ${CLFS}/usr/bin 2>/dev/null
+	    ln -sv $PREFIX_FINAL/lib/libgcc_s.so{,.1} ${CLFS}/usr/lib 2>/dev/null
+	    ln -sv $PREFIX_FINAL/lib/libstd*so* ${CLFS}/usr/lib 2>/dev/null
 
 	    if [ -n "$BUILD64" ]; then
-		ln -sv $PREFIX_FINAL/lib64/libgcc_s.so{,.1} ${BABY}/usr/lib64 2>/dev/null
-		ln -sv $PREFIX_FINAL/lib64/libstd*so* ${BABY}/usr/lib64 2>/dev/null
+		ln -sv $PREFIX_FINAL/lib64/libgcc_s.so{,.1} ${CLFS}/usr/lib64 2>/dev/null
+		ln -sv $PREFIX_FINAL/lib64/libstd*so* ${CLFS}/usr/lib64 2>/dev/null
 	    fi
 
 	    # CLFS used bash for this one, but we're using busybox's ash
 	    # instead.  in case we change this later, we just symlink our
 	    # bootstrap sh symlink to our baby system's /bin/sh
-	    ln -sv $PREFIX_FINAL/bin/sh ${BABY}/bin/sh 2>/dev/null
+	    ln -sv $PREFIX_FINAL/bin/sh ${CLFS}/bin/sh 2>/dev/null
 
 	    # we've got some more symlinks to make, because we use our
 	    # boostrap busybox install in place of a bunch of extra packages
@@ -333,7 +336,7 @@ build()
 	    # symlinks in the baby system by parsing busybox.links in
 	    # busybox's builddir
 	    for x in $(cat .build/busybox/busybox.links || exit 1); do
-		ln -sv $PREFIX_FINAL$x $BABY$x 2>/dev/null
+		ln -sv $PREFIX_FINAL$x $CLFS$x 2>/dev/null
 	    done
 	    
 	    echo done
@@ -348,7 +351,7 @@ build()
 	    #        install target use a DESTDIR, then move installed files
 	    #        around by hand.  Not sure why.  I'm going to try to
 	    #        make it work like the rest of the packages (i.e., use
-	    #        --prefix=$PREFIX_FINAL combined with our /bootstrap
+	    #        --prefix=$PREFIX_FINAL combined with our /tools
 	    #        symlink) so that the install target works properly.
 	    #
 	    #pushd $builddir &&
@@ -404,7 +407,7 @@ build()
 	    #make install-libs || exit 1
 	    
 	    # make needed symlinks in baby
-	    ln -sv $PREFIX_FINAL/sbin/{fsck.ext2,fsck.ext3,fsck.ext4,e2fsck} ${BABY}/sbin 2>/dev/null
+	    ln -sv $PREFIX_FINAL/sbin/{fsck.ext2,fsck.ext3,fsck.ext4,e2fsck} ${CLFS}/sbin 2>/dev/null
 	    echo done
 	    ;;
 
@@ -421,7 +424,7 @@ build()
 
 	    pushd $builddir &&
 	    make -j$JOBCOUNT &&
-	    make DESTDIR=$BABY install &&
+	    make DESTDIR=$CLFS install &&
 	    popd || exit 1
 
 	    # FIXME: this might need extra setuid magic
@@ -433,39 +436,40 @@ build()
             # logfiles, login scripts, fstab, needed device nodes, etc
 	    
 	    # copy inittab and mdev.conf into etc
-	    mkdir -vp $BABY/etc &&
-	    cp -v config/inittab $BABY/etc &&
-	    cp -v config/mdev.conf $BABY/etc || exit 1
+	    mkdir -vp $CLFS/etc &&
+	    cp -v config/inittab $CLFS/etc &&
+	    cp -v config/mdev.conf $CLFS/etc || exit 1
 
 	    # copy passwd and group files into etc
-	    cp -v config/{passwd,group} $BABY/etc || exit 1
+	    cp -v config/{passwd,group} $CLFS/etc || exit 1
 	    
 	    # initialize login related log files.
 	    #
 	    # NOTE: busybox's init replacement might not use these, but if
 	    #       switch over to the real sysvinit later on we'll want
 	    #       these files
-	    touch ${BABY}/var/run/utmp ${BABY}/var/log/{btmp,lastlog,wtmp} &&
-	    chmod -v 664 ${BABY}/var/run/utmp ${BABY}/var/log/lastlog &&
-	    chmod -v 600 ${BABY}/var/log/btmp || exit 1
+	    touch ${CLFS}/var/run/utmp ${CLFS}/var/log/{btmp,lastlog,wtmp} &&
+	    chmod -v 664 ${CLFS}/var/run/utmp ${CLFS}/var/log/lastlog &&
+	    chmod -v 600 ${CLFS}/var/log/btmp || exit 1
 	    
 	    # copy profile into root's homedir
-	    cp -v config/profile $BABY/root/.profile
+	    cp -v config/profile $CLFS/root/.profile
 
 	    # make sure these build variables are set
-	    echo export BUILD32=\"$BUILD32\" >> $BABY/root/.profile
-	    echo export BUILD64=\"$BUILD64\" >> $BABY/root/.profile
-	    echo export MACHTYPE_TARGET32=\"$MACHTYPE_TARGET32\" >> $BABY/root/.profile
+	    echo export BUILD32=\"$BUILD32\" >> $CLFS/root/.profile
+	    echo export BUILD64=\"$BUILD64\" >> $CLFS/root/.profile
+	    # FIXME: what about CLFS_HOST and CLFS_TARGET?
+	    echo export CLFS_TARGET32=\"$CLFS_TARGET32\" >> $CLFS/root/.profile
 	    
 	    # copy fstab into etc
 	    #
 	    # FIXME: this needs to have appropriate device name and
 	    #        filesystem types inserted in it.
-	    cp -v config/fstab $BABY/etc || exit 1
+	    cp -v config/fstab $CLFS/etc || exit 1
 
 	    # NOTE: now touch /.ruckus_bootstrap_stage2, which causes init
 	    #       to run the stage2 script on tty1 at boot
-	    touch $BABY$RUCKUS_BOOTSTRAP_STAGE2_FILE || exit 1
+	    touch $CLFS$RUCKUS_BOOTSTRAP_STAGE2_FILE || exit 1
 
 	    ;;
 
@@ -480,7 +484,7 @@ build()
 
 	    # get ready
 	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
-	    MAKE+=" ARCH=$ARCH_TARGET CROSS_COMPILE=$MACHTYPE_TARGET-"
+	    MAKE+=" ARCH=$ARCH_TARGET CROSS_COMPILE=$CLFS_TARGET-"
 	    pushd $builddir &&
 	    $MAKE mrproper &&
 	    popd || exit 1
@@ -501,9 +505,9 @@ build()
 
 	    # now actually install the resulting kernel files
 	    pushd $builddir &&
-	    cp -v arch/$ARCH_TARGET/boot/bzImage $BABY/boot/vmlinuz-ruckus-bootstrap &&
-	    cp -v System.map $BABY/boot/System.map-ruckus-bootstrap &&
-	    cp -v .config $BABY/boot/config-ruckus-bootstrap &&
+	    cp -v arch/$ARCH_TARGET/boot/bzImage $CLFS/boot/vmlinuz-ruckus-bootstrap &&
+	    cp -v System.map $CLFS/boot/System.map-ruckus-bootstrap &&
+	    cp -v .config $CLFS/boot/config-ruckus-bootstrap &&
 	    popd || exit 1
 	    ;;
 
@@ -513,11 +517,11 @@ build()
 	    # install the scripts
 	    pushd $builddir &&
 	    make SOURCEDIR=$source -f $source/Makefile \
-		DESTDIR=$BABY install-minimal &&
+		DESTDIR=$CLFS install-minimal &&
 	    popd || exit 1
 
 	    # groom them a bit
-	    echo "UTC=1" > $BABY/etc/sysconfig/clock || exit 1
+	    echo "UTC=1" > $CLFS/etc/sysconfig/clock || exit 1
 
 	    ;;
 
@@ -531,7 +535,7 @@ build()
 	    rm -f $builddir/mk/devel.mk || exit 1
 
 	    pushd $builddir &&
-	    make CROSS_COMPILE=$MACHTYPE_TARGET- -j$JOBCOUNT &&
+	    make CROSS_COMPILE=$CLFS_TARGET- -j$JOBCOUNT &&
 	    install -m 755 extlinux/extlinux $PREFIX_CROSS/bin &&
 	    install -d -m 755 $PREFIX_CROSS/syslinux &&
 	    install -m 644 mbr/mbr.bin $PREFIX_CROSS/syslinux &&
@@ -549,13 +553,13 @@ build()
 	    #       just to make this easier to read/maintain.  assuming
 	    #       sudo is configured to work correctly, the additional
 	    #       overhead should be negligible.
-	    sudo chown -Rc 0:0 $BABY &&
-	    sudo chgrp -c 13 $BABY/var/{run/utmp,log/lastlog} || exit 1
-	    if [ ! -c $BABY/dev/console ]; then
-		sudo mknod -m 600 $BABY/dev/console c 5 1 || exit 1
+	    sudo chown -Rc 0:0 $CLFS &&
+	    sudo chgrp -c 13 $CLFS/var/{run/utmp,log/lastlog} || exit 1
+	    if [ ! -c $CLFS/dev/console ]; then
+		sudo mknod -m 600 $CLFS/dev/console c 5 1 || exit 1
 	    fi
-	    if [ ! -c $BABY/dev/null ]; then
-		sudo mknod -m 666 $BABY/dev/null c 1 3 || exit 1
+	    if [ ! -c $CLFS/dev/null ]; then
+		sudo mknod -m 666 $CLFS/dev/null c 1 3 || exit 1
 	    fi
 
 	    # FIXME: double check that files that were setuid build_user are
@@ -567,37 +571,37 @@ build()
 	    #       somewhere along the line the setuid bit is getting
 	    #       dropped.
 	    setuid_list=""
-	    setuid_list+=" /bootstrap/bin/mount"
-	    setuid_list+=" /bootstrap/bin/umount"
-	    setuid_list+=" /bootstrap/bin/busybox"
-	    #setuid_list+=" /bootstrap/bin/ping" #bb
-	    #setuid_list+=" /bootstrap/bin/ping6" #bb
-	    #setuid_list+=" /bootstrap/bin/su" #bb
-	    #setuid_list+=" /bootstrap/bin/at" #at
-	    #setuid_list+=" /bootstrap/bin/chage" #shadow-utils
-	    setuid_list+=" /bootstrap/bin/chfn"
-	    setuid_list+=" /bootstrap/bin/chsh"
-	    #setuid_list+=" /bootstrap/bin/crontab" #vixie-cron
-	    #setuid_list+=" /bootstrap/bin/cu" #uucp
-	    #setuid_list+=" /bootstrap/bin/gpasswd" #shadow-utils
-	    setuid_list+=" /bootstrap/bin/newgrp"
-	    #setuid_list+=" /bootstrap/bin/newrole" #policycoreutils
-	    #setuid_list+=" /bootstrap/bin/passwd" #passwd #????
-	    #setuid_list+=" /bootstrap/bin/Xorg" #xorg-server
-	    #setuid_list+=" /bootstrap/bin/dumpcap" #wireshark
-	    #setuid_list+=" /bootstrap/bin/fusermount" #fuse
-	    setuid_list+=" /bootstrap/bin/ntfs-3g"
-	    #setuid_list+=" /bootstrap/bin/rlogin" #inetutils
-	    #setuid_list+=" /bootstrap/bin/rsh" #inetutils
-	    #setuid_list+=" /bootstrap/sbin/ccreds_validate" #pam_ccreds
-	    #setuid_list+=" /bootstrap/sbin/userhelper" #usermode
-	    #setuid_list+=" /bootstrap/sbin/uucico" #uucp
-	    #setuid_list+=" /bootstrap/sbin/uuxqt" #uucp
-	    #setuid_list+=" /bootstrap/sbin/pam_timestamp_check" #pam
-	    #setuid_list+=" /bootstrap/sbin/unix_chkpwd" #pam
+	    setuid_list+=" /tools/bin/mount"
+	    setuid_list+=" /tools/bin/umount"
+	    setuid_list+=" /tools/bin/busybox"
+	    #setuid_list+=" /tools/bin/ping" #bb
+	    #setuid_list+=" /tools/bin/ping6" #bb
+	    #setuid_list+=" /tools/bin/su" #bb
+	    #setuid_list+=" /tools/bin/at" #at
+	    #setuid_list+=" /tools/bin/chage" #shadow-utils
+	    setuid_list+=" /tools/bin/chfn"
+	    setuid_list+=" /tools/bin/chsh"
+	    #setuid_list+=" /tools/bin/crontab" #vixie-cron
+	    #setuid_list+=" /tools/bin/cu" #uucp
+	    #setuid_list+=" /tools/bin/gpasswd" #shadow-utils
+	    setuid_list+=" /tools/bin/newgrp"
+	    #setuid_list+=" /tools/bin/newrole" #policycoreutils
+	    #setuid_list+=" /tools/bin/passwd" #passwd #????
+	    #setuid_list+=" /tools/bin/Xorg" #xorg-server
+	    #setuid_list+=" /tools/bin/dumpcap" #wireshark
+	    #setuid_list+=" /tools/bin/fusermount" #fuse
+	    setuid_list+=" /tools/bin/ntfs-3g"
+	    #setuid_list+=" /tools/bin/rlogin" #inetutils
+	    #setuid_list+=" /tools/bin/rsh" #inetutils
+	    #setuid_list+=" /tools/sbin/ccreds_validate" #pam_ccreds
+	    #setuid_list+=" /tools/sbin/userhelper" #usermode
+	    #setuid_list+=" /tools/sbin/uucico" #uucp
+	    #setuid_list+=" /tools/sbin/uuxqt" #uucp
+	    #setuid_list+=" /tools/sbin/pam_timestamp_check" #pam
+	    #setuid_list+=" /tools/sbin/unix_chkpwd" #pam
 
 	    for x in $setuid_list; do
-		sudo chmod -c u+s $BABY$x || exit 1
+		sudo chmod -c u+s $CLFS$x || exit 1
 	    done
 
 	    ;;
@@ -662,7 +666,7 @@ packages+=" texinfo"
 #
 # FIXME: hmm... not sure how i'm gonna do this...  CLFS builds a bunch of
 #        basic utils, udev, and a stripped down kernel in the target
-#        filesystem (ie, not /bootstrap) to make a bootable system.  Then
+#        filesystem (ie, not /tools) to make a bootable system.  Then
 #        the next chapter in CLFS overwrites the installed files with the
 #        final versions.  I guess this is doable...  The final system
 #        packages are going to be packaged and installed with SRP, so we'll
@@ -672,16 +676,16 @@ packages+=" texinfo"
 #        though.
 #
 # FIXME: CLFS installs util-linux-ng at this point... we're using busybox as
-#        a replacement and it's already installed in /bootstrap...  Do the
+#        a replacement and it's already installed in /tools...  Do the
 #        util-linux portions of it really need to be in the proper places?
-#        or will /bootstrap do?  If /bootstrap isn't good enough for that
+#        or will /tools do?  If /tools isn't good enough for that
 #        part of busybox, why not just install the whole darn thing in the
 #        baby filesystem and let it all be overwritten by the busybox srp
 #        later on...?
 #
 #        Actually, it might be simpler (at least for now) to install
 #        symlinks for all the busybox binaries that got intsalled in
-#        /bootstrap in /bin, /sbin, etc.
+#        /tools in /bin, /sbin, etc.
 #
 # FIXME: hey, busybox installs a udev replacement called 'mdev'... should we
 #        use that instead of udev for our bootstrap boot?  we could either
@@ -777,7 +781,7 @@ done
 # NOTE: we're all done cross-compiling at this point and we're about to
 #       reboot into our stage2 bootstrap environment using our new native
 #       bootstrap compiler.
-sudo rm -rf $BABY$PREFIX_CROSS || exit 1
+sudo rm -rf $CLFS$PREFIX_CROSS || exit 1
 
 # remove the bootstrap and bootstrap-cross symlinks
 sudo rm -f $PREFIX_CROSS $PREFIX_FINAL || exit 1
@@ -791,19 +795,19 @@ sudo rm -f $PREFIX_CROSS $PREFIX_FINAL || exit 1
 # NOTE: using sudo for this to make sure our build user has appropriate
 #       permissions to read all the files we're backing up
 echo -n "creating bootstrap-stage1 backup... "
-sudo tar -zcf $BUILDROOT/baby-bootstrap-stage1.tar.gz -C $BABY . || exit 1
+sudo tar -zcf $BUILDROOT/baby-bootstrap-stage1.tar.gz -C $CLFS . || exit 1
 echo "done."
 
 
-# NOTE: now we have to move $BABY/* to $INSTALLROOT.  we can either do a
+# NOTE: now we have to move $CLFS/* to $INSTALLROOT.  we can either do a
 #       globbing mv, or we can untar our baby*.tar files... depends on how
-#       much we care about preserving the original contents of $BABY.
-#       considering that we already have the tar files backing up BABY, we
+#       much we care about preserving the original contents of $CLFS.
+#       considering that we already have the tar files backing up CLFS, we
 #       might as well do a globbing mv
-sudo mv $BABY/* $INSTALLROOT
-sudo rmdir $BABY
+sudo mv $CLFS/* $INSTALLROOT
+sudo rmdir $CLFS
 
-# FIXME: ownership of $BABY's new toplevel directory (which becomes / once
+# FIXME: ownership of $CLFS's new toplevel directory (which becomes / once
 #        we boot up into stage2) has not been modified by these scripts, so
 #        it's probably inappropriate (i.e., owned by non-root).
 

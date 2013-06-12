@@ -133,7 +133,7 @@ exit 0
 cp $BUILDROOT/baby-bootstrap-stage1.snar \
     $BUILDROOT/baby-bootstrap-stage2.snar &&
 sudo tar -vcf $BUILDROOT/baby-bootstrap-stage2.tar \
-    -g $BUILDROOT/baby-bootstrap-stage2.snar -C $BABY . || exit 1
+    -g $BUILDROOT/baby-bootstrap-stage2.snar -C $CLFS . || exit 1
 
 
 # NOTE: if the bootstrap system is feature-complete for my embedded

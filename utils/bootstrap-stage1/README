@@ -11,12 +11,12 @@ cross-compiling is a pain.  Stage1 uses the cross-compiler and builds just
 enough to result in a bootable system.  We then boot into the baby system
 and build the rest of the bootstrap tools natively.
 
-After this step is complete, the resulting $BABY dir can be used to populate
+After this step is complete, the resulting $CLFS dir can be used to populate
 a seperate filesystem, which can then be made bootable by editing the
 host system's bootloader configuration (e.g., /boot/grub/menu.lst).
 
 
-NOTE: I should eventually automate the process by which $BABY actually
+NOTE: I should eventually automate the process by which $CLFS actually
       becomes bootable... but it might involve toasting the host machine.
       This is unacceptable in my home environment, so for now I'll manually
       set up a dual boot.  The process will eventually be:

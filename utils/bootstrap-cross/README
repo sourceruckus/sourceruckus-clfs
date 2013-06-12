@@ -7,11 +7,11 @@ will be used to compile the bootstrap-stage1 step for the correct
 architecture.
 
 All the packages built in this section will get compiled and installed in
-/bootstrap-cross (via the symlink created in bootstrap-early).  Actually
+/cross-tools (via the symlink created in bootstrap-early).  Actually
 using them will require tweaking of your user's environment.
 
 
-NOTE: This is all actually getting installed in $BABY/bootstrap-cross at the
+NOTE: This is all actually getting installed in $CLFS/cross-tools at the
       moment, but I don't remember why I implemented it that way... might
       have been a mistake... but I seem to remember there being some reason
       why I had to do it that way.
@@ -20,18 +20,18 @@ NOTE: Did it that way to follow the CLFS book, which says it installs in
       $CLFS/cross-tools just to be consistent with $CLFS/tools.  Should be
       able to move these things around later and see what breaks.
 
-NOTE: Did some preliminary testing regarding /bootstrap-cross breakage if
-      installed outside BABY... the bootstrap-cross stage builds fine, but
+NOTE: Did some preliminary testing regarding /cross-tools breakage if
+      installed outside $CLFS... the bootstrap-cross stage builds fine, but
       bootstrap-final's gcc compilation fails with a zillion undefined
       references.
 
-NOTE: If this really does have to go inside $BABY, we should dump an image
+NOTE: If this really does have to go inside $CLFS, we should dump an image
       when we're done.  This stage takes almost 2 hours to build on my
       netbook, even on subsequent runs that are mostly just doing 'make
       install'.  (A full rebuild takes about 3 hours)
 
 NOTE: kernel headers and glibc (32 and 64bit) are actually installed in
-      PREFIX_FINAL (/bootstrap) here.  This is what the CLFS book does, and
+      PREFIX_FINAL (/tools) here.  This is what the CLFS book does, and
       we follow suit... even though I'm not entirely sure why this is done.
       It does mean that the final bootstrap stage doesn't have to compile
       eglibc at all...

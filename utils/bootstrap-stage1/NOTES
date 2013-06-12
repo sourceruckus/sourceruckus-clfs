@@ -19,11 +19,11 @@
 If we're concerned with rootfs size, the first thing to do is strip debug
 like this:
 
-# find $BABY -type f --exec strip --strip-debug {} \;
+# find $CLFS -type f --exec strip --strip-debug {} \;
 
 Do NOT do this from within the bootstrap system.  It must be done from the
 host system or strip will hose the strip binary.
 
 This brings our rootfs size down to about 138M for 32bit builds.
 
-And there's still a bunch of waste in /bootstrap/{man,info,share}
+And there's still a bunch of waste in /tools/{man,info,share}

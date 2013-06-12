@@ -6,25 +6,69 @@ sourcedir=$toplevel/src
 INSTALLROOT=$toplevel/..
 BUILDROOT=$toplevel/.build
 PREFIX_EARLY=$BUILDROOT/bootstrap-early
-PREFIX_CROSS=/bootstrap-cross
 
-# FIXME: PREFIX_CROSS should be $INSTALLROOT/.build/bootstrap-cross and we
-#        probably don't need the /bootstrap-cross symlink.  Once everything
-#        works, fix this and see what breaks.
+# NOTE: The CLFS book puts the cross-compilation toolcahin in /cross-tools
+#       and the cross-compiled temporary native compilation toolchain in
+#       /tools.  Both of these are actually symlinks pointing into
+#       $CLFS/cross-tools and $CLFS/tools.  I don't remember the rationale
+#       for doing this at the momment, but for simplicity's sake we're going
+#       to follow the CLFS book to a tee (at least, early on).
 #
-# FIXME: Actually, stuff did break... but I don't remember what exactly.  it
-#        was enough to be not worth fixing, though...
+#       For the record, ditching the symlinks and installing directly into
+#       $CLFS does indeed cause breakage in the CLFS instructions...
+PREFIX_CROSS=/cross-tools
+PREFIX_FINAL=/tools
+
+
+# --- CLFS Variables ------------------------------------------------------
+
+# these cannot be set (CLFS book says so, I assume because massive breakage
+# will ensue)
+unset CFLAGS
+unset CXXFLAGS
 
 # this is where our baby filesystem lives while we're building it.  at the
 # end of the bootstrap-stage1 stage, we'll move this to $INSTALLROOT.
 # keeping it inside a different directory until then make maintainence
-# easier (e.g., chown -R root:root $BABY won't mess with our source tree)
-BABY=$BUILDROOT/baby
+# easier (e.g., chown -R root:root $CLFS won't mess with our source tree)
+CLFS=$BUILDROOT/baby
 
-# FIXME: should think about defining a variable for $BABY/bootstrap.  the
-#        /bootstrap moniker is hardcoded into a bunch of source files (into
-#        patches actually), so this might be non-trivial
-PREFIX_FINAL=/bootstrap
+# set host and target variables.
+#
+# NOTE: I would have called these MACHTYPE_HOST, MACHTYPE_TARGET, and
+#       MACHTYPE_TARGET32, but we're using the CLFS variables so we can
+#       cut-n-paste build scripts.
+#
+# NOTE: The CLFS book manipulates the $MACHTYPE system variable to determine
+#       CLFS_HOST, which works when $MACHTYPE is something like
+#       'i386-redhat-linux-gnu' (fedora, 32bit), but sometimes it's just set
+#       to something like 'i686' (SUSE, 32bit).
+#
+# FIXME: this should eventually be done via autoconf
+#
+# NOTE: This needs to NOT be a normal host string just in case our target
+#       system actually happens to be the same as our host system (which
+#       would break the cross-compilation scheme we're using here).
+export CLFS_HOST="i686-cross-linux-gnu"
+export CLFS_TARGET="x86_64-ruckus-linux-gnu"
+export CLFS_TARGET32="i686-pc-linux-gnu"
+
+# these variables seem like overkill, but are used in the CLFS book, so
+# we'll follow suit.
+#
+# FIXME: they should probably also be set via autoconf
+export BUILD32="-m32"
+export BUILD64="-m64"
+
+# -------------------------------------------------------------------------
+
+# FIXME: should also get determined by autoconf
+#
+# FIXME: where did this variable come from?  i don't see CLFS using it...
+#        they're in the build scripts for busybox and the kernel.
+export ARCH_TARGET=x86_64
+
+
 
 # this variable tells bootstrap scripts where to find gnulib, to avoid them
 # all trying to create their own local clone
@@ -66,27 +110,6 @@ if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
 	export LD_LIBRARY_PATH=$PREFIX_CROSS/lib:$LD_LIBRARY_PATH
     fi
 fi
-
-
-# set host and target variables.  this should eventually be done via autoconf
-
-# NOTE: MACHTYPE on a fedora 32bit box is 'i386-redhat-linux-gnu', but on a SUSE box it's just 'i686'
-#export CLFS_HOST="$(echo ${MACHTYPE} | \
-#    sed "s/$(echo ${MACHTYPE} | cut -d- -f2)/cross/")"
-
-export MACHTYPE_HOST="i686-cross-linux-gnu"
-
-export MACHTYPE_TARGET="x86_64-ruckus-linux-gnu"
-
-export MACHTYPE_TARGET32="i686-pc-linux-gnu"
-
-# these should also get determined by autoconf
-export ARCH_TARGET=x86_64
-
-# these variables seem like overkill, but might make things easier later on.
-# they should probably also be set vi autoconf
-export BUILD32="-m32"
-export BUILD64="-m64"
 
 # this variable will be used by default to determine the number of jobs to
 # pass into make.
@@ -342,13 +365,13 @@ compile_generic()
 
 set_cross_compile()
 {
-    export CC="${MACHTYPE_TARGET}-gcc"
-    export CXX="${MACHTYPE_TARGET}-g++"
-    export AR="${MACHTYPE_TARGET}-ar"
-    export AS="${MACHTYPE_TARGET}-as"
-    export RANLIB="${MACHTYPE_TARGET}-ranlib"
-    export LD="${MACHTYPE_TARGET}-ld"
-    export STRIP="${MACHTYPE_TARGET}-strip"
+    export CC="${CLFS_TARGET}-gcc"
+    export CXX="${CLFS_TARGET}-g++"
+    export AR="${CLFS_TARGET}-ar"
+    export AS="${CLFS_TARGET}-as"
+    export RANLIB="${CLFS_TARGET}-ranlib"
+    export LD="${CLFS_TARGET}-ld"
+    export STRIP="${CLFS_TARGET}-strip"
 
     export CC="${CC} ${BUILD64}"
     export CXX="${CXX} ${BUILD64}"
