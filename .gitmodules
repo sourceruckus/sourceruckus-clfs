@@ -85,3 +85,6 @@
 [submodule "src/cloog"]
 	path = src/cloog
 	url = git://repo.or.cz/cloog.git
+[submodule "src/isl"]
+	path = src/isl
+	url = git://repo.or.cz/isl.git
