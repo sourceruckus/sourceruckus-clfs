@@ -82,3 +82,6 @@
 [submodule "src/curl"]
 	path = src/curl
 	url = git://github.com/bagder/curl.git
+[submodule "src/cloog"]
+	path = src/cloog
+	url = git://repo.or.cz/cloog.git
