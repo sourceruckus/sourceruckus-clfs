@@ -77,15 +77,21 @@ build()
 	    ;;
 
 	cloog)
+            # FIXME: cloog's automake files are reeeealy old.  In addition to a
+            #        bunch of deprecation warnings, bootstrapping also chokes
+            #        on $(srcdir) usage in TESTS (tests/Makefile.am).  they're
+            #        all over the place, and we only need the TESTS ones
+            #        removed, so i'll make a patch for this instead of using
+            #        sed...
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 $OPTS \
-		--with-gmp=$PREFIX_CROSS
+		--with-gmp-prefix=$PREFIX_CROSS
 	    ;;
 
 	binutils)
-	    # FIXME: this was using /tools as apposed to /tools-cross
-	    #        in the CLFS book...  is this really correct?
-	    
+	    # NOTE: The CLFS book sets lib-path to /tools as apposed to
+	    #       /tools-cross (i.e., $PREFIX_FINAL instead of
+	    #       $PREFIX_CROSS).  This is not a typo.
 	    AR=ar AS=as setup_generic $1 &&
 	    AR=ar AS=as \
 		configure_generic $1 $OPTS \
@@ -97,6 +103,12 @@ build()
 
 	    # FIXME: should the --enable-64-bit-bfd flag be used on 32bit
 	    #        systems?
+            #
+            #        no, it shouldn't.  at least, it's not used in the 32bit
+            #        LFS book.
+            #
+            # FIXME: if not multilib, we should be passing --disable-multilib
+            #        in here as well (also from the CLFS book)
 
 	    pushd $builddir &&
 	    make configure-host &&
