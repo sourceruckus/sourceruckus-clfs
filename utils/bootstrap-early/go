@@ -118,6 +118,13 @@ build()
 	pkg-config)
 	    # NOTE: Some systems need march to be >= i486 to build the
 	    #       included glib bits here...
+            #
+            # NOTE: The internal glib snapshot can be used to remove a host
+            #       system dependency, but if the host system has glib and a
+            #       really old kernel that doesn't define PR_SET_NAME
+            #       (<2.6.9?), it'll fail to compile.
+            #
+            # FIXME: autoconf for this?
 	    CPPFLAGS=-march=i486 \
 		build_generic $1 --prefix=$PREFIX_EARLY \
 		--with-internal-glib || exit 1
