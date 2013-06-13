@@ -18,11 +18,9 @@ build_linux_headers()
     make ARCH=$ARCH_TARGET headers_check &&
     make ARCH=$ARCH_TARGET INSTALL_HDR_PATH=dest headers_install || exit 1
 
-    # FIXME: CLFS book used /tools as apposed to /cross-tools here... not
-    #        sure why.  it might just be that this is really a
-    #        bootstrap-final chore that needs to be done prior to building
-    #        bootstrap-cross...  need to investigate later.
-    mkdir -p $PREFIX_FINAL/include &&
+    # NOTE: We use /tools as apposed to /cross-tools here (just like the
+    #       CLFS book).  There's nothing to cross-compile here, but it's
+    #       needed now.
     rsync -va dest/include $PREFIX_FINAL || exit 1
     popd
 }
@@ -62,8 +60,7 @@ build()
 	    ;;
 
 	gmp)
-	    CPPFLAGS=-fexceptions \
-		build_generic $1 $OPTS --enable-cxx
+	    build_generic $1 $OPTS --enable-cxx
 	    ;;
 
 	mpfr)
@@ -79,24 +76,10 @@ build()
 		--with-mpfr=$PREFIX_CROSS
 	    ;;
 
-	ppl)
-	    # we have patches for the autoconf files, so lets make sure
-	    # autoreconf gets called
-	    autoreconf=yes LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+	cloog)
+	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 $OPTS \
-		--enable-interfaces="c,cxx" \
-		--disable-optimization \
-		--with-libgmp-prefix=$PREFIX_CROSS \
-		--with-libgmpxx-prefix=$PREFIX_CROSS
-	    ;;
-
-	cloog-ppl)
-	    # we patch the autoconf files
-	    autoreconf=yes LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		build_generic $1 $OPTS \
-		--with-bits=gmp \
-		--with-gmp=$PREFIX_CROSS \
-		--with-ppl=$PREFIX_CROSS
+		--with-gmp=$PREFIX_CROSS
 	    ;;
 
 	binutils)
@@ -353,12 +336,12 @@ build()
 packages=""
 packages+=" linux_headers"
 packages+=" file"
+packages+=" m4"
 packages+=" ncurses"
 packages+=" gmp"
 packages+=" mpfr"
 packages+=" mpc"
-packages+=" ppl"
-packages+=" cloog-ppl"
+packages+=" cloog"
 packages+=" binutils"
 packages+=" gcc-static"
 packages+=" eglibc-32bit"
@@ -384,4 +367,6 @@ done
 #       permissions to read all the files we're backing up
 echo -n "creating bootstrap-cross backup... "
 sudo tar -zcf $BUILDROOT/baby-bootstrap-cross.tar.gz -C $CLFS . || exit 1
+#sudo tar -jcf $BUILDROOT/baby-bootstrap-cross.tar.bz2 -C $CLFS . || exit 1
+#sudo tar -Jcf $BUILDROOT/baby-bootstrap-cross.tar.xz -C $CLFS . || exit 1
 echo "done."
