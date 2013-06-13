@@ -88,3 +88,6 @@
 [submodule "src/isl"]
 	path = src/isl
 	url = git://repo.or.cz/isl.git
+[submodule "src/openscop"]
+	path = src/openscop
+	url = git://repo.or.cz/openscop.git
