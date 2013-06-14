@@ -288,7 +288,7 @@ setup_generic()
 	# some packages can't build out-of-tree.  we'll replace $builddir
 	# with a symlink to our local source tree
 	rmdir $builddir && ln -s $source $builddir || exit 1
-	configure=./configure
+	configure=$builddir/configure
     fi
 
     # apply additional patches, if specified
