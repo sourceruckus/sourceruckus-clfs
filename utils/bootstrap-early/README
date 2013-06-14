@@ -30,6 +30,12 @@ NOTE: There are cyclic dependencies that crop up when bootstrapping the
 NOTE: The version of git might need to be fairly recent (submodule wasn't very
       good until around v1.6).
 
+FIXME: We should probably check for git submodule update --init --recursive if
+       we're going to rely on that to init recursive submodules...  since we
+       don't build git here, I guess it'll just issue a warning.  Work around
+       would be to either upgrade host system's git or traverse the system
+       initializing submodules by hand...
+
 NOTE: The system's tar command will need to be able to transparently decrompress
       via gzip, bzip2, and xz (i.e., tar xf foo.tar.xz needs to work).  Some
       really old distros might not support xz yet.

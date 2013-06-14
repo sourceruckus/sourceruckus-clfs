@@ -49,9 +49,19 @@ CLFS=$BUILDROOT/baby
 # NOTE: This needs to NOT be a normal host string just in case our target
 #       system actually happens to be the same as our host system (which
 #       would break the cross-compilation scheme we're using here).
+#
 export CLFS_HOST="i686-cross-linux-gnu"
+
+# --- x86 ---
+#export CLFS_TARGET="i686-ruckus-linux-gnu"
+#unset CLFS_TARGET32
+# --- x86_64 multilib ---
 export CLFS_TARGET="x86_64-ruckus-linux-gnu"
-export CLFS_TARGET32="i686-pc-linux-gnu"
+export CLFS_TARGET32="i686-ruckus-linux-gnu"
+# --- x86_64 pure64 ---
+#export CLFS_TARGET="x86_64-ruckus-linux-gnu"
+#unset CLFS_TARGET32
+
 
 # these variables seem like overkill, but are used in the CLFS book, so
 # we'll follow suit.
@@ -61,15 +71,46 @@ export CLFS_TARGET32="i686-pc-linux-gnu"
 #       have just BUILD64 set.  x86_64 Multilib will have both.
 #
 # FIXME: they should probably also be set via autoconf
+#
+# x86: BUILD32 and BUILD64 are both unused
+#
+# x86_64 pure: BUILD64 is used for bootstrap-cross eglibc (and a conditional in
+#              binutils), bootstrap-stage1 everything.  It's completely unused
+#              in bootstrap-stage2 and final system
+#
+# x86_64 multi: BUILD64 and BUILD32 are used for bootstrap-cross eglibc*.  All
+#               of bootstrap-stage1 and bootstrap-stage2 is built using BUILD64
+#               ONLY.  Final system software is built using both BUILD32 and
+#               BUILD64.
+#
+# If we follow that scheme (i.e, don't set either if arch is x86), then having
+# BUILD32 set means we're x86_64 multilib... which is going to get pretty
+# confusing... perhaps we should just have a MULTILIB variable?
+#
+# --- x86 ---
+#unset BUILD32
+#unset BUILD64
+# --- x86_64 multilib ---
 export BUILD32="-m32"
 export BUILD64="-m64"
+# --- x86_64 pure64 ---
+#unset BUILD32
+#export BUILD64="-m64"
 
 # -------------------------------------------------------------------------
 
 # FIXME: should also get determined by autoconf
 #
 # FIXME: where did this variable come from?  i don't see CLFS using it...
-#        they're in the build scripts for busybox and the kernel.
+#        they're in the build scripts for cross-compiling busybox and the
+#        kernel.
+#
+# FIXME: shouldn't the x86 kernel use an ARCH newer than 386?  didn't they just
+#        remove 386 support a few releases ago?  CLFS book is using i386, but
+#        we've got our TARGET triplet set up as i686, so I'm going to use
+#        that...
+#
+#export ARCH_TARGET=i686
 export ARCH_TARGET=x86_64
 
 
@@ -377,6 +418,13 @@ set_cross_compile()
     export LD="${CLFS_TARGET}-ld"
     export STRIP="${CLFS_TARGET}-strip"
 
+    # NOTE: We append BUILD64 to CC and CXX here unconditionally.  This is OK
+    #       because BUILD64 is unset if we're building x86 and both pure64 and
+    #       multilib x86_64 builds use BUILD64 for all the tools built via the
+    #       cross-compiler.
+    #
+    # FIXME: i'm not sure i like the fact that this is sorta hidden in
+    #        here... we'll see if i change my mind
     export CC="${CC} ${BUILD64}"
     export CXX="${CXX} ${BUILD64}"
 

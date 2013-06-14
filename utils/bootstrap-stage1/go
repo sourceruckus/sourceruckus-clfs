@@ -10,11 +10,15 @@ toplevel=$PWD/../..
 build()
 {
     # set some common variables for all targets
+    #
+    # NOTE: We don't need any conditionals here because all supported build
+    #       types use CLFS_TARGET for --host throughout the stage1 bootstrap.
     OPTS="--prefix=$PREFIX_FINAL"
     OPTS+=" --build=${CLFS_HOST}"
     OPTS+=" --host=${CLFS_TARGET}"
 
-    if [ -n "$BUILD64" ]; then
+    # put libs in lib64 if we're building x86_64 multilib
+    if [ -n "$BUILD32" ]; then
 	OPTS+=" --libdir=$PREFIX_FINAL/lib64"
     fi
 
@@ -458,7 +462,9 @@ build()
 	    # make sure these build variables are set
 	    echo export BUILD32=\"$BUILD32\" >> $CLFS/root/.profile
 	    echo export BUILD64=\"$BUILD64\" >> $CLFS/root/.profile
-	    # FIXME: what about CLFS_HOST and CLFS_TARGET?
+	    # FIXME: what about CLFS_HOST and CLFS_TARGET?  CLFS_TARGET is no
+	    #        longer needed, probably the same for CLFS_HOST.  TARGET32
+	    #        is still needed when we go to build 32bit libs.
 	    echo export CLFS_TARGET32=\"$CLFS_TARGET32\" >> $CLFS/root/.profile
 	    
 	    # copy fstab into etc
