@@ -89,6 +89,21 @@ build()
 	    ;;
 
 	binutils)
+            # FIXME: double check that these flags are getting configured
+            #        appropriately in the build system...
+            #
+            #        verified 64bit multilib
+            #
+            # add 64bit support if desired
+            if [ -n "$BUILD64" ]; then
+                OPTS+=" --enable-64-bit-bfd"
+            fi
+            # disable multilib if we're building pure 32 or 64 bit
+            if [ -z "$BUILD32" -o -z "$BUILD64" ]; then
+                OPTS+=" --disable-multilib"
+            fi
+            echo "!!!!!!!!!!!! OPTS: $OPTS"
+
 	    # NOTE: The CLFS book sets lib-path to /tools as apposed to
 	    #       /tools-cross (i.e., $PREFIX_FINAL instead of
 	    #       $PREFIX_CROSS).  This is not a typo.
@@ -98,17 +113,7 @@ build()
 		--host=${CLFS_HOST} \
 		--target=${CLFS_TARGET} \
 		--with-sysroot=${CLFS} \
-		--with-lib-path=$PREFIX_FINAL/lib \
-		--enable-64-bit-bfd || exit 1
-
-	    # FIXME: should the --enable-64-bit-bfd flag be used on 32bit
-	    #        systems?
-            #
-            #        no, it shouldn't.  at least, it's not used in the 32bit
-            #        LFS book.
-            #
-            # FIXME: if not multilib, we should be passing --disable-multilib
-            #        in here as well (also from the CLFS book)
+		--with-lib-path=$PREFIX_FINAL/lib || exit 1
 
 	    pushd $builddir &&
 	    make configure-host &&
@@ -128,7 +133,7 @@ build()
 	    ;;
 
 	gcc-static)
-	    setup_generic gcc &&
+	    setup_generic gcc || exit 1
 	    if [ ! -f $builddir/Makefile ]; then
 		pushd $source || exit 1
 		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
@@ -137,56 +142,46 @@ build()
 		popd
 	    fi
 
+	    # make GCC look in PREFIX_FINAL (i.e., not the host sys)
+            pushd $source
+	    echo "#undef STANDARD_STARTFILE_PREFIX_1" >> gcc/config/linux.h
+            echo "#define STANDARD_STARTFILE_PREFIX_1 \"$PREFIX_FINAL/lib/\"" >> gcc/config/linux.h
+	    echo "#undef STANDARD_STARTFILE_PREFIX_2" >> gcc/config/linux.h
+            echo "#define STANDARD_STARTFILE_PREFIX_2 \"\"" >> gcc/config/linux.h
+            popd
+
 	    # create a dummy limits.h so the build will not use the one
 	    # provided by the host distro
 	    mkdir -p $PREFIX_FINAL/include &&
 	    touch $PREFIX_FINAL/include/limits.h || exit 1
 
-	    # FIXME: should probably rework the gcc patches to modify
-	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
+	    # NOTE: gcc-static, eglibc32, eglibc64, and gcc-final should NOT
+	    #       use our common OPTS.  these packages are VERY important and
+	    #       so we're going to follow the CLFS book exactly.
+	    OPTS=""
 
-	    # NOTE: gcc-static, eglibc32, and eglibc64 should NOT use our
-	    #       common OPTS.  these packages are VERY important and so
-	    #       we're going to follow the CLFS book exactly.
-	    OPTS=
+            AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+                configure_generic gcc --prefix=$PREFIX_CROSS \
+                --build=${CLFS_HOST} --host=${CLFS_HOST} --target=${CLFS_TARGET} \
+                --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_FINAL \
+                --with-native-system-header-dir=$PREFIX_FINAL/include --disable-nls \
+                --disable-shared --with-mpfr=$PREFIX_CROSS --with-gmp=$PREFIX_CROSS \
+                --with-cloog=$PREFIX_CROSS --with-mpc=$PREFIX_CROSS --without-headers \
+                --with-newlib --disable-decimal-float --disable-libgomp --disable-libmudflap \
+                --disable-libssp --disable-threads --disable-libatomic --disable-libitm \
+                --disable-libsanitizer --disable-libquadmath --disable-target-libiberty \
+                --disable-target-zlib --with-system-zlib --enable-cloog-backend=isl \
+                --disable-cloog-version-check --enable-languages=c \
+                --enable-checking=release || exit 1
 
-	    AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		configure_generic gcc --prefix=$PREFIX_CROSS \
-		--build=${CLFS_HOST} \
-		--host=${CLFS_HOST} \
-		--target=${CLFS_TARGET} \
-		--with-sysroot=${CLFS} \
-		--with-local-prefix=$PREFIX_FINAL \
-		--disable-nls \
-		--disable-shared \
-		--with-mpfr=$PREFIX_CROSS \
-		--with-gmp=$PREFIX_CROSS \
-		--with-ppl=$PREFIX_CROSS \
-		--with-cloog=$PREFIX_CROSS \
-		--without-headers \
-		--with-newlib \
-		--disable-decimal-float \
-		--disable-libgomp \
-		--disable-libmudflap \
-		--disable-libssp \
-		--disable-threads \
-		--enable-languages=c || exit 1
-
-	    pushd $builddir || exit 1
+	    pushd $builddir &&
 	    make -j$JOBCOUNT all-gcc all-target-libgcc &&
-	    make install-gcc install-target-libgcc || exit 1
-	    popd
+	    make install-gcc install-target-libgcc &&
+	    popd || exit 1
 	    ;;
 
 	eglibc-32bit)
-	    setup_generic eglibc &&
-	    if [ ! -f $builddir/Makefile ]; then
-		pushd $source || exit 1
-		for p in $toplevel/utils/bootstrap-cross/patches/eglibc/*.patch; do
-		    patch -Np1 < $p || exit 1
-		done
-		popd
-	    fi
+	    setup_generic eglibc || exit 1
 
 	    # the following lines need to be added to config.cache (in
 	    # $builddir!) for EGLIBC to support NPTL.  without this,
@@ -203,25 +198,25 @@ build()
 	    #       /tools so we don't have to build it again during the
 	    #       final bootstrap stage.  this is the way the CLFS book
 	    #       does it, so we're following suit.
+            #
+	    # NOTE: gcc-static, eglibc32, eglibc64, and gcc-final should NOT
+	    #       use our common OPTS.  these packages are VERY important and
+	    #       so we're going to follow the CLFS book exactly.
 	    OPTS=""
 
-	    BUILD_CC="gcc" CC="${CLFS_TARGET}-gcc ${BUILD32}" \
-		AR="${CLFS_TARGET}-ar" RANLIB="${CLFS_TARGET}-ranlib" \
-		CFLAGS="-march=$(cut -d- -f1 <<< $CLFS_TARGET32) -mtune=generic -g -O2" \
-		configure_generic eglibc --prefix=$PREFIX_FINAL \
-		--host=${CLFS_TARGET32} \
-		--build=${CLFS_HOST} \
-		--disable-profile \
-		--enable-add-ons \
-		--with-tls \
-		--enable-kernel=2.6.0 \
-		--with-__thread \
-		--with-binutils=$PREFIX_CROSS/bin \
-		--with-headers=$PREFIX_FINAL/include \
-		--cache-file=config.cache || exit 1
+            BUILD_CC="gcc" CC="${CLFS_TARGET}-gcc ${BUILD32}" \
+                AR="${CLFS_TARGET}-ar" RANLIB="${CLFS_TARGET}-ranlib" \
+                CFLAGS="-march=$(cut -d- -f1 <<< $CLFS_TARGET32) -mtune=generic -g -O2" \
+                configure_generic eglibc --prefix=$PREFIX_FINAL \
+                --host=${CLFS_TARGET32} --build=${CLFS_HOST} \
+                --disable-profile --with-tls --enable-kernel=2.6.32 --with-__thread \
+                --with-binutils=$PREFIX_CROSS/bin --with-headers=$PREFIX_FINAL/include \
+                --enable-obsolete-rpc --cache-file=config.cache || exit 1
 
-	    compile_generic eglibc || exit 1
-
+	    pushd $builddir &&
+	    make -j$JOBCOUNT &&
+	    make install inst_vardbdir=$PREFIX_FINAL/var/db &&
+	    popd || exit 1
 	    ;;
 
 	eglibc-64bit)
@@ -229,14 +224,16 @@ build()
 	    # have a fully patched source tree, so setup_generic should just
 	    # verify that the source tree exists and setup all our build
 	    # variables.
-	    setup_generic eglibc &&
-	    if [ ! -f $builddir/Makefile ]; then
-		pushd $source || exit 1
-		for p in $toplevel/utils/bootstrap-cross/patches/eglibc/*.patch; do
-		    patch -Np1 < $p || exit 1
-		done
-		popd
-	    fi
+	    #
+            # NOTE: What we're doing here (and for gcc down below) is we're
+            #       REUSING the prepped source tree from the 32bit build with a
+            #       seperate BUILD dir.  We can do this because we built the
+            #       32bit stuff out-of-tree.
+            #
+	    # NOTE: This means you CANNOT start a build at the eglibc-64bit
+	    #       step unless you have a leftover eglibc tree from a previous
+	    #       run or you set it up by hand!
+	    setup_generic eglibc || exit 1
 
 	    # however, we do have to adjust some variables
 	    builddir=$PWD/.build/eglibc64
@@ -253,35 +250,34 @@ build()
 	    echo libc_cv_ssp=no >> config.cache
 	    popd
 
-	    # NOTE: eglibc builds and installs in PREFIX_FINAL on purpose.
-	    #       this package can safely be built now and installed in
-	    #       /tools so we don't have to build it again during the
-	    #       final bootstrap stage.  this is the way the CLFS book
-	    #       does it, so we're following suit.
-	    OPTS=""
-
 	    # install 64-bit libraries in lib64
 	    pushd $builddir
 	    echo "slibdir=$PREFIX_FINAL/lib64" >> configparms
 	    popd
 
-	    BUILD_CC="gcc" CC="${CLFS_TARGET}-gcc ${BUILD64}" \
-		AR="${CLFS_TARGET}-ar" RANLIB="${CLFS_TARGET}-ranlib" \
-		configure_generic eglibc --prefix=$PREFIX_FINAL \
-		--host=${CLFS_TARGET} \
-		--build=${CLFS_HOST} \
-		--libdir=$PREFIX_FINAL/lib64 \
-		--disable-profile \
-		--enable-add-ons \
-		--with-tls \
-		--enable-kernel=2.6.0 \
-		--with-__thread \
-		--with-binutils=$PREFIX_CROSS/bin \
-		--with-headers=$PREFIX_FINAL/include \
-		--cache-file=config.cache || exit 1
+	    # NOTE: eglibc builds and installs in PREFIX_FINAL on purpose.
+	    #       this package can safely be built now and installed in
+	    #       /tools so we don't have to build it again during the
+	    #       final bootstrap stage.  this is the way the CLFS book
+	    #       does it, so we're following suit.
+            #
+	    # NOTE: gcc-static, eglibc32, eglibc64, and gcc-final should NOT
+	    #       use our common OPTS.  these packages are VERY important and
+	    #       so we're going to follow the CLFS book exactly.
+	    OPTS=""
 
-	    compile_generic eglibc || exit 1
+            BUILD_CC="gcc" CC="${CLFS_TARGET}-gcc ${BUILD64}" \
+                AR="${CLFS_TARGET}-ar" RANLIB="${CLFS_TARGET}-ranlib" \
+                configure_generic eglibc --prefix=$PREFIX_FINAL \
+                --host=${CLFS_TARGET} --build=${CLFS_HOST} --libdir=$PREFIX_FINAL/lib64 \
+                --disable-profile --with-tls --enable-kernel=2.6.32 --with-__thread \
+                --with-binutils=$PREFIX_CROSS/bin --with-headers=$PREFIX_FINAL/include \
+                --enable-obsolete-rpc --cache-file=config.cache || exit 1
 
+	    pushd $builddir &&
+	    make -j$JOBCOUNT &&
+	    make install inst_vardbdir=$PREFIX_FINAL/var/db &&
+	    popd || exit 1
 	    ;;
 
 	gcc)
@@ -289,54 +285,44 @@ build()
 	    # a fully patched source tree, so setup_generic should just
 	    # verify that the source tree exists and setup all our build
 	    # variables.
-	    setup_generic gcc &&
-	    if [ ! -f $builddir/Makefile ]; then
-		pushd $source || exit 1
-		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
-		    patch -Np1 < $p || exit 1
-		done
-		popd
-	    fi
-
-	    # FIXME: should probably rework the gcc patches to modify
-	    #        Makefile.am instead of Makefile.in and then set
-	    #        autoreconf=yes
+            #
+            # NOTE: What we're doing here (and for eglibc above) is we're
+            #       REUSING the prepped source tree from the static build with
+            #       a seperate BUILD dir.  We can do this because we built the
+            #       static stuff out-of-tree.
+            #
+	    # NOTE: This means you CANNOT start a build at the gcc step unless
+	    #       you have a leftover gcc tree from a previous run or you set
+	    #       it up by hand!
+	    setup_generic gcc || exit 1
 
 	    # however, we do have to adjust some variables
 	    builddir=$PWD/.build/gcc-final
 	    mkdir -p $builddir
 	    echo "builddir: $builddir"
 
-	    # FIXME: OPTS has --disable-static... is that ok here?  CLFS
-	    #        book didn't use that flag...
+	    # NOTE: gcc-static, eglibc32, eglibc64, and gcc-final should NOT
+	    #       use our common OPTS.  these packages are VERY important and
+	    #       so we're going to follow the CLFS book exactly.
+            OPTS=""
 
-	    AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		configure_generic gcc $OPTS \
-		--build=${CLFS_HOST} \
-		--target=${CLFS_TARGET} \
-		--host=${CLFS_HOST} \
-		--with-sysroot=${CLFS} \
-		--with-local-prefix=$PREFIX_FINAL \
-		--enable-languages=c,c++ \
-		--enable-__cxa_atexit \
-		--with-mpfr=$PREFIX_CROSS \
-		--with-gmp=$PREFIX_CROSS \
-		--enable-c99 \
-		--with-ppl=$PREFIX_CROSS \
-		--with-cloog=$PREFIX_CROSS \
-		--enable-long-long \
-		--enable-threads=posix || exit 1
+            AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+                configure_generic gcc --prefix=$PREFIX_CROSS \
+                --build=${CLFS_HOST} --target=${CLFS_TARGET} --host=${CLFS_HOST} \
+                --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_FINAL \
+                --with-native-system-header-dir=$PREFIX_FINAL/include --disable-nls \
+                --enable-shared --disable-static --enable-languages=c,c++ \
+                --enable-__cxa_atexit --enable-c99 --enable-long-long --enable-threads=posix \
+                --with-mpc=$PREFIX_CROSS --with-mpfr=$PREFIX_CROSS --with-gmp=$PREFIX_CROSS \
+                --with-cloog=$PREFIX_CROSS --enable-cloog-backend=isl --with-system-zlib \
+                --disable-cloog-version-check --enable-checking=release \
+                --enable-libstdcxx-time || exit 1
 
-	    pushd $builddir || exit 1
-	    make -j$JOBCOUNT_KBUILD AS_FOR_TARGET="${CLFS_TARGET}-as" \
+	    pushd $builddir &&
+	    make -j$JOBCOUNT AS_FOR_TARGET="${CLFS_TARGET}-as" \
 		LD_FOR_TARGET="${CLFS_TARGET}-ld" &&
-	    make install || exit 1
-	    popd
-	    ;;
-
-	nasm)
-	    # NOTE: nasm-2.09.10 can't build out-of-tree
-	    build_in_tree=yes build_generic $1 $OPTS || exit 1
+	    make install &&
+	    popd || exit 1
 	    ;;
 
 	*)
@@ -363,11 +349,11 @@ if [ -n "$BUILD64" ]; then
 fi
 
 packages+=" gcc"
-packages+=" nasm"
 
 
 mkdir -p $PWD/.build
 
+echo packages: $packages
 for p in $packages; do
     echo "building bootstrap-cross package: $p"
     build $p || exit 1

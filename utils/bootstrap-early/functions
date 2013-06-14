@@ -56,6 +56,10 @@ export CLFS_TARGET32="i686-pc-linux-gnu"
 # these variables seem like overkill, but are used in the CLFS book, so
 # we'll follow suit.
 #
+# NOTE: We also use these variables to determine what we're building.  If we're
+#       buliding plain old 32bit, only BUILD32 will be set.  Pure64 x86_64 will
+#       have just BUILD64 set.  x86_64 Multilib will have both.
+#
 # FIXME: they should probably also be set via autoconf
 export BUILD32="-m32"
 export BUILD64="-m64"
