@@ -30,40 +30,23 @@ build()
 
     case "$1" in
 	gmp)
-	    HOST_CC=gcc CPPFLAGS=-fexceptions \
+	    HOST_CC=gcc \
 		build_generic $1 $OPTS \
 		--enable-cxx || exit 1
 	    ;;
 
-	ppl)
-	    # we patch autoconf files, so we need to make sure autoreconf
-	    # gets called
-	    setup_generic $1 &&
-	    autoreconf=yes configure_generic $1 $OPTS \
-		--enable-interfaces="c,cxx" \
-		--disable-optimization \
-		--with-libgmp-prefix=$PREFIX_FINAL \
-		--with-libgmpxx-prefix=$PREFIX_FINAL || exit 1
+        cloog)
+            setup_generic $1 &&
+            configure_generic $1 $OPTS \
+                --with-gmp-prefix=$PREFIX_FINAL || exit 1
 
-	    pushd $builddir || exit 1
-	    # CLFS: Wwhen PPL is cross-compiled, it does not check whether
-	    # GMP was compiled with support for exceptions, and simply
-	    # assumes it was not. This assumption is incorrect, so we will
-	    # fix that:
-	    echo '#define PPL_GMP_SUPPORTS_EXCEPTIONS 1' >> confdefs.h &&
-	    popd || exit 1
-	    
-	    compile_generic $1 || exit 1
-	    ;;
-
-	cloog-ppl)
-	    # we patch autoconf files, so we need to make sure autoreconf
-	    # gets called
-	    autoreconf=yes build_generic $1 $OPTS \
-		--with-bits=gmp \
-		--with-gmp=$PREFIX_FINAL \
-		--with-ppl=$PREFIX_FINAL || exit 1
-	    ;;
+            pushd $builddir &&
+            make -C isl &&
+            make -C isl install &&
+            make &&
+            make install &&
+            popd || exit 1
+            ;;
 
 	zlib)
 	    # zlib doesn't support out-of-tree builds...
@@ -623,8 +606,7 @@ packages=""
 packages+=" gmp"
 packages+=" mpfr"
 packages+=" mpc"
-packages+=" ppl"
-packages+=" cloog-ppl"
+packages+=" cloog"
 packages+=" zlib"
 packages+=" binutils"
 packages+=" gcc"
@@ -637,9 +619,10 @@ packages+=" busybox"
 #       package's equivilent tools
 #
 #packages+=" bash"
+#packages+=" bzip2"
 #packages+=" coreutils"
 #packages+=" diffutils"
-#packages+=" findutils" # missing locate...
+#packages+=" findutils" # still missing locate...? do i care?
 #packages+=" gawk"
 #packages+=" grep"
 #packages+=" gzip"
@@ -649,9 +632,10 @@ packages+=" busybox"
 #packages+=" vim"
 #packages+=" xz-utils"
 #
-# NOTE: The busybox xz applet(s) only support decompressing... If we
-#       need to compress with xz from the bootstrap system, we'll need
-#       to install the real xz package.
+# NOTE: The busybox xz applet(s) only support decompressing... If we need to
+#       compress with xz from the bootstrap system, we'll need to install the
+#       real xz package.  However, this does mean we're perfectly capable of
+#       untarring tar.xz files transparently using busybox.
 
 packages+=" bison"
 packages+=" file"
@@ -720,13 +704,19 @@ packages+=" create-dirs"
 packages+=" create-symlinks"
 
 # more boot packages
-packages+=" util-linux"
-packages+=" e2fsprogs"
+packages+=" util-linux" # for transparent cryptoloop mounting?
+packages+=" e2fsprogs" # for bulletproof ext2/3/4 support
 
 # NOTE: We want this to be a pretty usable tiny bootstrap system, so we're
 #       gonna include propper NTFS support here as well.  Now we'll have
 #       support for ext2/3/4, vfat, and ntfs filesystems along with
 #       losetup/mount support for the kernel's cryptoloop code.
+#
+# FIXME: actually, the cryptoloop stuff in the latest util-linux is broken.
+#        it's been deprecated for years in favor of dm-crypt, so i doubt it's
+#        going to be fixed...  if the transparent cryptoloop mount usage was
+#        the only reason i went with the real util-linux here, i should
+#        reconsider.
 packages+=" ntfs-3g"
 
 # FIXME: mdev vs udev.  I suspect that if we base our desktop image on our
@@ -763,6 +753,16 @@ packages+=" bootscripts"
 #packages+=" grub-conf"
 #
 # NOTE: syslinux needs nasm in bootstrap-cross
+#
+# FIXME: syslinux should ONLY need nasm if you rebuild all the stuff that the
+#        maintainer pretty much begs you not to...  and even if we did need it
+#        here, we would need to cross-compile it HERE, not build it in
+#        bootstrap-cross (which BUILDS the cross-compiler).
+#
+#        wait, i'm all confused now.  we need it to RUN on our HOST system
+#        (i.e., so it DOES need to be built PRIOR to this bootstrap
+#        stage)... but why was i building it in bootstrap-cross as apposed to
+#        bootstrap-early?
 #
 packages+=" syslinux"
 
