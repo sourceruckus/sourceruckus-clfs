@@ -49,14 +49,18 @@ build()
             ;;
 
 	zlib)
-	    # zlib doesn't support out-of-tree builds...
+	    # NOTE: zlib doesn't use autotools... despite the "configure"
+	    #       script and autotool-ish configure flags.  This means it
+	    #       doesn't support out-of-tree builds, and its build system
+	    #       usage is just different enough to break our
+	    #       configure_generic routine...
 	    build_in_tree=yes setup_generic $1 || exit 1
 
-	    # and it doesn't use autotools... despite the "configure" script
-	    # and autotool-ish configure flags
+	    # NOTE: It also fails to configure if any unknown flags are passed
+	    #       in, so we can't use our generic OPTS variable...
 	    OPTS="--prefix=$PREFIX_FINAL"
 
-	    if [ -n "$BUILD64" ]; then
+	    if [ -n "$BUILD32" ]; then
 		OPTS+=" --libdir=$PREFIX_FINAL/lib64"
 	    fi
 
@@ -68,13 +72,21 @@ build()
 	    ;;
 
 	binutils)
-	    # FIXME: does the lib-path and 64-bit-bfd stuff have to be
-	    #        conditional for 64 bit systems?  i'm thinking it might
-	    #        be ok to compile on 32bit systems, but we'll see...
+            # add 64bit support if desired
+            if [ -n "$BUILD64" ]; then
+                OPTS+=" --enable-64-bit-bfd"
+            fi
+            # disable multilib if we're building pure 32 or 64 bit
+            if [ -z "$BUILD32" ]; then
+                OPTS+=" --disable-multilib"
+                OPTS+=" --with-lib-path=$PREFIX_FINAL/lib"
+            else
+                OPTS+=" --with-lib-path=$PREFIX_FINAL/lib64:$PREFIX_FINAL/lib"
+            fi
+
 	    setup_generic $1 &&
 	    configure_generic $1 $OPTS \
-		--with-lib-path=$PREFIX_FINAL/lib64:$PREFIX_FINAL/lib \
-		--enable-64-bit-bfd || exit 1
+                --target=${CLFS_TARGET} || exit 1
 
 	    pushd $builddir &&
 	    make configure-host &&
