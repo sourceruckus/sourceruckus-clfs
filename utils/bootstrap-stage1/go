@@ -156,10 +156,18 @@ build()
 	busybox)
 	    setup_generic $1 || exit 1
 
-	    pushd $builddir || exit 1
+	    # get ready
+	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
+	    MAKE+=" ARCH=$ARCH_TARGET CROSS_COMPILE=$CLFS_TARGET-"
+	    pushd $builddir &&
+	    $MAKE mrproper &&
+	    popd || exit 1
 
 	    # create .config
 	    #
+            # FIXME: update all these comments once we have this all
+            #        straightened out.  ;-)
+            #
 	    # NOTE: planning on using the busybox variants of everything
 	    #       possible except for programs provided by the following
 	    #       packages:
@@ -168,28 +176,27 @@ build()
 	    #       - util-linux (blkid, mount, losetup, agetty, etc)
 	    #       - dhcpd, dnsd (dnsmasq instead)
 	    #
-	    # NOTE: We're not using PAM here... might want to add this into
-	    #       our final busybox config (assuming we actually compile
-	    #       the PAM libs first).
-	    #
 	    # NOTE: if you want to do a make menuconfig to tweak .config,
 	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL in order
 	    #       to use the ncurses installed via bootstrap-early (and
 	    #       our KBUILD patch needs to be applied)
-	    cp $packagedir/$1/config-bootstrap .config &&
-	    make KBUILD_SRC=$source -f $source/Makefile oldconfig || exit 1
+            cp -v config/bb-config $builddir/.config &&
+	    pushd $builddir &&
+	    $MAKE oldconfig &&
+            popd || exit 1
 
 	    # build
 	    #
 	    # FIXME: current embedded CLFS book doesn't set ARCH here, but
 	    #        it does have a config patch...
-	    make -j$JOBCOUNT_KBUILD ARCH=${ARCH_TARGET} \
-		CROSS_COMPILE="${CLFS_TARGET}-" || exit 1
+            pushd $builddir &&
+	    $MAKE -j$JOBCOUNT_KBUILD &&
+	    popd || exit 1
 
 	    # install
-	    make ARCH=${ARCH_TARGET} \
-		CROSS_COMPILE="${CLFS_TARGET}-" \
-		CONFIG_PREFIX=$PREFIX_FINAL install || exit 1
+            pushd $builddir &&
+	    $MAKE CONFIG_PREFIX=$PREFIX_FINAL install &&
+            popd || exit 1
 
 	    # NOTE: busybox binary is setuid root later on under
 	    #       fix-perms
@@ -198,8 +205,6 @@ build()
 	    #        $source/examples that we might want installed too
 	    #cp $source/examples/depmod.pl $PREFIX_FINAL/bin &&
 	    #chmod 755 $PREFIX_FINAL/bin/depmod.pl|| exit 1
-
-	    popd
 
 	    ;;
 
