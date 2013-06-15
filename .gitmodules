@@ -84,7 +84,7 @@
 	url = git://github.com/bagder/curl.git
 [submodule "src/cloog"]
 	path = src/cloog
-	url = git://repo.or.cz/cloog.git
+	url = ../contrib/cloog.git
 [submodule "src/isl"]
 	path = src/isl
 	url = git://repo.or.cz/isl.git
