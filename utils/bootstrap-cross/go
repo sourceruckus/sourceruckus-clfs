@@ -128,11 +128,18 @@ build()
 
 	gcc-static)
 	    setup_generic gcc || exit 1
+
+            # apply the CLFS specs patch
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $source || exit 1
-		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
-		    patch -Np1 < $p || exit 1
-		done
+                # NOTE: gcc has a different patch for pure64 than for x86 or
+                #       x86_64 multilib.
+                if [ -n "$BUILD64" -a -z "$BUILD32" ]; then
+                    p=$toplevel/utils/bootstrap-cross/patches/gcc/*-pure64_specs-*.patch
+                else
+                    p=$toplevel/utils/bootstrap-cross/patches/gcc/*-specs-*.patch
+                fi
+		pushd $source &&
+		patch -Np1 < $p || exit 1
 		popd
 	    fi
 
