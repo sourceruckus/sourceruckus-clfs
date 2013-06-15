@@ -98,39 +98,43 @@ build()
 	gcc)
 	    setup_generic gcc || exit 1
 
+            # apply the CLFS specs patch
 	    if [ ! -f $builddir/Makefile ]; then
-		pushd $source || exit 1
-		# apply bootstrap patches from the bootstrap-cross stage.
-		for p in $toplevel/utils/bootstrap-cross/patches/gcc/*.patch; do
-		    patch -Np1 < $p || exit 1
-		done
-
-		# revert this one bootstrap-cross patch
-		patch -R -Np1 < $toplevel/utils/bootstrap-cross/patches/gcc/0003-set-CROSS_SYSTEM_HEADER_DIR.patch || exit 1
-
-		# and apply final bootstrap patches
-		for p in $toplevel/utils/bootstrap-stage1/patches/gcc/*.patch; do
-		    patch -Np1 < $p || exit 1
-		done
+                # NOTE: gcc has a different patch for pure64 than for x86 or
+                #       x86_64 multilib.
+                if [ -n "$BUILD64" -a -z "$BUILD32" ]; then
+                    p=$toplevel/utils/bootstrap-cross/patches/gcc/*-pure64_specs-*.patch
+                else
+                    p=$toplevel/utils/bootstrap-cross/patches/gcc/*-specs-*.patch
+                fi
+		pushd $source &&
+		patch -Np1 < $p || exit 1
 		popd
 	    fi
 
-	    # FIXME: should probably rework the gcc patches to modify
-	    # Makefile.am instead of Makefile.in and then set autoreconf=yes
-	    configure_generic $1 $OPTS \
-		--target=${CLFS_TARGET} \
-		--with-local-prefix=$PREFIX_FINAL \
-		--enable-long-long \
-		--enable-c99 \
-		--enable-threads=posix \
-		--enable-__cxa_atexit \
-		--enable-languages=c,c++ \
-		--disable-libstdcxx-pch || exit 1
+	    # make GCC look in PREFIX_FINAL (i.e., not the host sys)
+            pushd $source
+	    echo "#undef STANDARD_STARTFILE_PREFIX_1" >> gcc/config/linux.h
+            echo "#define STANDARD_STARTFILE_PREFIX_1 \"$PREFIX_FINAL/lib/\"" >> gcc/config/linux.h
+	    echo "#undef STANDARD_STARTFILE_PREFIX_2" >> gcc/config/linux.h
+            echo "#define STANDARD_STARTFILE_PREFIX_2 \"\"" >> gcc/config/linux.h
+            popd
+
+            configure_generic $1 $OPTS \
+                --target=${CLFS_TARGET} --libexecdir=$PREFIX_FINAL/lib64 \
+                --with-local-prefix=$PREFIX_FINAL \
+                --enable-long-long --enable-c99 --enable-shared --enable-threads=posix \
+                --disable-nls --enable-__cxa_atexit --enable-languages=c,c++ \
+                --disable-libstdcxx-pch --enable-cloog-backend=isl --with-system-zlib \
+                --with-native-system-header-dir=$PREFIX_FINAL/include --disable-libssp \
+                --disable-install-libiberty --disable-cloog-version-check \
+                --enable-checking=release --enable-libstdcxx-time || exit 1
 
 	    pushd $builddir || exit 1
 	    #  The following will prevent GCC from looking in the wrong
 	    #  directories for headers and libraries
-	    sed -i "/^HOST_\(GMP\|PPL\|CLOOG\)\(LIBS\|INC\)/s:-[IL]/\(lib\|include\)::" Makefile || exit 1
+            sed -i "/^HOST_\(GMP\|CLOOG\)\(LIBS\|INC\)/s:-[IL]/\(lib\|include\)::" \
+                Makefile || exit 1
 
 	    make -j$JOBCOUNT AS_FOR_TARGET="${AS}" LD_FOR_TARGET="${LD}" &&
 	    make install &&
@@ -138,6 +142,9 @@ build()
 	    ;;
 
 	ncurses)
+            # FIXME: There is also a CLFS patch to fix some bash-related
+            #        problems, but I haven't run into the bug it fixes, so I've
+            #        left it out for now.
 	    build_generic $1 $OPTS \
 		--with-shared \
 		--without-debug \
@@ -716,7 +723,12 @@ packages+=" create-dirs"
 packages+=" create-symlinks"
 
 # more boot packages
-packages+=" util-linux" # for transparent cryptoloop mounting?
+#
+# FIXME: am i building util-linux or using busybox applets?  i might want
+#        cryptoloop and i might want -o remount.  transparent -o loop might
+#        have diff behavior.
+#
+#packages+=" util-linux" # for transparent cryptoloop mounting?
 packages+=" e2fsprogs" # for bulletproof ext2/3/4 support
 
 # NOTE: We want this to be a pretty usable tiny bootstrap system, so we're
