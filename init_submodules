@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# first, initialize our submodules
+#
+#git submodule init
+
+# read mirror file and replace entries in .git/config.  format is as follows:
+#
+# git_repo_to_be_mirrored mirrored_path
+#
+# we'll iterate through each line of this file and reconfigure our
+# submodules as needed.
+MIRRORS=MIRRORS
+while read remote mirror; do
+    echo remote: $remote
+    echo mirror: $mirror
+done < $MIRRORS
+
+# now actually fetch all the submodules
+#
+#git submodule update
+
+# do recursive submodule updates?  we can't really do --recursive because
+# we'll be adding new submodules w/out a chance to setup our mirrors...
+
+# then do get_sources
