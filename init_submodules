@@ -1,20 +1,69 @@
-#!/bin/bash
+#!/usr/bin/env python3
+
+import subprocess
+import configparser
+
+from pprint import pprint
+
+# read in our MIRRORS file
+try:
+    with open("MIRRORS") as f:
+        mirrors = eval(f.read())
+except:
+    print("WARNING: failed to read MIRRORS file")
+    mirrors = {}
+pprint(mirrors)
+
+
+def do_submod(path):
+    try:
+        f = open(path+"/.gitmodules")
+    except:
+        # all done
+        return
+
+    # initialize the submodules
+    #print("init:", path)
+    go = "git submodule init"
+    print("[cwd="+path+"]", go)
+    #subprocess.check_call(go.split(), cwd=path)
+
+    # setup a ConfigParser instance to read the file with
+    c = configparser.ConfigParser()
+    c.read_file(f)
+    f.close()
+
+    for x in c:
+        if x.startswith("submodule "):
+            # override url if in mirror
+            #print("url:", c[x]["url"])
+            for m in mirrors:
+                for url in mirrors[m]:
+                    if c[x]["url"].startswith(url):
+                        m = c[x]["url"].replace(url, m)
+                        #print("use mirror:", m)
+                        go = "git config submodule.{}.url {}".format(
+                            c[x]["path"],
+                            m)
+                        print("[cwd="+path+"]", go)
+                        #subprocess.check_call(go.split(), cwd=path)
+
+            # update
+            #print("update:", path+"/"+c[x]["path"])
+            go = "git submodule update " + c[x]["path"]
+            print("[cwd="+path+"]", go)
+            #subprocess.check_call(go.split(), cwd=path)
+
+            # recurse!
+            #print("recursing into:" 
+            do_submod(path+"/"+c[x]["path"])
+
+
+do_submod(".")
 
 # first, initialize our submodules
 #
-#git submodule init
-
-# read mirror file and replace entries in .git/config.  format is as follows:
-#
-# git_repo_to_be_mirrored mirrored_path
-#
-# we'll iterate through each line of this file and reconfigure our
-# submodules as needed.
-MIRRORS=MIRRORS
-while read remote mirror; do
-    echo remote: $remote
-    echo mirror: $mirror
-done < $MIRRORS
+#subprocess.check_call(["git", "submodule", "init"])
 
 # now actually fetch all the submodules
 #
