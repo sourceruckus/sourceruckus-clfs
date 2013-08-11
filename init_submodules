@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
 
-import subprocess
+import argparse
 import configparser
-
+import subprocess
+import sys
 from pprint import pprint
 
-# read in our MIRRORS file
-try:
-    with open("MIRRORS") as f:
-        mirrors = eval(f.read())
-except:
-    print("WARNING: failed to read MIRRORS file")
-    mirrors = {}
-pprint(mirrors)
 
 
 def do_submod(path):
+    global RETVAL
     try:
         f = open(path+"/.gitmodules")
     except:
@@ -23,10 +17,15 @@ def do_submod(path):
         return
 
     # initialize the submodules
-    #print("init:", path)
     go = "git submodule init"
     print("[cwd="+path+"]", go)
-    #subprocess.check_call(go.split(), cwd=path)
+    if not config.dry_run:
+        try:
+            subprocess.check_call(go.split(), cwd=path)
+        except Exception as e:
+            print("ERROR:", e)
+            RETVAL=-1
+            return
 
     # setup a ConfigParser instance to read the file with
     c = configparser.ConfigParser()
@@ -36,40 +35,90 @@ def do_submod(path):
     for x in c:
         if x.startswith("submodule "):
             # override url if in mirror
-            #print("url:", c[x]["url"])
-            for m in mirrors:
-                for url in mirrors[m]:
+            for m in config.mirrors:
+                for url in config.mirrors[m]:
                     if c[x]["url"].startswith(url):
                         m = c[x]["url"].replace(url, m)
-                        #print("use mirror:", m)
                         go = "git config submodule.{}.url {}".format(
                             c[x]["path"],
                             m)
                         print("[cwd="+path+"]", go)
-                        #subprocess.check_call(go.split(), cwd=path)
+                        if not config.dry_run:
+                            try:
+                                subprocess.check_call(go.split(), cwd=path)
+                            except Exception as e:
+                                print("WARNING: failed to configure mirror:", e)
+                                #RETVAL=-1
+                                # we don't bother to bail out here, we might
+                                # not need the mirror, so don't make it
+                                # fatal.
 
             # update
-            #print("update:", path+"/"+c[x]["path"])
             go = "git submodule update " + c[x]["path"]
             print("[cwd="+path+"]", go)
-            #subprocess.check_call(go.split(), cwd=path)
+            if not config.dry_run:
+                try:
+                    subprocess.check_call(go.split(), cwd=path)
+                except Exception as e:
+                    print("ERROR:", e)
+                    RETVAL=-1
+                    continue
 
             # recurse!
-            #print("recursing into:" 
             do_submod(path+"/"+c[x]["path"])
 
 
-do_submod(".")
 
-# first, initialize our submodules
-#
-#subprocess.check_call(["git", "submodule", "init"])
+# FIXME: add special handling for gnulib (and pax_utils?)
 
-# now actually fetch all the submodules
-#
-#git submodule update
 
-# do recursive submodule updates?  we can't really do --recursive because
-# we'll be adding new submodules w/out a chance to setup our mirrors...
+desc = """\
+init_submodules -- recursive bootstrap util for Source Ruckus Linux
+(C) 2001-2013 Michael D Labriola <michael.d.labriola@gmail.com>
+"""
 
-# then do get_sources
+epi = """\
+example: ./init_submodules --dry-run --mirrors=MIRRORS
+"""
+
+
+p = argparse.ArgumentParser(
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    prog='init_submodules',
+    description=desc.rstrip(),
+    epilog=epi.rstrip()
+    )
+
+p.add_argument('-n', '--dry-run', action='store_true',
+               help="Don't really do anything, just print output.")
+
+p.add_argument('-m', '--mirrors', metavar='MIRRORS',
+               help="""Read a map of mirror info from the specified file.
+               Format of file is simply {'mirror_url': [list, of, urls,
+               that, use, this, mirror]}""")
+
+
+# namespace holding our runtime config
+config = None
+
+RETVAL = 0
+
+
+if __name__ == "__main__":
+    config = p.parse_args()
+    print(config)
+
+    # read in our MIRRORS file
+    if config.mirrors:
+        try:
+            with open(config.mirrors) as f:
+                config.mirrors = eval(f.read())
+        except Exception as e:
+            print("WARNING: failed to read MIRRORS file:", e)
+            config.mirrors = {}
+    else:
+        config.mirrors = {}
+
+    pprint(config.mirrors)
+    do_submod(".")
+    sys.exit(RETVAL)
