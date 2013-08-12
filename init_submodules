@@ -10,6 +10,32 @@ from pprint import pprint
 
 
 
+def git_submod_init(cwd):
+    go = "git submodule init"
+    print("[cwd="+cwd+"]", go)
+    if not config.dry_run:
+        subprocess.check_call(go.split(), cwd=cwd)
+
+
+def git_submod_update(path, cwd):
+    go = "git submodule update " + path
+    print("[cwd="+cwd+"]", go)
+    if not config.dry_run:
+        subprocess.check_call(go.split(), cwd=cwd)
+
+
+def git_config(key, val=None, cwd=".", remove=False):
+    go = "git config "
+    if remove:
+        go += "--remove-section "
+    go += key
+    if val:
+        go += " "+val
+    print("[cwd="+cwd+"]", go)
+    if not config.dry_run:
+        subprocess.check_call(go.split(), cwd=cwd)
+
+
 def delete_all_submods():
     global ERR
 
@@ -41,10 +67,10 @@ def delete_all_submods():
 
         # remove it from toplevel config
         t = "submodule."+c[x]['path']
-        go = "git config --remove-section "+t
-        print(go)
-        if not config.dry_run:
-            subprocess.call(go.split())
+        try:
+            git_config(t, remove=True)
+        except:
+            pass
 
 
 def do_submod(path):
@@ -58,78 +84,63 @@ def do_submod(path):
         return
 
     # initialize the submodules
-    go = "git submodule init"
-    print("[cwd="+path+"]", go)
-    if not config.dry_run:
-        try:
-            subprocess.check_call(go.split(), cwd=path)
-        except Exception as e:
-            print("ERROR:", e)
-            ERR=-1
-            return
+    try:
+        git_submod_init(cwd=path)
+    except Exception as e:
+        print("ERROR:", e)
+        ERR=-1
+        return
 
     # setup a ConfigParser instance to read the file with
     c = configparser.ConfigParser()
     c.read_file(f)
     f.close()
 
-    #shared_ones = {}
     for x in c:
         if not x.startswith("submodule "):
             continue
 
         # check for previous clone to share with
         shared=toplevel+"/src/"+os.path.basename(c[x]["url"]).split('.git')[0]
-        #print("shared:", shared)
         if os.path.exists(shared) and path != ".":
             # NOTE: We have to make sure that toplevel/src submod has
             #       already been cloned before we do anything else in here.
             #       Otherwise, it's entirely possible that a submod of a
             #       submod will try to share a submod repo that hasn't been
-            #       cloned yet.  The easiest way to fix this is to take a
-            #       side trip and recurse into that tree if needed.
+            #       cloned yet.
             #
-            # NOTE: A better way to do this will be to keep track of these
-            #       special to-be-shared submods, and wait until we've
-            #       finished the rest of this loop to initialize them.
-            shared_ones[shared] = (path, c[x]["path"])
+            # NOTE: We're going to fix this by keeping track of these
+            #       special to-be-shared submods, and waiting until we've
+            #       finished the rest of our submods to initialize them.
+            if shared not in shared_ones:
+                shared_ones[shared] = []
+            shared_ones[shared].append((path, c[x]["path"]))
             continue
 
         # override url if in mirror
         for m in config.mirrors:
             for url in config.mirrors[m]:
                 if c[x]["url"].startswith(url):
-                    m = c[x]["url"].replace(url, m)
-                    go = "git config submodule.{}.url {}".format(
-                        c[x]["path"],
-                        m)
-                    print("[cwd="+path+"]", go)
-                    if not config.dry_run:
-                        try:
-                            subprocess.check_call(go.split(), cwd=path)
-                        except Exception as e:
-                            print("WARNING: failed to configure mirror:", e)
-                            #ERR=-1
-                            # we don't bother to bail out here, we might
-                            # not need the mirror, so don't make it
-                            # fatal.
+                    try:
+                        git_config("submodule.{}.url".format(c[x]["path"]),
+                                   c[x]["url"].replace(url, m),
+                                   cwd=path)
+                    except Exception as e:
+                        print("WARNING: failed to configure mirror:", e)
+                        # NOTE: We don't bother to bail out here, we might
+                        #       not need this, so don't make it fatal.
 
         # update
-        go = "git submodule update " + c[x]["path"]
-        print("[cwd="+path+"]", go)
-        if not config.dry_run:
-            try:
-                subprocess.check_call(go.split(), cwd=path)
-            except Exception as e:
-                print("ERROR:", e)
-                ERR=-1
-                continue
+        try:
+            git_submod_update(c[x]["path"], cwd=path)
+        except Exception as e:
+            print("ERROR:", e)
+            # NOTE: Keep looping, but let the user know we had a failure via
+            #       ERR return value
+            ERR=-1
 
         # recurse!
         do_submod(path+"/"+c[x]["path"])
-
-    return
-
 
 
 def foo():
@@ -241,5 +252,11 @@ if __name__ == "__main__":
 
     print("special shared repos...")
     pprint(shared_ones)
+
+    # FIXME: what if a shared submod contains submods of its own... perhaps
+    #        we should do this over and over until shared_ones is empty?
+    #        maybe make do_submod only trigger the special handling of
+    #        shared submods if they aren't already cloned.  that way, if
+    #        they HAVE already been cloned, we'll just recurse into them.
 
     sys.exit(ERR)
