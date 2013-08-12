@@ -53,7 +53,7 @@ def delete_all_submods():
         if not config.dry_run:
             try:
                 shutil.rmtree(t)
-                # leave and empty dir behind
+                # leave an empty dir behind
                 #
                 # NOTE: This is because our shared module detection algo
                 #       looks for a toplevel/src/submod dir to see if we
@@ -109,11 +109,18 @@ def do_submod(path):
         # check for previous clone to share with
         shared=toplevel+"/src/"+os.path.basename(c[x]["url"]).split('.git')[0]
         if os.path.exists(shared) and path != ".":
+            try:
+                git_config("submodule.{}.url".format(c[x]["path"]),
+                           shared,
+                           cwd=path)
+            except Exception as e:
+                print("WARNING: failed to configure shared submod:", e)
+
             # NOTE: We have to make sure that toplevel/src submod has
-            #       already been cloned before we do anything else in here.
+            #       already been cloned before we actually update.
             #       Otherwise, it's entirely possible that a submod of a
-            #       submod will try to share a submod repo that hasn't been
-            #       cloned yet.
+            #       submod will try to share a toplevel submod repo that
+            #       hasn't actually been cloned yet.
             #
             # NOTE: We're going to fix this by keeping track of these
             #       special to-be-shared submods, and waiting until we've
