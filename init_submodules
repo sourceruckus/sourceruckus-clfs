@@ -53,6 +53,12 @@ def delete_all_submods():
         if not config.dry_run:
             try:
                 shutil.rmtree(t)
+                # leave and empty dir behind
+                #
+                # NOTE: This is because our shared module detection algo
+                #       looks for a toplevel/src/submod dir to see if we
+                #       have a toplevel clone to share...
+                os.mkdir(t)
             except:
                 pass
 
