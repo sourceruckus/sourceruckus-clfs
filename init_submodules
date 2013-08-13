@@ -82,6 +82,7 @@ def delete_all_submods():
 def do_submod(path):
     global ERR
     global shared_ones
+    global todo
 
     try:
         f = open(path+"/.gitmodules")
@@ -106,9 +107,18 @@ def do_submod(path):
         if not x.startswith("submodule "):
             continue
 
-        # check for previous clone to share with
+        # figure out if we've already set this submod up
         shared=toplevel+"/src/"+os.path.basename(c[x]["url"]).split('.git')[0]
-        if os.path.exists(shared) and path != ".":
+        config_done = False
+        try:
+            for y in shared_ones[shared]:
+                if path == y[0]:
+                    config_done = True
+        except:
+            pass
+
+        # check for previous clone to share with
+        if os.path.exists(shared) and path != "." and not config_done:
             try:
                 git_config("submodule.{}.url".format(c[x]["path"]),
                            shared,
@@ -128,12 +138,15 @@ def do_submod(path):
             if shared not in shared_ones:
                 shared_ones[shared] = []
             shared_ones[shared].append((path, c[x]["path"]))
+
+            # let the toplevel know to re-run this
+            todo=True
             continue
 
         # override url if in mirror
         for m in config.mirrors:
             for url in config.mirrors[m]:
-                if c[x]["url"].startswith(url):
+                if c[x]["url"].startswith(url) and not config_done:
                     try:
                         git_config("submodule.{}.url".format(c[x]["path"]),
                                    c[x]["url"].replace(url, m),
@@ -156,49 +169,6 @@ def do_submod(path):
         do_submod(path+"/"+c[x]["path"])
 
 
-def foo():
-    # now handle our special shared clones
-    print("configuring shared repos:", path)
-    pprint(shared_ones)
-    for x in shared_ones:
-        #print(x)
-        # override submod url
-        go = "git config submodule.{}.url {}".format(
-            c[x]["path"],
-            shared_ones[x])
-        print("[cwd="+path+"]", go)
-        if not config.dry_run:
-            try:
-                subprocess.check_call(go.split(), cwd=path)
-            except Exception as e:
-                print("ERROR:", e)
-                ERR=-1
-                continue
-
-        # update
-        go = "git submodule update " + c[x]["path"]
-        print("[cwd="+path+"]", go)
-        if not config.dry_run:
-            try:
-                subprocess.check_call(go.split(), cwd=path)
-            except Exception as e:
-                print("ERROR:", e)
-                ERR=-1
-                continue
-
-        # recurse!
-        do_submod(path+"/"+c[x]["path"])
-
-
-
-# FIXME: add special handling for gnulib (and pax_utils?)
-#
-# FIXME: perhaps check for ../whatever/.git for a submodule named whatever?
-#        this would nail gnuilb i think, but would miss some others.  for
-#        example, bison has a gnulib submod but also has
-#        submodules/autoconf.  perhaps we should look for
-#        $toplevel/src/`basename foo` for everything and automatically do a
-#        git submodule --shared to that?
 
 
 
@@ -261,15 +231,11 @@ if __name__ == "__main__":
         config.mirrors = {}
 
     pprint(config.mirrors)
-    do_submod(".")
 
-    print("special shared repos...")
-    pprint(shared_ones)
-
-    # FIXME: what if a shared submod contains submods of its own... perhaps
-    #        we should do this over and over until shared_ones is empty?
-    #        maybe make do_submod only trigger the special handling of
-    #        shared submods if they aren't already cloned.  that way, if
-    #        they HAVE already been cloned, we'll just recurse into them.
+    todo = True
+    while todo:
+        todo = False
+        # do_submod will set todo back to True if any submods got skipped
+        do_submod(".")
 
     sys.exit(ERR)
