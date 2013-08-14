@@ -31,6 +31,9 @@
 [submodule "src/util-linux"]
 	path = src/util-linux
 	url = git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git
+# NOTE: We have a toplevel gnulib module because it's used to bootstrap a
+#       ton of the GNU project's git trees.  It is not a stand-alone
+#       package.
 [submodule "src/gnulib"]
 	path = src/gnulib
 	url = git://git.savannah.gnu.org/gnulib.git
@@ -61,6 +64,8 @@
 [submodule "src/nasm"]
 	path = src/nasm
 	url = git://repo.or.cz/nasm.git
+# FIXME: might need to use SOURCE_URL for syslinux.  building from git is
+#        strongly discouraged by the author.
 [submodule "src/syslinux"]
 	path = src/syslinux
 	url = git://git.kernel.org/pub/scm/boot/syslinux/syslinux.git
@@ -73,9 +78,17 @@
 [submodule "src/gzip"]
 	path = src/gzip
 	url = git://git.savannah.gnu.org/gzip.git
+# NOTE: The tar source tree doesn't register paxutils as a submodule, it
+#       clones directly via its bootstrap script.  The PAXUTILS_SRCDIR
+#       variable should be set to toplevel/src/paxutils to force bootstrap
+#       to clone it from there.
 [submodule "src/tar"]
 	path = src/tar
 	url = git://git.savannah.gnu.org/tar.git
+# NOTE: paxutils is used by both tar and cpio, so we have a shared toplevel
+#       repo for it, even though it's not a standalone package.
+#
+# FIXME: we don't even have a cpio submod yet...
 [submodule "src/paxutils"]
 	path = src/paxutils
 	url = git://git.savannah.gnu.org/paxutils.git

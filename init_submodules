@@ -95,7 +95,7 @@ def do_submod(path):
         git_submod_init(cwd=path)
     except Exception as e:
         print("ERROR:", e)
-        ERR=-1
+        ERR+=1
         return
 
     # setup a ConfigParser instance to read the file with
@@ -158,12 +158,23 @@ def do_submod(path):
 
         # update
         try:
-            git_submod_update(c[x]["path"], cwd=path)
+            # make sure path exists
+            #
+            # NOTE: We don't treat a missing path as an error.  This case
+            #       comes up when a source tree isn't correctly configured
+            #       for submodules.  For example, cloog's isl submodule has
+            #       a .gitmodules file that specifies a URL and path for
+            #       piplib, but the submodule hasn't been added to the repo.
+            #       In other words, this script doesn't care if the
+            #       knucklehead maintaining a 3rd party git repo has it
+            #       misconfigured.
+            if os.path.exists(path+"/"+c[x]["path"]):
+                git_submod_update(c[x]["path"], cwd=path)
         except Exception as e:
             print("ERROR:", e)
             # NOTE: Keep looping, but let the user know we had a failure via
             #       ERR return value
-            ERR=-1
+            ERR+=1
 
         # recurse!
         do_submod(path+"/"+c[x]["path"])
@@ -232,6 +243,16 @@ if __name__ == "__main__":
 
     pprint(config.mirrors)
 
+    # NOTE: The semi-lame way in which we're handling the recursion here (do
+    #       it over and over infinitely until a pass does not result in any
+    #       shared repos being configured) means we will ALWAYS iterate
+    #       through N times, where N is the maximum depth needed to satisfy
+    #       all submods, even if they're already setup and cloned.
+    #
+    # FIXME: We could fix this by checking to see if the shared submod we're
+    #        configuring has already been cloned... but then I don't think
+    #        we can guarantee that we'll init everything unless we start
+    #        with a clean checkout.
     todo = True
     while todo:
         todo = False

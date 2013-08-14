@@ -117,10 +117,24 @@ export ARCH_TARGET=x86_64
 
 # this variable tells bootstrap scripts where to find gnulib, to avoid them
 # all trying to create their own local clone
+#
+# FIXME: Is this still needed now that init_submodules will have already
+#        cloned shared repos of everyone's gnulib submodules?  I think this
+#        would only be needed if a package's bootstrap/autogen script does a
+#        straight "git clone" instead of using submodules...  Probably
+#        doesn't hurt to leave this here, though.
+#
+# FIXME: Actually, i need to test this and make sure the gnulib modules
+#        already being cloned makes things work right when the bootstrap
+#        scripts get run...
 export GNULIB_SRCDIR=$toplevel/src/gnulib
 
 # this variable tells bootstrap scripts (probably just cpio and tar) to use
 # our paxutils submodule instead of cloning their own.
+#
+# NOTE: If tar used .gitsubmodules for paxutils, this wouldn't be needed.
+#       However, the tar boostrap script just does a git clone instead of
+#       using submodules.  At least, for now...
 export PAXUTILS_SRCDIR=$toplevel/src/paxutils
 
 # this variable tells bootstrap scripts to not download new po files via
