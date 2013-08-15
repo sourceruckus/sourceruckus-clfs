@@ -52,12 +52,6 @@
 [submodule "src/ntfs-3g"]
 	path = src/ntfs-3g
 	url = git://ntfs-3g.git.sourceforge.net/gitroot/ntfs-3g/ntfs-3g
-[submodule "src/tcl"]
-	path = src/tcl
-	url = ../contrib/tcl.git
-[submodule "src/expect"]
-	path = src/expect
-	url = ../contrib/expect.git
 [submodule "src/dejagnu"]
 	path = src/dejagnu
 	url = git://git.sv.gnu.org/dejagnu.git
@@ -72,6 +66,7 @@
 [submodule "src/xz"]
 	path = src/xz
 	url = http://git.tukaani.org/xz.git
+# FIXME: should update this from upstream
 [submodule "src/make"]
 	path = src/make
 	url = ../contrib/make.git
