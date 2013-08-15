@@ -357,6 +357,9 @@ autoreconf_generic()
 
     # choose a bootstrap method
     nothing_to_do=
+    # some scripts will automatically run ./configure unless NOCONFIGURE is
+    # set, so lets set it.
+    export NOCONFIGURE=1
     if [ -x ./bootstrap.sh ]; then
 	echo "./bootstrap.sh..."
 	./bootstrap.sh || exit 1
@@ -373,6 +376,7 @@ autoreconf_generic()
 	nothing_to_do=true
 	echo "autoreconf_generic: doing nothing..."
     fi
+    unset NOCONFIGURE
 
     # make sure we're unconfigured.  some bootstrap and autogen.sh scripts
     # run configure at the end, but not all.  we have to be able to assume
