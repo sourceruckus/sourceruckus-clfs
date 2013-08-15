@@ -36,7 +36,8 @@ done
 #
 # NOTE: We're using a WGET variable here, which is overridable by the user
 #       because we're just friendly like that.  ;-)
-for x in src/*/SOURCE_URL utils/*/patches/*/SOURCE_URL; do
+fetch_list=$(find packages src utils -name SOURCE_URL)
+for x in $fetch_list; do
     pushd $(dirname $x) && $WGET -nc -i $(basename $x) && popd || break
     if [ -n "$MAKE_CACHE" ]; then
         tar -rf $cache $(sed "s|.*/|$(dirname $x)/|" $x)
