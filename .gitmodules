@@ -15,7 +15,7 @@
 	url = git://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git
 [submodule "src/bison"]
 	path = src/bison
-	url = git://git.savannah.gnu.org/bison.git
+	url = git://git.sv.gnu.org/bison.git
 [submodule "src/srp"]
 	path = src/srp
 	url = ../srp3.git
@@ -27,7 +27,7 @@
 	url = git://busybox.net/busybox.git
 [submodule "src/m4"]
 	path = src/m4
-	url = git://git.savannah.gnu.org/m4.git
+	url = git://git.sv.gnu.org/m4.git
 [submodule "src/util-linux"]
 	path = src/util-linux
 	url = git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git
@@ -36,7 +36,7 @@
 #       package.
 [submodule "src/gnulib"]
 	path = src/gnulib
-	url = git://git.savannah.gnu.org/gnulib.git
+	url = git://git.sv.gnu.org/gnulib.git
 [submodule "src/bootscripts"]
 	path = src/bootscripts
 	url = ../contrib/bootscripts.git
@@ -67,21 +67,21 @@
 	url = ../contrib/make.git
 [submodule "src/gzip"]
 	path = src/gzip
-	url = git://git.savannah.gnu.org/gzip.git
+	url = git://git.sv.gnu.org/gzip.git
 # NOTE: The tar source tree doesn't register paxutils as a submodule, it
 #       clones directly via its bootstrap script.  The PAXUTILS_SRCDIR
 #       variable should be set to toplevel/src/paxutils to force bootstrap
 #       to clone it from there.
 [submodule "src/tar"]
 	path = src/tar
-	url = git://git.savannah.gnu.org/tar.git
+	url = git://git.sv.gnu.org/tar.git
 # NOTE: paxutils is used by both tar and cpio, so we have a shared toplevel
 #       repo for it, even though it's not a standalone package.
 #
 # FIXME: we don't even have a cpio submod yet...
 [submodule "src/paxutils"]
 	path = src/paxutils
-	url = git://git.savannah.gnu.org/paxutils.git
+	url = git://git.sv.gnu.org/paxutils.git
 [submodule "src/curl"]
 	path = src/curl
 	url = git://github.com/bagder/curl.git
