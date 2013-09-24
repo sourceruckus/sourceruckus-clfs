@@ -93,3 +93,6 @@
 [submodule "src/gettext"]
 	path = src/gettext
 	url = ../contrib/gettext.git
+[submodule "src/flex"]
+	path = src/flex
+	url = git://git.code.sf.net/p/flex/flex
