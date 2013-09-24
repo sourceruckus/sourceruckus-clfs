@@ -8,11 +8,19 @@
 # For example:
 #
 #{"git://git.neo/mirror":
-#     ["git://git.sv.gnu.org",
-#      "git://git.samba.org",
-#      "git://git.kernel.org/pub/scm/fs/ext2"],
-# "git://git.neo/mirror/cloog":
-#     ["git://repo.or.cz"],
-# "git://git.neo/mirror/ruckus":
-#     ["labriola.dyndns.org/scrap/projects"],
+#    [
+#     "git://busybox.net",
+#     "git://git.kernel.org/pub/scm/boot/syslinux",
+#     "git://git.kernel.org/pub/scm/fs/ext2",
+#     "git://git.kernel.org/pub/scm/linux/kernel/git/stable",
+#     "git://git.kernel.org/pub/scm/utils/util-linux",
+#     "git://git.samba.org",
+#     "git://git.savannah.gnu.org",
+#     "git://git.sv.gnu.org",
+#     "git://github.com/bagder",
+#     "git://github.com/git",
+#     "git://ntfs-3g.git.sourceforge.net/gitroot/ntfs-3g",
+#     "git://repo.or.cz",
+#     "http://git.tukaani.org",
+#     ],
 # }
