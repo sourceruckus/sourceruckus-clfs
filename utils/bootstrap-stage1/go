@@ -665,13 +665,8 @@ packages+=" bison"
 packages+=" file"
 packages+=" flex"
 
-# FIXME: should gettext do ./autogen.sh --quick?
 packages+=" gettext"
-
-# FIXME: old patch not needed any more?
 packages+=" m4"
-
-# FIXME: git repo was down...
 packages+=" make"
 
 packages+=" texinfo"

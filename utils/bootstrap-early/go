@@ -60,7 +60,7 @@ packages+=" help2man"
 packages+=" m4" # automake >= 1.11.1
 packages+=" autoconf" # m4 >= 1.4.16
 packages+=" automake" # autoconf >= 2.69
-packages+=" gettext" # too painful, so we use a dist tarball
+packages+=" gettext"
 packages+=" libtool" # warned about libtool.m4 bootstrap failure
 packages+=" pkg-config" # glib bits need libtool
 packages+=" make" # automake >= 1.11.1, gettext >= 0.18.1, pkg-config
@@ -91,6 +91,12 @@ packages+=" e2fsprogs"
 #       our bootstrap-early libraries.
 packages+=" ncurses"
 
+# for ruckusrd?
+packages+=" cpio"
+
+packages+=" ruckusrd"
+
+packages+=" syslinux"
 
 
 build()
@@ -129,23 +135,6 @@ build()
 		build_generic $1 --prefix=$PREFIX_EARLY \
 		--with-internal-glib || exit 1
 	    ;;
-        bison)
-            # this guy needs to update submodules
-            #
-            # NOTE: This is kinda involved because I don't want to have to
-            #       maintain a fork of bison just to make it find our autoconf
-            #       submodule instead of going out to gnu.org...
-            #
-            #       The sed statement replaces remote git URLs with ../ to use
-            #       our other submodules, then we explicitly only update the
-            #       autoconf module (i.e., we skip gnulib which is referenced
-            #       directly via the GNULIB_SRCDIR variable).
-            pushd $toplevel/src/bison && 
-            sed -i 's|git://.*/|../|' .gitmodules &&
-            git submodule update --init submodules/autoconf &&
-            popd &&
-	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
-            ;;
         bzip2)
             # Doesn't have configure
             build_in_tree=1 setup_generic $1 &&

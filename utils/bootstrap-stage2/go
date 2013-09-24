@@ -100,17 +100,17 @@ packages="$packages dnsmasq"
 packages="$packages python"
 packages="$packages srp"
 
+# ruckusrd?
+# FIXME: does bb cpio work well enough?
+packages="$packages cpio"
+packages="$packages ruckusrd"
+
 # dev tools
 packages="$packages rsync"
 packages="$packages git"
 packages="$packages readline"
 packages="$packages emacs"
 packages="$packages zsh"
-
-# multimedia?
-packages="$packages ImageMagick"
-packages="$packages ushare"
-packages="$packages dvgrab"
 
 
 cd $toplevel/utils/bootstrap-stage2
