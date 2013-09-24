@@ -395,7 +395,7 @@ autoreconf_generic()
 
     # if we were previously set up to use our cross-compiler.  set it back
     # up now
-    if [ -n "$should_cross_compile" ]; then
+    if [ "$should_cross_compile" = "true" ]; then
 	set_cross_compile
     fi
 
@@ -450,6 +450,7 @@ set_cross_compile()
 
 unset_cross_compile()
 {
+    [ "$cross_compile" != "true" ] && return
     export CC=
     export CXX=
     export AR=
@@ -457,5 +458,5 @@ unset_cross_compile()
     export RANLIB=
     export LD=
     export STRIP=
-    export cross_compile=
+    export cross_compile=false
 }
