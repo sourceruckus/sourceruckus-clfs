@@ -10,7 +10,6 @@
 #{"git://git.neo/mirror":
 #    [
 #     "git://busybox.net",
-#     "git://git.kernel.org/pub/scm/boot/syslinux",
 #     "git://git.kernel.org/pub/scm/fs/ext2",
 #     "git://git.kernel.org/pub/scm/linux/kernel/git/stable",
 #     "git://git.kernel.org/pub/scm/utils/util-linux",

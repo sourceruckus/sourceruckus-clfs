@@ -58,11 +58,6 @@
 [submodule "src/nasm"]
 	path = src/nasm
 	url = git://repo.or.cz/nasm.git
-# FIXME: might need to use SOURCE_URL for syslinux.  building from git is
-#        strongly discouraged by the author.
-[submodule "src/syslinux"]
-	path = src/syslinux
-	url = git://git.kernel.org/pub/scm/boot/syslinux/syslinux.git
 [submodule "src/xz"]
 	path = src/xz
 	url = http://git.tukaani.org/xz.git
