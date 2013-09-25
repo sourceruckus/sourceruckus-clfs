@@ -200,14 +200,12 @@ build()
 	eglibc-stage1)
 	    setup_generic eglibc || exit 1
 
-	    # the following lines need to be added to config.cache (in
-	    # $builddir!) for EGLIBC to support NPTL.  without this,
-	    # compilation fails.
+	    # Add the following to config.cache to disable ssp when building
+	    # EGLIBC
+	    #
+	    # NOTE: In $builddir!!!
 	    pushd $builddir
-	    echo libc_cv_forced_unwind=yes > config.cache
-	    echo libc_cv_c_cleanup=yes >> config.cache
-	    echo libc_cv_gnu89_inline=yes >> config.cache
-	    echo libc_cv_ssp=no >> config.cache
+	    echo "libc_cv_ssp=no" > config.cache
 	    popd
 
 	    # NOTE: eglibc builds and installs in PREFIX_FINAL on purpose.
@@ -224,7 +222,7 @@ build()
             if [ -n "$BUILD32" ]; then
                 # x86_64 multi
                 tmp_CC="${CLFS_TARGET}-gcc ${BUILD32}"
-                tmp_CFLAGS="-march=$(cut -d- -f1 <<< $CLFS_TARGET32) -mtune=generic -g -O2"
+                tmp_CFLAGS="-march=$(cut -d- -f1 <<< $CLFS_TARGET32) -O2"
                 tmp_host="--host=${CLFS_TARGET32}"
             elif [ -n "$BUILD64" ]; then
                 # x86_64 pure
@@ -234,7 +232,7 @@ build()
             else
                 # x86
                 tmp_CC="${CLFS_TARGET}-gcc"
-                tmp_CFLAGS="-march=$(cut -d- -f1 <<< $CLFS_TARGET) -mtune=generic -g -O2"
+                tmp_CFLAGS="-march=$(cut -d- -f1 <<< $CLFS_TARGET) -O2"
                 tmp_host="--host=${CLFS_TARGET}"
             fi
             echo tmp_CC: $tmp_CC
@@ -252,8 +250,17 @@ build()
 
 	    pushd $builddir &&
 	    make -j$JOBCOUNT &&
-	    make install inst_vardbdir=$PREFIX_FINAL/var/db &&
+	    make install &&
 	    popd || exit 1
+
+            if [ -z "$BUILD32" ] && [ -n "$BUILD64" ]; then
+                # x86_64 pure
+		#
+		# The stubs.h header installed by eglibc looks for
+		# stubs-32.h and stubs-64.h. This configuration of eglibc
+		# only generates stubs-64.h. Fix this with the following:
+		mv -v $PREFIX_FINAL/include/gnu/stubs{-64,}.h
+	    fi
 	    ;;
 
 	eglibc-stage2)
@@ -276,14 +283,12 @@ build()
 	    mkdir -p $builddir
 	    echo "builddir: $builddir"
 
-	    # the following lines need to be added to config.cache (in
-	    # $builddir!) for EGLIBC to support NPTL.  without this,
-	    # compilation fails.
+	    # Add the following to config.cache to disable ssp when building
+	    # EGLIBC
+	    #
+	    # NOTE: In $builddir!!!
 	    pushd $builddir
-	    echo libc_cv_forced_unwind=yes > config.cache
-	    echo libc_cv_c_cleanup=yes >> config.cache
-	    echo libc_cv_gnu89_inline=yes >> config.cache
-	    echo libc_cv_ssp=no >> config.cache
+	    echo "libc_cv_ssp=no" > config.cache
 	    popd
 
 	    # install 64-bit libraries in lib64
@@ -312,7 +317,7 @@ build()
 
 	    pushd $builddir &&
 	    make -j$JOBCOUNT &&
-	    make install inst_vardbdir=$PREFIX_FINAL/var/db &&
+	    make install &&
 	    popd || exit 1
 	    ;;
 
