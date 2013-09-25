@@ -76,19 +76,35 @@ build()
 		--with-mpfr=$PREFIX_CROSS
 	    ;;
 
-	cloog)
-            # FIXME: cloog's automake files are reeeealy old.  In addition to a
-            #        bunch of deprecation warnings, bootstrapping also chokes
-            #        on $(srcdir) usage in TESTS (tests/Makefile.am).  they're
-            #        all over the place, and we only need the TESTS ones
-            #        removed, so i'll make a patch for this instead of using
-            #        sed...
+	isl)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 $OPTS \
-		--with-gmp-prefix=$PREFIX_CROSS
+		--with-gmp=$PREFIX_CROSS
+	    ;;
+
+	cloog)
+            # NOTE: cloog's automake files are reeeealy old.  In addition to
+            #       a bunch of deprecation warnings, bootstrapping also
+            #       chokes on $(srcdir) usage in TESTS (tests/Makefile.am).
+            #       They're all over the place, and we only need the TESTS
+            #       ones removed, so I added a patch to contrib/cloog.git
+            #       instead of using sed...
+	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+		build_generic $1 $OPTS \
+		--with-gmp-prefix=$PREFIX_CROSS \
+		--with-isl-prefix=$PREFIX_CROSS
 	    ;;
 
 	binutils)
+	    # FIXME: CLFS 20130924 has a sed statement to fix build problems
+	    #        on host systems w/ texinfo 5.x.  My boxes hav 4.x, so I
+	    #        don't need it for now, but we should add this check to
+	    #        configure.  Either add the sed statement here
+	    #        universally and conditionally build texinfo 5.x in
+	    #        bootstrap-early or have the configure script enable the
+	    #        sed statement only if host system has texinfo 5.x.
+	    #        Whichever is easier.
+
             # add 64bit support if desired
             if [ -n "$BUILD64" ]; then
                 OPTS+=" --enable-64-bit-bfd"
@@ -172,7 +188,7 @@ build()
                 --disable-libssp --disable-threads --disable-libatomic --disable-libitm \
                 --disable-libsanitizer --disable-libquadmath --disable-target-libiberty \
                 --disable-target-zlib --with-system-zlib --enable-cloog-backend=isl \
-                --disable-cloog-version-check --enable-languages=c \
+                --with-isl=$PREFIX_CROSS --disable-isl-version-check --enable-languages=c \
                 --enable-checking=release || exit 1
 
 	    pushd $builddir &&
@@ -370,6 +386,7 @@ packages+=" ncurses"
 packages+=" gmp"
 packages+=" mpfr"
 packages+=" mpc"
+packages+=" isl"
 packages+=" cloog"
 packages+=" binutils"
 packages+=" gcc-static"

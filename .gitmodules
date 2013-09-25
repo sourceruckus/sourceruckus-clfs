@@ -85,8 +85,6 @@
 [submodule "src/curl"]
 	path = src/curl
 	url = git://github.com/bagder/curl.git
-# NOTE: Cloog has two submods, isl and openscop, but neither is used by any
-#       other package, so we don't bother keeping them at the toplevel.
 [submodule "src/cloog"]
 	path = src/cloog
 	url = ../contrib/cloog.git
@@ -96,3 +94,6 @@
 [submodule "src/flex"]
 	path = src/flex
 	url = git://git.code.sf.net/p/flex/flex
+[submodule "src/isl"]
+	path = src/isl
+	url = git://repo.or.cz/isl.git
