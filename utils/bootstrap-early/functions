@@ -290,7 +290,7 @@ setup_generic()
 	# up for out-of-tree, it simply rsync's the source into where it
 	# would be if we were using a tarball
 	echo "copying source tree from $source to $builddir/source..."
-	rsync -a --delete $source/ $builddir/source || exit 1
+	rsync -a --delete --exclude .git $source/ $builddir/source || exit 1
 	source=$builddir/source
 	builddir=$builddir/build
 	mkdir -p $builddir || exit 1

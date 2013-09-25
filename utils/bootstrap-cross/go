@@ -10,19 +10,19 @@ toplevel=$PWD/../..
 # install linux headers
 build_linux_headers()
 {
-    builddir=$PWD/.build/kernel
-    # get the source tree into our build dir
-    rsync -a --exclude .git $sourcedir/kernel/ $builddir || exit 1
-    pushd $builddir
-    make mrproper &&
-    make ARCH=$ARCH_TARGET headers_check &&
-    make ARCH=$ARCH_TARGET INSTALL_HDR_PATH=dest headers_install || exit 1
+    setup_generic $1 || exit 1
+
+    MAKE="make ARCH=$ARCH_TARGET"
 
     # NOTE: We use /tools as apposed to /cross-tools here (just like the
     #       CLFS book).  There's nothing to cross-compile here, but it's
     #       needed now.
-    rsync -va dest/include $PREFIX_FINAL || exit 1
-    popd
+    pushd $builddir &&
+    $MAKE mrproper &&
+    $MAKE headers_check &&
+    $MAKE INSTALL_HDR_PATH=$PREFIX_FINAL headers_install &&
+    popd || exit 1
+
 }
 
 
@@ -352,6 +352,17 @@ build()
 
 
 packages=""
+# NOTE: CLFS added bc to cross-tools (and final system) on 2013-07-23... I
+#       remember seing something on the mailing list... but I don't really
+#       remember for sure why it was added.  I think it had something to do
+#       with prepping the linux headers.
+#
+# FIXME: I don't understand why this isn't a host system requirement as
+#        apposed to a cross-tools item... I suspect it ended up in
+#        cross-tools for CLFS because it's so easy/quick to install, why
+#        bother checking host system.  But we've got bootstrap-early to take
+#        care of that...
+packages+=" bc"
 packages+=" linux_headers"
 packages+=" file"
 packages+=" m4"
