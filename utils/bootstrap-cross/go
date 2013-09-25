@@ -351,12 +351,13 @@ build()
                 configure_generic gcc --prefix=$PREFIX_CROSS \
                 --build=${CLFS_HOST} --target=${CLFS_TARGET} --host=${CLFS_HOST} \
                 --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_FINAL \
-                --with-native-system-header-dir=$PREFIX_FINAL/include --disable-nls \
-                --enable-shared --disable-static --enable-languages=c,c++ \
-                --enable-__cxa_atexit --enable-c99 --enable-long-long --enable-threads=posix \
-                --with-mpc=$PREFIX_CROSS --with-mpfr=$PREFIX_CROSS --with-gmp=$PREFIX_CROSS \
-                --with-cloog=$PREFIX_CROSS --enable-cloog-backend=isl --with-system-zlib \
-                --disable-cloog-version-check --enable-checking=release \
+                --with-native-system-header-dir=$PREFIX_FINAL/include \
+                --disable-nls --enable-shared --disable-static \
+                --enable-languages=c,c++ --enable-__cxa_atexit --enable-c99 \
+                --enable-long-long --enable-threads=posix --with-mpc=$PREFIX_CROSS \
+                --with-mpfr=$PREFIX_CROSS --with-gmp=$PREFIX_CROSS --with-cloog=$PREFIX_CROSS \
+                --enable-cloog-backend=isl --with-isl=$PREFIX_CROSS \
+                --disable-isl-version-check --with-system-zlib --enable-checking=release \
                 --enable-libstdcxx-time || exit 1
 
 	    pushd $builddir &&
