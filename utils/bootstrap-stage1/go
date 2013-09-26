@@ -35,17 +35,15 @@ build()
 		--enable-cxx || exit 1
 	    ;;
 
-        cloog)
-            setup_generic $1 &&
-            configure_generic $1 $OPTS \
-                --with-gmp-prefix=$PREFIX_FINAL || exit 1
+	isl)
+	    build_generic $1 $OPTS \
+		--with-gmp-prefix=$PREFIX_FINAL || exit 1
+	    ;;
 
-            pushd $builddir &&
-            make -C isl &&
-            make -C isl install &&
-            make &&
-            make install &&
-            popd || exit 1
+        cloog)
+	    build_generic $1 $OPTS \
+		--with-gmp-prefix=$PREFIX_FINAL \
+		--with-isl-prefix=$PREFIX_FINAL || exit 1
             ;;
 
 	zlib)
@@ -54,6 +52,11 @@ build()
 	    #       doesn't support out-of-tree builds, and its build system
 	    #       usage is just different enough to break our
 	    #       configure_generic routine...
+	    #
+	    # FIXME: i think zlib is using CMake, which we should
+	    #        perhaps build support for into our generic build
+	    #        scripts... although, the real problem here is
+	    #        configure failing if passed any invalid args...
 	    build_in_tree=yes setup_generic $1 || exit 1
 
 	    # NOTE: It also fails to configure if any unknown flags are passed
@@ -72,6 +75,18 @@ build()
 	    ;;
 
 	binutils)
+	    # FIXME: CLFS 20130924 has a sed statement to fix build problems
+	    #        on host systems w/ texinfo 5.x.  My boxes hav 4.x, so I
+	    #        don't need it for now, but we should add this check to
+	    #        configure.  Either add the sed statement here
+	    #        universally and conditionally build texinfo 5.x in
+	    #        bootstrap-early or have the configure script enable the
+	    #        sed statement only if host system has texinfo 5.x.
+	    #        Whichever is easier.
+	    #
+	    # sed -i -e 's/@colophon/@@colophon/' \
+	    #     -e 's/doc@cygnus.com/doc@@cygnus.com/' bfd/doc/bfd.texinfo
+
             # add 64bit support if desired
             if [ -n "$BUILD64" ]; then
                 OPTS+=" --enable-64-bit-bfd"
@@ -120,21 +135,40 @@ build()
             echo "#define STANDARD_STARTFILE_PREFIX_2 \"\"" >> gcc/config/linux.h
             popd
 
+            # Apply a sed subsitution that will suppress the execution
+            # of the fixincludes script:
+            pushd $source &&
+            cp -v gcc/Makefile.in{,.orig} &&
+            sed 's@\./fixinc\.sh@-c true@' gcc/Makefile.in.orig > gcc/Makefile.in &&
+            popd || exit 1
+
+            # extra tweaks
+            if [ -n "$BUILD32" ]; then
+                # x86_64 multilib
+                OPTS+=" --libexecdir=$PREFIX_FINAL/lib64"
+            else
+                # x86_64 pure or x86
+                OPTS+=" --disable-multilib"
+            fi
+
             configure_generic $1 $OPTS \
-                --target=${CLFS_TARGET} --libexecdir=$PREFIX_FINAL/lib64 \
+                --target=${CLFS_TARGET} \
                 --with-local-prefix=$PREFIX_FINAL \
                 --enable-long-long --enable-c99 --enable-shared --enable-threads=posix \
                 --disable-nls --enable-__cxa_atexit --enable-languages=c,c++ \
-                --disable-libstdcxx-pch --enable-cloog-backend=isl --with-system-zlib \
+                --disable-libstdcxx-pch --enable-cloog-backend=isl --with-gmp=$PREFIX_FINAL \
+                --with-mpfr=$PREFIX_FINAL --with-mpc=$PREFIX_FINAL --with-isl=$PREFIX_FINAL \
+                --disable-isl-version-check --with-cloog=$PREFIX_FINAL --with-system-zlib \
                 --with-native-system-header-dir=$PREFIX_FINAL/include --disable-libssp \
-                --disable-install-libiberty --disable-cloog-version-check \
-                --enable-checking=release --enable-libstdcxx-time || exit 1
+                --disable-install-libiberty  --enable-libstdcxx-time \
+                --enable-checking=release || exit 1
 
 	    pushd $builddir || exit 1
 	    #  The following will prevent GCC from looking in the wrong
 	    #  directories for headers and libraries
-            sed -i "/^HOST_\(GMP\|CLOOG\)\(LIBS\|INC\)/s:-[IL]/\(lib\|include\)::" \
-                Makefile || exit 1
+            cp -v Makefile{,.orig} &&
+            sed "/^HOST_\(GMP\|ISL\|CLOOG\)\(LIBS\|INC\)/s:$PREFIX_FINAL:$PREFIX_CROSS:g" \
+                Makefile.orig > Makefile || exit 1
 
 	    make -j$JOBCOUNT AS_FOR_TARGET="${AS}" LD_FOR_TARGET="${LD}" &&
 	    make install &&
@@ -146,11 +180,8 @@ build()
             #        problems, but I haven't run into the bug it fixes, so I've
             #        left it out for now.
 	    build_generic $1 $OPTS \
-		--with-shared \
-		--without-debug \
-		--without-ada \
-		--enable-overwrite \
-		--with-build-cc=gcc || exit 1
+                --without-debug --without-ada \
+                --enable-overwrite --with-build-cc=gcc || exit 1
 		;;
 
 	busybox)
@@ -208,14 +239,41 @@ build()
 
 	    ;;
 
+        bison)
+            setup_generic $1 || exit 1
+
+            # Apply a sed which disables the building of bison.help
+            # when cross-compiling.
+            #
+            # NOTE: In $source!  This means we either have to undo
+            #       this at the end or make a copy of the source tree
+            #       (because bison is a git submodule in src/)
+            pushd $source &&
+            [ -f Makefile.in.orig ] && exit 1
+            cp -v Makefile.in{,.orig} &&
+            sed '/bison.help:/s/^/# /' Makefile.in.orig > Makefile.in &&
+            popd || exit 1
+
+            # The configure script does not determine the correct
+            # value for the following. Set the value manually:
+            #
+            # NOTE: In $builddir!!!
+            pushd $builddir
+            echo "ac_cv_prog_lex_is_flex=yes" > config.cache
+            popd
+
+            M4=m4 configure_generic $1 $OPTS \
+                --cache-file=config.cache &&
+            compile_generic $1 || exit 1
+
+            # revert the Makefile.in changes
+            pushd $source &&
+            mv Makefile.in{.orig,} &&
+            popd || exit 1
+            ;;
+
 	flex)
 	    setup_generic $1 || exit 1
-
-	    # Make sure that Flex doesn't try to include headers from
-	    # /usr/include.
-	    pushd $source &&
-	    sed -i "s/-I@includedir@//g" Makefile.in &&
-	    popd || exit 1
 
 	    # When cross-compiling, the configure script does not determine
 	    # the correct values for the following, so we'll set the values
@@ -225,8 +283,20 @@ build()
 	    echo ac_cv_func_realloc_0_nonnull=yes >> config.cache &&
 	    popd || exit 1
 
-	    configure_generic $1 $OPTS \
-		--cache-file=config.cache &&
+            M4=m4 configure_generic $1 $OPTS \
+		--cache-file=config.cache || exit 1
+
+            # NOTE: We can't let flex build manpage, because help2man tries to
+            #       run ../flex --help, which is cross-compiled for a
+            #       non-native architecture.  The following sed statement
+            #       disables manpage generation for now.
+            #
+            # NOTE: CLFS doesn't run into this because they use dist tarballs
+            #       as apposed to git trees.
+            pushd $builddir &&
+            sed -i 's|^dist_man_MANS|#dist_man_MANS|' doc/Makefile &&
+            popd || exit 1
+
 	    compile_generic $1 || exit 1
 	    ;;
 
@@ -247,6 +317,8 @@ build()
 	    echo "gl_cv_func_wcwidth_works=yes" > config.cache &&
 	    popd || exit 1
 
+	    # FIXME: We've got --enable-shared --disable-static in
+	    #        $OPTS... Does disabling shard now re-enable static?
 	    configure_generic $1 $OPTS \
 		--disable-shared \
 		--cache-file=config.cache || exit 1
@@ -285,7 +357,7 @@ build()
 	    # need to set LDFLAGS like this so that texinfo's bootstrap
 	    # native build can find our bootstrap-early stuff (ncurses,
 	    # specifically)
-	    autoreconf=yes LDFLAGS=-L$PREFIX_EARLY/lib \
+	    LDFLAGS=-L$PREFIX_EARLY/lib \
 		configure_generic $1 $OPTS || exit 1
 
 	    pushd $builddir &&
@@ -630,6 +702,7 @@ packages=""
 packages+=" gmp"
 packages+=" mpfr"
 packages+=" mpc"
+packages+=" isl"
 packages+=" cloog"
 packages+=" zlib"
 packages+=" binutils"
@@ -662,10 +735,12 @@ packages+=" busybox"
 #       untarring tar.xz files transparently using busybox.
 
 packages+=" bison"
+
 packages+=" file"
 packages+=" flex"
 
 packages+=" gettext"
+
 packages+=" m4"
 packages+=" make"
 
