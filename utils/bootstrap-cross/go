@@ -7,25 +7,6 @@ toplevel=$PWD/../..
 . $toplevel/utils/bootstrap-early/functions
 
 
-# install linux headers
-build_linux_headers()
-{
-    setup_generic $1 || exit 1
-
-    MAKE="make ARCH=$ARCH_TARGET"
-
-    # NOTE: We use /tools as apposed to /cross-tools here (just like the
-    #       CLFS book).  There's nothing to cross-compile here, but it's
-    #       needed now.
-    pushd $builddir &&
-    $MAKE mrproper &&
-    $MAKE headers_check &&
-    $MAKE INSTALL_HDR_PATH=$PREFIX_FINAL headers_install &&
-    popd || exit 1
-
-}
-
-
 
 build()
 {
@@ -37,7 +18,20 @@ build()
 
     case "$1" in
 	linux_headers)
-	    build_linux_headers
+            setup_generic kernel || exit 1
+
+            # get ready
+	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
+            MAKE+=" ARCH=$ARCH_TARGET"
+
+            # NOTE: We use /tools as apposed to /cross-tools here (just like
+            #       the CLFS book).  There's nothing to cross-compile here, but
+            #       it's needed now.
+            pushd $builddir &&
+            $MAKE mrproper &&
+            $MAKE headers_check &&
+            $MAKE INSTALL_HDR_PATH=$PREFIX_FINAL headers_install &&
+            popd || exit 1
 	    ;;
 
 	ncurses)
@@ -369,6 +363,7 @@ build()
 
 	*)
 	    build_generic $1 $OPTS || exit 1
+            ;;
     esac
 }
 
