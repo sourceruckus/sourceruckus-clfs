@@ -39,6 +39,24 @@ packages+=" tar"
 # running autoreconf
 packages+=" help2man"
 
+# might also want to make sure that the host system has a usable ncurses
+# (and ncurses-devel) library.  otherwise we can't run the 'menuconfig'
+# target for kernel and busybox configuration
+#
+# NOTE: Both the kernel and busybox fail to look for ncurses anywhere
+#       other than in /usr... so in order to actually make use of
+#       this, their source trees will need to be patched to point to
+#       our bootstrap-early libraries.
+#
+# NOTE: texinfo also requires ncurses to compile
+packages+=" ncurses"
+
+# latest m4 needs a pretty recent version of texinfo (>= 4.13) and our gcc
+# build script assumes >= 5.0
+#
+# NOTE: requires automake >= 1.13 and ncurses
+packages+=" texinfo"
+
 # install these to make sure the rest of the build is done using the GNU
 # build tools we test against
 #
@@ -57,7 +75,7 @@ packages+=" help2man"
 #
 # NOTE: I've placed requirements in comments for each of these, for future
 #       reference.
-packages+=" m4" # automake >= 1.11.1
+packages+=" m4" # automake >= 1.11.6, autoconf >= 2.62, help2man >= 1.29, makeinfo >= 4.13, xz
 packages+=" autoconf" # m4 >= 1.4.16
 packages+=" automake" # autoconf >= 2.69
 packages+=" gettext"
@@ -80,16 +98,6 @@ packages+=" bison"
 #       e2fsprogs submodule to v1.41.7 prior to building bootstrap-early, then
 #       fast forwarding it back to the modern day.  ;-)
 packages+=" e2fsprogs"
-
-# might also want to make sure that the host system has a usable ncurses
-# (and ncurses-devel) library.  otherwise we can't run the 'menuconfig'
-# target for kernel and busybox configuration
-#
-# NOTE: Both the kernel and busybox fail to look for ncurses anywhere
-#       other than in /usr... so in order to actually make use of
-#       this, their source trees will need to be patched to point to
-#       our bootstrap-early libraries.
-packages+=" ncurses"
 
 # for ruckusrd?
 packages+=" cpio"
