@@ -51,10 +51,15 @@ packages+=" help2man"
 # NOTE: texinfo also requires ncurses to compile
 packages+=" ncurses"
 
-# latest m4 needs a pretty recent version of texinfo (>= 4.13) and our gcc
-# build script assumes >= 5.0
+# latest m4 needs a pretty recent version of texinfo (>= 4.13)
 #
-# NOTE: requires automake >= 1.13 and ncurses
+# FIXME: binutils needs special sed hackage to build w/ texinfo 5.x
+#
+# FIXME: texinfo 5.1 requires automake >= 1.13 and ncurses.  actually, it
+#        requires aclocal-1.13 and automake-1.13... so having automake 1.14
+#        doesn't help at all...
+#
+# FIXME: keeping this at 4.13 for now to avoid above issues.
 packages+=" texinfo"
 
 # install these to make sure the rest of the build is done using the GNU
