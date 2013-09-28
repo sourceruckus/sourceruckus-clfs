@@ -2,24 +2,25 @@
 #
 # This file defines a map of mirror URLs.  Keys are the mirrors, values are
 # lists of URLs to replace with the specified mirror.  This is a python
-# expression that gets parsed via eval(), so there is not variable
+# expression that gets parsed via eval(), so there is no variable
 # assignment.
 #
 # For example:
 #
-#{"git://git.neo/mirror":
-#    [
-#     "git://busybox.net",
-#     "git://git.code.sf.net/p/flex",
-#     "git://git.kernel.org/pub/scm/fs/ext2",
-#     "git://git.kernel.org/pub/scm/linux/kernel/git/stable",
-#     "git://git.kernel.org/pub/scm/utils/util-linux",
-#     "git://git.samba.org",
-#     "git://git.sv.gnu.org",
-#     "git://github.com/bagder",
-#     "git://github.com/git",
-#     "git://ntfs-3g.git.sourceforge.net/gitroot/ntfs-3g",
-#     "git://repo.or.cz",
-#     "http://git.tukaani.org",
-#     ],
-# }
+
+{"git://sourceruckus.org/mirror":
+    [
+     "git://busybox.net",
+     "git://git.code.sf.net/p/flex",
+     "git://git.kernel.org/pub/scm/fs/ext2",
+     "git://git.kernel.org/pub/scm/linux/kernel/git/stable",
+     "git://git.kernel.org/pub/scm/utils/util-linux",
+     "git://git.samba.org",
+     "git://git.sv.gnu.org",
+     "git://github.com/bagder",
+     "git://github.com/git",
+     "git://ntfs-3g.git.sourceforge.net/gitroot/ntfs-3g",
+     "git://repo.or.cz",
+     "http://git.tukaani.org",
+     ],
+ }
