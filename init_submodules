@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- mode: python -*-
 
 import argparse
 import configparser
@@ -22,6 +23,13 @@ def git_submod_update(path, cwd):
     print("[cwd="+cwd+"]", go)
     if not config.dry_run:
         subprocess.check_call(go.split(), cwd=cwd)
+
+    if config.clean:
+        clean_cwd = os.path.join(cwd, path)
+        for go in ["git clean -dfx", "git checkout ."]:
+            print("[cwd="+clean_cwd+"]", go)
+            if not config.dry_run:
+                subprocess.check_call(go.split(), cwd=clean_cwd)
 
 
 def git_config(key, val=None, cwd=".", remove=False):
@@ -209,7 +217,10 @@ p.add_argument('-m', '--mirrors', metavar='MIRRORS',
                that, use, this, mirror]}""")
 
 p.add_argument('--clean', action='store_true',
-               help="Delete all submodules.")
+               help="Clean all submodules (i.e., return them to freshly checked out state).")
+
+p.add_argument('--remove', action='store_true',
+               help="Remove all submodules.")
 
 
 # namespace holding our runtime config
@@ -226,7 +237,7 @@ if __name__ == "__main__":
     print(config)
     print(toplevel)
 
-    if config.clean:
+    if config.remove:
         delete_all_submods()
         sys.exit(ERR)
 
