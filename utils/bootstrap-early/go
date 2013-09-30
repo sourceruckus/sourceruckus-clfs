@@ -155,6 +155,15 @@ build()
             make -j$JOBCOUNT && make PREFIX=$PREFIX_EARLY install &&
             popd || exit 1
             ;;
+	texinfo)
+	    # We have a configure.ac patch and need to force an autoreconf
+	    #
+	    # We need to set LDFLAGS like this so that texinfo's build can
+	    # find our bootstrap-early stuff (ncurses, specifically).
+	    autoreconf=yes \
+		LDFLAGS=-L$PREFIX_EARLY/lib \
+		build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	    ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;

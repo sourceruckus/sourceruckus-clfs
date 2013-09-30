@@ -54,26 +54,26 @@ build()
 	    ;;
 
 	gmp)
-	    build_generic $1 $OPTS --enable-cxx
+	    build_generic $1 $OPTS --enable-cxx || exit 1
 	    ;;
 
 	mpfr)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 $OPTS \
-		--with-gmp=$PREFIX_CROSS
+		--with-gmp=$PREFIX_CROSS || exit 1
 	    ;;
 
 	mpc)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 $OPTS \
 		--with-gmp=$PREFIX_CROSS \
-		--with-mpfr=$PREFIX_CROSS
+		--with-mpfr=$PREFIX_CROSS || exit 1
 	    ;;
 
 	isl)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 $OPTS \
-		--with-gmp=$PREFIX_CROSS
+		--with-gmp=$PREFIX_CROSS || exit 1
 	    ;;
 
 	cloog)

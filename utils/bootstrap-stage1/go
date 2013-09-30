@@ -362,11 +362,12 @@ build()
 	    ;;
 
 	texinfo)
-	    setup_generic $1 || exit 1
+	    # We have a configure.ac patch and need to force an autoreconf
+	    autoreconf=yes \
+		setup_generic $1 || exit 1
 
-	    # need to set LDFLAGS like this so that texinfo's bootstrap
-	    # native build can find our bootstrap-early stuff (ncurses,
-	    # specifically)
+	    # We need to set LDFLAGS like this so that texinfo's build can
+	    # find our bootstrap-early stuff (ncurses, specifically).
 	    LDFLAGS=-L$PREFIX_EARLY/lib \
 		configure_generic $1 $OPTS || exit 1
 

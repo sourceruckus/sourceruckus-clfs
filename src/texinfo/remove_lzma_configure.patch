@@ -1,0 +1,11 @@
+--- a/configure.ac	2013-09-28 12:15:09.578400435 -0400
++++ b/configure.ac	2013-09-28 12:17:44.131173851 -0400
+@@ -13,7 +13,7 @@
+ 
+ dnl Must come before AM_INIT_AUTOMAKE.
+ AC_CONFIG_AUX_DIR([build-aux])
+-AM_INIT_AUTOMAKE([1.10.1 readme-alpha dist-lzma])
++AM_INIT_AUTOMAKE([1.10.1 readme-alpha])
+ 
+ # Minimum Autoconf version required.
+ AC_PREREQ(2.59)
