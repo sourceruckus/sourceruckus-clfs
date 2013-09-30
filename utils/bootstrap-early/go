@@ -62,6 +62,11 @@ packages+=" ncurses"
 # FIXME: keeping this at 4.13 for now to avoid above issues.
 packages+=" texinfo"
 
+# gettext needs gperf to bootstrap propperly
+#
+# NOTE: As far as I can tell, any version will do
+packages+=" gperf"
+
 # install these to make sure the rest of the build is done using the GNU
 # build tools we test against
 #
@@ -155,6 +160,19 @@ build()
             make -j$JOBCOUNT && make PREFIX=$PREFIX_EARLY install &&
             popd || exit 1
             ;;
+	gperf)
+	    # Won't build doc, at least on AVLinux 6, which is the
+	    # only system I've run into that doesn't have gperf
+	    # installed already...
+	    setup_generic $1 &&
+	    configure_generic $1 --prefix=$PREFIX_EARLY || exit 1
+
+	    pushd $builddir &&
+	    sed -i  '/cd doc;/d' Makefile &&
+	    popd || exit 1
+
+	    compile_generic $1 || exit 1
+	    ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
