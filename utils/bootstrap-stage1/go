@@ -303,6 +303,9 @@ build()
             #
             # NOTE: CLFS doesn't run into this because they use dist tarballs
             #       as apposed to git trees.
+	    #
+	    # FIXME: Flex is still failing during doc on my avlinux
+	    #        box... not sure why...
             pushd $builddir &&
             sed -i 's|^dist_man_MANS|#dist_man_MANS|' doc/Makefile &&
             popd || exit 1
