@@ -189,7 +189,7 @@ build()
 
 	    # get ready
 	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
-	    MAKE+=" ARCH=$ARCH_TARGET CROSS_COMPILE=$CLFS_TARGET-"
+	    MAKE+=" ARCH=$CLFS_ARCH CROSS_COMPILE=$CLFS_TARGET-"
 	    pushd $builddir &&
 	    $MAKE mrproper &&
 	    popd || exit 1
@@ -569,7 +569,7 @@ build()
 
 	    # get ready
 	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
-	    MAKE+=" ARCH=$ARCH_TARGET CROSS_COMPILE=$CLFS_TARGET-"
+	    MAKE+=" ARCH=$CLFS_ARCH CROSS_COMPILE=$CLFS_TARGET-"
 	    pushd $builddir &&
 	    $MAKE mrproper &&
 	    popd || exit 1
@@ -590,7 +590,7 @@ build()
 
 	    # now actually install the resulting kernel files
 	    pushd $builddir &&
-	    cp -v arch/$ARCH_TARGET/boot/bzImage $CLFS/boot/vmlinuz-ruckus-bootstrap &&
+	    cp -v arch/$CLFS_ARCH/boot/bzImage $CLFS/boot/vmlinuz-ruckus-bootstrap &&
 	    cp -v System.map $CLFS/boot/System.map-ruckus-bootstrap &&
 	    cp -v .config $CLFS/boot/config-ruckus-bootstrap &&
 	    popd || exit 1

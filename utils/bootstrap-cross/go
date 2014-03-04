@@ -22,7 +22,7 @@ build()
 
             # get ready
 	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
-            MAKE+=" ARCH=$ARCH_TARGET"
+            MAKE+=" ARCH=$CLFS_ARCH"
 
             # NOTE: We use /tools as apposed to /cross-tools here (just like
             #       the CLFS book).  There's nothing to cross-compile here, but

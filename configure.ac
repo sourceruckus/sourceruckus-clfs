@@ -2,7 +2,98 @@
 
 AC_INIT([Source Ruckus], [3.0-dev], [michael.d.labriola@gmail.com], sourceruckus)
 
+AC_CANONICAL_BUILD
+CLFS_HOST=$build_cpu-cross-$build_os
+
+# NOTE: We do NOT use AC_CANONICAL_HOST or AC_CANONICAL_TARGET here, for
+#       the following reasons:
+#
+#       1. We want to OVERRIDE the --host value AUTOMATICALLY based on the
+#          results of config.guess.
+#
+#       2. Passing --host or --target into this configure script will mean
+#          something DIFFERENT than what's documented in the autoconf
+#          manual (i.e., When I say "target", it's really what should be
+#          passed into --host for some packages).  We're not configuring a
+#          cross-compiler here, we're configuring a system for building
+#          lots of things including a cross-compiler...
+#
+#       3. I don't want to make/let the user specify the whole triplet.
+#
+#       4. I just don't want to confuse myself... ;-)
+#
+AC_DEFUN([valid_archs], [i686 x86_64])
+m4_define(default_arch, x86_64)
+AC_ARG_ENABLE(arch,
+  AS_HELP_STRING([--enable-arch=ARCH], [Final target architecture of build (valid: m4_unquote(m4_split(valid_archs))) [default=default_arch]]),
+  build_arch=$enableval,
+  build_arch=default_arch)
+
+CLFS_TARGET=$build_arch-ruckus-linux-gnu
+
+
+# allow disabling multilib for pure64 builds
+AC_ARG_ENABLE(multilib,
+  AS_HELP_STRING([--enable-multilib], [Enable multilib [default=auto]]),
+  build_multilib=$enableval,
+  build_multilib=yes)
+
+# check for propper arch usage
+build_arch_is_valid=no
+for x in valid_archs; do
+  AS_IF([test "$build_arch" = "$x"],
+    [build_arch_is_valid=yes
+     break
+    ])
+done
+
+AS_IF([test "$build_arch_is_valid" != "yes"],
+  [AC_MSG_ERROR([Invalid arch '$build_arch' specified (valid: m4_unquote(m4_split(valid_archs)))])])
+
+CLFS_ARCH=$build_arch
+
+# set variables based on build_arch
+AS_IF([test "$build_arch" = "i686"],
+  [ # x86
+   BUILD32=
+   BUILD64=
+   CLFS_TARGET32=
+   build_multilib=no
+  ],
+  [ # x86_64
+   AS_IF([test "$build_multilib" = "yes"],
+     [ # x86_64 multilib
+      BUILD32="-m32"
+      BUILD64="-m64"
+      CLFS_TARGET32="i686-ruckus-linux-gnu"
+     ],
+     [ # pure64
+      BUILD32=
+      BUILD64="-m64"
+      CLFS_TARGET32=
+     ])
+  ])
+
+
+abs_srcdir=$(cd $srcdir && pwd)
+INSTALLROOT=$abs_srcdir/..
+BUILDROOT=$abs_srcdir/.build
+PREFIX_EARLY=$BUILDROOT/bootstrap-early
+PREFIX_CROSS=/cross-tools
+PREFIX_FINAL=/tools
+AC_ARG_VAR(INSTALLROOT, Root of our final rootfs)
+AC_ARG_VAR(BUILDROOT, The build dir)
+AC_ARG_VAR(PREFIX_EARLY, Prefix for bootstrap-early)
+AC_ARG_VAR(PREFIX_CROSS, Prefix for bootstrap-cross)
+AC_ARG_VAR(PREFIX_FINAL, Prefix for bootstrap-final)
+
+
 AM_INIT_AUTOMAKE
+
+# FIXME: probably not going to be used anywhere...
+AM_CONDITIONAL([MULTILIB],
+  [test x$build_multilib = xyes -a x$target_arch = xx86_64])
+
 
 # check for needed utils on the host system
 #
@@ -167,6 +258,13 @@ AS_IF([test "$CPIO" != ""], [], [p_early+=" cpio"])
 #AS_IF([test "$SYSLINUX" != ""], [], [p_early+=" syslinux"])
 
 AC_SUBST(p_early)
+AC_SUBST(INSTALLROOT)
+AC_SUBST(CLFS_HOST)
+AC_SUBST(CLFS_TARGET)
+AC_SUBST(CLFS_TARGET32)
+AC_SUBST(BUILD32)
+AC_SUBST(BUILD64)
+AC_SUBST(CLFS_ARCH)
 
 
 #AC_CONFIG_FILES(Makefile, src/Makefile, packages/Makefile, utils/Makefile)
@@ -177,3 +275,34 @@ AC_CONFIG_FILES([
 ])
 
 AC_OUTPUT
+
+echo
+echo
+echo
+echo "------------------------------------------------------------------------"
+echo "$PACKAGE_STRING"
+echo "------------------------------------------------------------------------"
+echo
+echo "Configuration Options Summary:"
+echo
+echo "Bootstrap Early Packages: $p_early"
+echo
+echo "Options:"
+echo "  Final Target Arch....: $build_arch"
+echo "  Multilib.............: $build_multilib"
+echo
+echo "CLFS Variables:"
+echo "  CLFS_HOST............: $CLFS_HOST"
+echo "  CLFS_TARGET..........: $CLFS_TARGET"
+echo "  CLFS_TARGET32........: $CLFS_TARGET32"
+echo "  CLFS_ARCH............: $CLFS_ARCH"
+echo "  BUILD32..............: $BUILD32"
+echo "  BUILD64..............: $BUILD64"
+echo
+echo "Other Variables:"
+echo "  INSTALLROOT..........: $INSTALLROOT"
+echo "  BUILDROOT............: $BUILDROOT"
+echo "  PREFIX_EARLY.........: $PREFIX_EARLY"
+echo "  PREFIX_CROSS.........: $PREFIX_CROSS"
+echo "  PREFIX_FINAL.........: $PREFIX_FINAL"
+echo
