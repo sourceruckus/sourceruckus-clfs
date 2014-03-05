@@ -83,6 +83,9 @@ build()
 	    #        bootstrap-early or have the configure script enable the
 	    #        sed statement only if host system has texinfo 5.x.
 	    #        Whichever is easier.
+            #
+            # FIXME: If we do it, don't forget to un-sed at the end as we might
+            #        be building in-tree or referencing a git checkout...
 	    #
 	    # sed -i -e 's/@colophon/@@colophon/' \
 	    #     -e 's/doc@cygnus.com/doc@@cygnus.com/' bfd/doc/bfd.texinfo
@@ -128,6 +131,11 @@ build()
 	    fi
 
 	    # make GCC look in PREFIX_FINAL (i.e., not the host sys)
+            #
+            # FIXME: This is only ok because we use a dist tarball for gcc's
+            #        sources... if we ever swtich to a git tree, we'll need to
+            #        either make a copy of the source tree or undo this at the
+            #        end...
             pushd $source
 	    echo "#undef STANDARD_STARTFILE_PREFIX_1" >> gcc/config/linux.h
             echo "#define STANDARD_STARTFILE_PREFIX_1 \"$PREFIX_FINAL/lib/\"" >> gcc/config/linux.h
@@ -137,6 +145,8 @@ build()
 
             # Apply a sed subsitution that will suppress the execution
             # of the fixincludes script:
+            #
+            # FIXME: same here, we could need to undo this
             pushd $source &&
             cp -v gcc/Makefile.in{,.orig} &&
             sed 's@\./fixinc\.sh@-c true@' gcc/Makefile.in.orig > gcc/Makefile.in &&
@@ -293,6 +303,9 @@ build()
             #
             # NOTE: CLFS doesn't run into this because they use dist tarballs
             #       as apposed to git trees.
+	    #
+	    # FIXME: Flex is still failing during doc on my avlinux
+	    #        box... not sure why...
             pushd $builddir &&
             sed -i 's|^dist_man_MANS|#dist_man_MANS|' doc/Makefile &&
             popd || exit 1
@@ -352,11 +365,12 @@ build()
 	    ;;
 
 	texinfo)
-	    setup_generic $1 || exit 1
+	    # We have a configure.ac patch and need to force an autoreconf
+	    autoreconf=yes \
+		setup_generic $1 || exit 1
 
-	    # need to set LDFLAGS like this so that texinfo's bootstrap
-	    # native build can find our bootstrap-early stuff (ncurses,
-	    # specifically)
+	    # We need to set LDFLAGS like this so that texinfo's build can
+	    # find our bootstrap-early stuff (ncurses, specifically).
 	    LDFLAGS=-L$PREFIX_EARLY/lib \
 		configure_generic $1 $OPTS || exit 1
 
@@ -370,9 +384,8 @@ build()
 
 	create-dirs)
 	    mkdir -pv ${CLFS}/{bin,boot,dev,{etc/,}opt,home,lib,mnt}
-	    mkdir -pv $CLFS/mnt/{cdrom,flash,floppy,crypt}
-	    mkdir -pv ${CLFS}/{proc,media/{floppy,cdrom},sbin,srv,sys}
-	    mkdir -pv ${CLFS}/var/{lock,log,mail,run,spool}
+	    mkdir -pv ${CLFS}/{proc,media/{floppy,cdrom},run/{,shm},sbin,srv,sys}
+	    mkdir -pv ${CLFS}/var/{lock,log,mail,spool}
 	    mkdir -pv ${CLFS}/var/{opt,cache,lib/{misc,locate},local}
 	    install -dv ${CLFS}/root -m 0750
 	    install -dv ${CLFS}{/var,}/tmp -m 1777
@@ -381,30 +394,62 @@ build()
 	    mkdir -pv ${CLFS}/usr/{,local/}share/{misc,terminfo,zoneinfo}
 	    mkdir -pv ${CLFS}/usr/{,local/}share/man/man{1,2,3,4,5,6,7,8}
 	    for dir in ${CLFS}/usr{,/local}; do
-		ln -sv share/{man,doc,info} $dir 2>/dev/null
+		ln -sv share/{man,doc,info} $dir
 	    done
-	    install -dv ${CLFS}/usr/lib/locale
 
-	    if [ -n "$BUILD64" ]; then
+	    if [ -n "$BUILD32" ]; then
+		# multilib dirs
 		mkdir -pv ${CLFS}/lib64
 		mkdir -pv ${CLFS}/var/lib64/{misc,locate}
 		mkdir -pv ${CLFS}/usr/{,local/}lib64
-		ln -sv ../lib/locale ${CLFS}/usr/lib64 2>/dev/null
+		install -dv ${CLFS}/usr/lib/locale
+		ln -sv ../lib/locale ${CLFS}/usr/lib64
 	    fi
+
+	    # I like these too much to leave out...
+	    mkdir -pv $CLFS/mnt/{cdrom,flash,floppy,crypt}
 
 	    echo done
 	    ;;
 
 	create-symlinks)
-	    ln -sv $PREFIX_FINAL/bin/{bash,cat,echo,grep,pwd,sleep,stty,mount,umount} ${CLFS}/bin 2>/dev/null
-	    ln -sv $PREFIX_FINAL/sbin/{swapon,swapoff} $CLFS/sbin 2>/dev/null
+
+            # FIXME: take the 2>/dev/null off all these lines to more closely
+            #        match CLFS, unless there was a really good reason I added
+            #        them...
+            #
+            # FIXME: This freshly copy-n-pasted (and then variable substituted)
+            #        block of ln commands from 20130924 differs from what I had
+            #        before:
+            #
+            #        1. It no longer creates /bin/{mount,umount} or
+            #           /sbin/{swapon,swapoff}.
+            #
+            #        2. It now creates /bin/{login,passwd},
+            #           /sbin/{agetty,blkid}, and /var/run.
+
+	    ln -sv $PREFIX_FINAL/bin/{bash,cat,echo,grep,login,passwd,pwd,sleep,stty} ${CLFS}/bin 2>/dev/null
 	    ln -sv $PREFIX_FINAL/bin/file ${CLFS}/usr/bin 2>/dev/null
+	    ln -sv $PREFIX_FINAL/sbin/{agetty,blkid} ${CLFS}/sbin 2>/dev/null
 	    ln -sv $PREFIX_FINAL/lib/libgcc_s.so{,.1} ${CLFS}/usr/lib 2>/dev/null
+
 	    ln -sv $PREFIX_FINAL/lib/libstd*so* ${CLFS}/usr/lib 2>/dev/null
 
-	    if [ -n "$BUILD64" ]; then
+	    ln -sv ../run ${CLFS}/var/run
+
+	    if [ -n "$BUILD32" ]; then
+		# x86_64 multilib only
 		ln -sv $PREFIX_FINAL/lib64/libgcc_s.so{,.1} ${CLFS}/usr/lib64 2>/dev/null
 		ln -sv $PREFIX_FINAL/lib64/libstd*so* ${CLFS}/usr/lib64 2>/dev/null
+
+	    elif [ -n "$BUILD64" ]; then
+		# x86_64 pure only
+
+		# To enable some c++ tests in the Glibc and Binutils testsuites
+		# to link, create a directory and make some symbolic links:
+		mkdir -pv ${CLFS}/usr/lib64
+		ln -sv $PREFIX_FINAL/lib/libstd*so* ${CLFS}/usr/lib64 2>/dev/null
+
 	    fi
 
 	    # CLFS used bash for this one, but we're using busybox's ash
@@ -425,72 +470,67 @@ build()
 	    echo done
 	    ;;
 
-	util-linux)
-	    build_generic $1 $OPTS \
-		--enable-login-utils \
-		--disable-makeinstall-chown || exit 1
-	    
-	    # NOTES: CLFS excludes --prefix for this one, then has the make
-	    #        install target use a DESTDIR, then move installed files
-	    #        around by hand.  Not sure why.  I'm going to try to
-	    #        make it work like the rest of the packages (i.e., use
-	    #        --prefix=$PREFIX_FINAL combined with our /tools
-	    #        symlink) so that the install target works properly.
-	    #
-	    #pushd $builddir &&
-	    #make -j$JOBCOUNT &&
-	    #make install &&
-	    #popd || exit 1
-
-	    # FIXME: In addition to rearranging where all the files were
-	    #        installed, the CLFS book also explicitly removes the
-	    #        libtool libraries.  Not sure why this is done, and it
-	    #        doesn't appear to be consistent with the handling of
-	    #        the other packages.
-	    #
-	    # FIXME: Actually, I extended this to include the removal of
-	    #        libmount.la
-	    #rm -fv ${PREFIX_FINAL}/lib64/lib{blkid,uuid,mount}.la || exit 1
-	    
-	    echo done
-	    ;;
-
 	e2fsprogs)
 	    setup_generic $1 || exit 1
 
-	    if [ -n "$BUILD64" ]; then
-	        # Change the library directory to lib64
+	    if [ -n "$BUILD32" ]; then
+		# multilib only
+
+		# Make sure the libraries get installed to /tools/lib64
+		#
+		# NOTE: In $source!  Don't forget to undo this when we're
+		#	done...
 		pushd $source &&
-		sed -i.bak '/libdir.*=.*\/lib/s@/lib@/lib64@g' configure &&
+		[ -f configure.orig ] && exit 1
+		cp -v configure{,.orig} &&
+		sed -e "/libdir=.*\/lib/s@/lib@/lib64@g" configure.orig > configure &&
 		popd || exit 1
 	    fi
 
 	    # NOTE: PKG_CONFIG variable is used by e2fsprogs build scripts,
-	    #       it's not something I added.
-	    PKG_CONFIG=true configure_generic $1 $OPTS \
-		--disable-fsck || exit 1
+	    #	    it's not something I added.
+	    #
+	    # FIXME: New command from CLFS 20130924 disables libblkid, libuuid,
+	    #	     and uuid... not sure how that will play with busybox's
+	    #	     mdev (as apposed to eudev)...
+	    #
+	    # FIXME: Actually, last time around I chose to not build these
+	    #	     because they weren't cross-compiling correctly... so it
+	    #	     must be ok?
+	    PKG_CONFIG=true \
+		configure_generic $1 $OPTS \
+		--enable-elf-shlibs \
+		--disable-libblkid --disable-libuuid --disable-fsck \
+		--disable-uuidd || exit 1
+
+	    # set some extra variables for building
+	    tmp_OPTS="LIBUUID=\"-luuid\" STATIC_LIBUUID=\"-luuid\""
+	    tmp_OPTS+=" LIBBLKID=\"-lblkid\" STATIC_LIBBLKID=\"-lblkid\""
+
+	    if [ -n "$BUILD32" ]; then
+		# x86_64 multilib only
+		tmp_OPTS+=" LDFLAGS=\"-Wl,-rpath,$PREFIX_FINAL/lib64\""
+
+	    elif [ -n "$BUILD64" ]; then
+		# x86_64 pure only
+		tmp_OPTS+=" LDFLAGS=\"-Wl,-rpath,$PREFIX_FINAL/lib\""
+	    fi
 
 	    pushd $builddir &&
-	    make -j$JOBCOUNT &&
+	    make -j$JOBCOUNT $tmp_OPTS &&
 	    make install &&
+	    make install-libs &&
+	    ln -sv $PREFIX_FINAL/sbin/{fsck.ext2,fsck.ext3,fsck.ext4,e2fsck} ${CLFS}/sbin &&
 	    popd || exit 1
 
-	    if [ -n "$BUILD64" ]; then
-	        # NOTE: we need to undo the lib64 sed we did above, since we
-	        #       could be working in-tree.
+	    if [ -n "$BUILD32" ]; then
+		# NOTE: we need to undo the lib64 sed we did above, since we
+		#	could be working in-tree.
 		pushd $source &&
-		mv -v configure.bak configure &&
+		mv -v configure{.orig,} &&
 		popd || exit 1
 	    fi
 
-	    # NOTE: we don't compile/install the libblkid, libuuid, etc,
-	    #       shared libs here.  I ran into cross-compilation problems
-	    #       here, and they're not needed.  We'll build and install
-	    #       them when we do our final e2fsprogs build later on.
-	    #make install-libs || exit 1
-	    
-	    # make needed symlinks in baby
-	    ln -sv $PREFIX_FINAL/sbin/{fsck.ext2,fsck.ext3,fsck.ext4,e2fsck} ${CLFS}/sbin 2>/dev/null
 	    echo done
 	    ;;
 
@@ -559,6 +599,15 @@ build()
 	    ;;
 
 	kernel)
+            # FIXME: I should redo the kernel configs, perhaps using ruckusrd
+            #        for initramfs...
+            #
+            #        Don't forget, this is the cross-compiled bare-bones kernel
+            #        just to get us booted up...  if we can live w/out modules,
+            #        that would be great.  That being said, it would be nice to
+            #        be kinda distro-kernel-ish so that most people with most
+            #        hardware can just use our bootstrap config... we'll see.
+
 	    setup_generic $1 || exit 1
 
 	    if [ -n "$BUILD64" ]; then
@@ -588,6 +637,10 @@ build()
 	    $MAKE -j$JOBCOUNT_KBUILD &&
 	    popd || exit 1
 
+            # FIXME: $MAKE INSTALL_MOD_PATH=${CLFS} modules_install
+
+            # FIXME: $MAKE INSTALL_FW_PATH=${CLFS}/lib/firmware firmware_install
+
 	    # now actually install the resulting kernel files
 	    pushd $builddir &&
 	    cp -v arch/$CLFS_ARCH/boot/bzImage $CLFS/boot/vmlinuz-ruckus-bootstrap &&
@@ -611,6 +664,10 @@ build()
 	    ;;
 
 	syslinux)
+            # FIXME: should move this to stage2 and early
+            #
+            # FIXME: same with ruckusrd
+
 	    build_in_tree=yes setup_generic $1 || exit 1
 
 	    # NOTE: devel.mk uses sets development-only debug flags,
