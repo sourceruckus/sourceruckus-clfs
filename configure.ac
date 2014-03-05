@@ -81,11 +81,13 @@ BUILDROOT=$abs_srcdir/.build
 PREFIX_EARLY=$BUILDROOT/bootstrap-early
 PREFIX_CROSS=/cross-tools
 PREFIX_FINAL=/tools
+CLFS=$BUILDROOT/baby
 AC_ARG_VAR(INSTALLROOT, Root of our final rootfs)
 AC_ARG_VAR(BUILDROOT, The build dir)
 AC_ARG_VAR(PREFIX_EARLY, Prefix for bootstrap-early)
 AC_ARG_VAR(PREFIX_CROSS, Prefix for bootstrap-cross)
 AC_ARG_VAR(PREFIX_FINAL, Prefix for bootstrap-final)
+AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 
 
 AM_INIT_AUTOMAKE
@@ -345,7 +347,8 @@ echo "------------------------------------------------------------------------"
 echo
 echo "Configuration Options Summary:"
 echo
-echo "Bootstrap Early Packages: $p_early"
+echo "Bootstrap Early Packages:"
+echo " $p_early"
 echo
 echo "Options:"
 echo "  Final Target Arch....: $build_arch"
@@ -365,4 +368,5 @@ echo "  BUILDROOT............: $BUILDROOT"
 echo "  PREFIX_EARLY.........: $PREFIX_EARLY"
 echo "  PREFIX_CROSS.........: $PREFIX_CROSS"
 echo "  PREFIX_FINAL.........: $PREFIX_FINAL"
+echo "  CLFS.................: $CLFS"
 echo

@@ -29,7 +29,7 @@ unset CXXFLAGS
 # end of the bootstrap-stage1 stage, we'll move this to $INSTALLROOT.
 # keeping it inside a different directory until then make maintainence
 # easier (e.g., chown -R root:root $CLFS won't mess with our source tree)
-CLFS=$BUILDROOT/baby
+CLFS=@CLFS@
 
 # set host and target variables.
 #
