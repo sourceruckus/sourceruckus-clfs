@@ -319,6 +319,47 @@ AC_CACHE_CHECK([for extlinux >= 4.0], [ac_cv_path_EXTLINUX],
     ])
   ])
 
+
+# check for CLFS symlinks...
+#
+# FIXME: Put a decent description of the CLFS /tools and /cross-tools
+#        symlinks in here...
+AC_MSG_CHECKING([for the CLFS $PREFIX_CROSS symlink])
+prefix_cross_link=`readlink $PREFIX_CROSS 2>/dev/null`
+AS_IF([test "$prefix_cross_link" = "$CLFS$PREFIX_CROSS"],
+  [AC_MSG_RESULT($prefix_cross_link)],
+  [AC_MSG_RESULT(missing)
+   AC_MSG_ERROR([
+		*************************************************************
+		Please create the CLFS $PREFIX_CROSS symlink by executing
+		the following command as root, then rerun configure:
+
+		ln -s $CLFS$PREFIX_CROSS $PREFIX_CROSS
+		*************************************************************])
+  ])
+
+AC_MSG_CHECKING([for the CLFS $PREFIX_FINAL symlink])
+prefix_final_link=`readlink $PREFIX_FINAL 2>/dev/null`
+AS_IF([test "$prefix_final_link" = "$CLFS$PREFIX_FINAL"],
+  [AC_MSG_RESULT($prefix_final_link)],
+  [AC_MSG_RESULT(missing)
+   AC_MSG_ERROR([
+		*************************************************************
+		Please create the CLFS $PREFIX_FINAL symlink by executing
+		the following command as root, then rerun configure:
+
+		ln -s $CLFS$PREFIX_FINAL $PREFIX_FINAL
+		*************************************************************])
+  ])
+
+
+
+
+
+# FIXME: I need to work out something better for INSTALLROOT...
+
+
+
 AC_SUBST(p_early)
 AC_SUBST(INSTALLROOT)
 AC_SUBST(CLFS_HOST)

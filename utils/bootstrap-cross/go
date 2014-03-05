@@ -412,10 +412,11 @@ done
 
 # make a backup of our progress.
 #
-# NOTE: using sudo for this to make sure our build user has appropriate
-#       permissions to read all the files we're backing up
+# NOTE: Used to use sudo for this to make sure our build user has appropriate
+#       permissions to read all the files we're backing up... but that seems
+#       unneeded.
+#
+# NOTE: In fact, this whole thing might not really be all that necessary...
 echo -n "creating bootstrap-cross backup... "
-sudo tar -zcf $BUILDROOT/baby-bootstrap-cross.tar.gz -C $CLFS . || exit 1
-#sudo tar -jcf $BUILDROOT/baby-bootstrap-cross.tar.bz2 -C $CLFS . || exit 1
-#sudo tar -Jcf $BUILDROOT/baby-bootstrap-cross.tar.xz -C $CLFS . || exit 1
+tar -Jcf $BUILDROOT/baby-bootstrap-cross.tar.xz -C $CLFS . || exit 1
 echo "done."

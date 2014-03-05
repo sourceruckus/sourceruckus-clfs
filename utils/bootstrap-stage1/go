@@ -695,6 +695,12 @@ build()
 	    #       just to make this easier to read/maintain.  assuming
 	    #       sudo is configured to work correctly, the additional
 	    #       overhead should be negligible.
+            #
+            # FIXME: Actually, I'm not assuming sudo work in bootstrap-early
+            #        anymore... not sure how I want to handle this...  Perhaps
+            #        split the final fix-perms and install type stuff out into
+            #        a seperate script that the user runs as root (like with
+            #        make install)?
 	    sudo chown -Rc 0:0 $CLFS &&
 	    sudo chgrp -c 13 $CLFS/var/{run/utmp,log/lastlog} || exit 1
 	    if [ ! -c $CLFS/dev/console ]; then
@@ -924,7 +930,7 @@ packages+=" syslinux"
 
 # this stage will set the ownership of our baby filesystem to root instead
 # of our build user
-packages+=" fix-perms"
+#packages+=" fix-perms"
 
 
 
@@ -936,6 +942,16 @@ for p in $packages; do
     echo "building bootstrap-stage1 package: $p"
     build $p || exit 1
 done
+
+
+# FIXME: Everything below this needs to be done as root (except the backup).
+#        Move the backup up here and run it non-root, then split the reset of
+#        this (along with the silly fix-perms "package" into a seperate script
+#        for the user to run as root.  This final script should groom/install
+#        everyting onto some type of media so that the user can go boot it up
+#        to kick off stage2!  Woo!
+exit 0
+
 
 
 # remove the cross-compiler and it's utilities
