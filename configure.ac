@@ -1,5 +1,5 @@
 # -*- mode: autoconf -*-
-
+AC_PREREQ(2.62)
 AC_INIT([Source Ruckus], [3.0-dev], [michael.d.labriola@gmail.com], sourceruckus)
 
 AC_CANONICAL_BUILD
@@ -104,36 +104,39 @@ p_early=
 # add rsync so we can use it to copy source trees for packages that don't
 # support out-of-tree builds
 AC_PATH_PROG(RSYNC, [rsync])
+AC_ARG_VAR(RSYNC, Path to rsync binary)
 AS_IF([test "$RSYNC" != ""], [], [p_early+=" rsync"])
+
 
 # gzip is needed so we can ensure tar can extract from tar.gz files
 #
 # FIXME: lots of the following types of warnings, then a failure on my
-#        netbook:
+#        netbook (SUSE Enterprise 11?):
 #
 #        cc1: warning: command line option "-Wabi" is valid for C++/ObjC++
 #        but not for C
 AC_PATH_PROG(GZIP, [gzip])
+AC_ARG_VAR(GZIP, Path to gzip binary)
 AS_IF([test "$GZIP" != ""], [], [p_early+=" gzip"])
+
 
 # bzip2 is also needed to make sure we can extract all our source tarballs
 AC_PATH_PROG(BZIP2, [bzip2])
+AC_ARG_VAR(BZIP2, Path to bzip2 binary)
 AS_IF([test "$BZIP2" != ""], [], [p_early+=" bzip2"])
+
 
 # xz is needed to build syslinux (and potentially for uncompressing
 # source tarballs, patches, etc)
 AC_PATH_PROG(XZ, [xz])
+AC_ARG_VAR(XZ, Path to xz binary)
 AS_IF([test "$XZ" != ""], [], [p_early+=" xz"])
 
-# tar is needed to make sure that we have a new enough version to extract
-# tarballs compressed with xz and lzma
-#
-# FIXME: actually check for xz support!  easiest way might be to create a
-#        tar.xz, tar,bz2, etc, file and assume that if can create you can
-#        extract.
-#
-# FIXME: tar --bzip2, --xz, --gzip
+
+# make sure that we have a version of tar that can extract tarballs
+# compressed with gzip, bzip2, and xz
 AC_PATH_PROG(TAR, [tar])
+AC_ARG_VAR(TAR, Path to tar binary (must support gzip, bzip2, and xz))
 AS_IF([test "$TAR" != ""],
 
   # we have tar, make sure it has gzip support
@@ -167,10 +170,13 @@ AS_IF([test "$TAR" != ""],
   # no tar
   [p_early+=" tar"])
 
+
 # help2man is needed to build man pages for libtool and texinfo after
 # running autoreconf
 AC_PATH_PROG(HELP2MAN, [help2man])
+AC_ARG_VAR(HELP2MAN, Path to help2man binary)
 AS_IF([test "$HELP2MAN" != ""], [], [p_early+=" help2man"])
+
 
 # might also want to make sure that the host system has a usable ncurses
 # (and ncurses-devel) library.  otherwise we can't run the 'menuconfig'
@@ -183,13 +189,25 @@ AS_IF([test "$HELP2MAN" != ""], [], [p_early+=" help2man"])
 #
 # NOTE: texinfo also requires ncurses to compile
 #
-# FIXME: print a WARNING
-#
-# FIXME: check for both lib and headers
+need_ncurses=no
 AC_CHECK_LIB(ncurses, [initscr],
   # lib found, check for header
-  [AC_CHECK_HEADER(curses.h, [], [p_early+=" ncurses"])],
-  [p_early+=" ncurses"])
+  [AC_CHECK_HEADER(curses.h, [], [need_ncurses=yes])],
+  [need_ncurses=yes])
+
+AS_IF([test "$need_ncurses" != "no"],
+  [p_early+=" ncurses"
+   AC_MSG_WARN([
+		*************************************************************
+		Your host system lacks a usable ncurses library.  We will
+		build and install one via bootstrap-early, but you may
+		have to patch packages (e.g., busybox, linux kernel) to
+		look anywhere other than /usr for it.  You might be better
+		off installing ncurses by hand (as root) with
+		--prefix=/usr and re-running this configure script.
+		*************************************************************])
+  ])
+
 
 # latest m4 needs a pretty recent version of texinfo (>= 4.13)
 #
@@ -200,11 +218,31 @@ AC_CHECK_LIB(ncurses, [initscr],
 #        doesn't help at all...
 #
 # FIXME: keeping this at 4.13 for now to avoid above issues.
-#AC_PATH_PROG(TEXINFO, [texinfo])
-#AS_IF([test "$TEXINFO" != ""], [], [p_early+=" texinfo"])
+#
+# FIXME: does this nasty puke macro even work if version is 4.13a?
+#
+AC_CACHE_CHECK([for texinfo >= 4.13], [ac_cv_path_TEXINFO],
+  [AC_PATH_PROGS_FEATURE_CHECK([TEXINFO], [makeinfo],
+    [[result=`$ac_path_TEXINFO --version | head -n1 | awk '{tmp=split($NF,v,"."); if (v[1] < 4) print "no"; else if (v[1] == 4 && v[2] < 13) print "no2"; else print "yes"}'`
+     test "x$result" = "xyes" && ac_cv_path_TEXINFO=$ac_path_TEXINFO ac_path_TEXINFO_found=:
+    ]],
 
-# install these to make sure the rest of the build is done using the GNU
-# build tools we test against
+    [ac_cv_path_TEXINFO=no
+     p_early+=" texinfo"
+    ])
+  ])
+
+
+# gettext needs gperf to bootstrap propperly
+#
+# NOTE: As far as I can tell, any version will do
+AC_PATH_PROG(GPERF, [gperf])
+AC_ARG_VAR(GPERF, Path to gperf binary)
+AS_IF([test "$GPERF" != ""], [], [p_early+=" gperf"])
+
+
+# always install these to make sure the rest of the build is done using
+# the GNU build tools we test against
 #
 # NOTE: This is the bootstrap black whole mentioned elsewhere.  I have
 #       sucessfully worked around it a few different ways.
@@ -220,7 +258,8 @@ AC_CHECK_LIB(ncurses, [initscr],
 #         just installing automake v1.11.1 might not be enough.
 #
 # NOTE: I've placed requirements in comments for each of these, for future
-#       reference.
+#       reference.  (although, i think they're outdated again...)
+#
 p_early+=" m4" # automake >= 1.11.6, autoconf >= 2.62, help2man >= 1.29, makeinfo >= 4.13, xz
 p_early+=" autoconf" # m4 >= 1.4.16
 p_early+=" automake" # autoconf >= 2.69
@@ -229,11 +268,12 @@ p_early+=" libtool" # warned about libtool.m4 bootstrap failure
 p_early+=" pkg-config" # glib bits need libtool
 p_early+=" make" # automake >= 1.11.1, gettext >= 0.18.1, pkg-config
 
-# FIXME: p_early+=" gperf"
+# FIXME: gperf?
 # FIXME: flex?
 # FIXME: graphviz?
 # FIXME: valgrind?
 p_early+=" bison"
+
 
 # to ensure that we don't inadvertantly use a modified version with
 # non-standard extensions to build our filesystems
@@ -245,17 +285,37 @@ p_early+=" bison"
 #       fast forwarding it back to the modern day.  ;-)
 p_early+=" e2fsprogs"
 
-# for ruckusrd?
+
+# for ruckusrd
 AC_PATH_PROG(CPIO, [cpio])
+AC_ARG_VAR(CPIO, Path to cpio binary)
 AS_IF([test "$CPIO" != ""], [], [p_early+=" cpio"])
 
+
 # check for ruckusrd >= 0.10.0
-#AC_PATH_PROG(RUCKUSRD, [ruckusrd])
-#AS_IF([test "$RUCKUSRD" != ""], [], [p_early+=" ruckusrd"])
+AC_CACHE_CHECK([for ruckusrd >= 0.10.0], [ac_cv_path_RUCKUSRD],
+  [AC_PATH_PROGS_FEATURE_CHECK([RUCKUSRD], [ruckusrd],
+    [[result=`$ac_path_RUCKUSRD --version | cut -b2- | awk '{tmp=split($NF,v,"."); if (v[1] < 0) print "no"; else if (v[1] == 0 && v[2] < 10) print "no2"; else print "yes"}'`
+     test "x$result" = "xyes" && ac_cv_path_RUCKUSRD=$ac_path_RUCKUSRD ac_path_RUCKUSRD_found=:
+    ]],
+
+    [ac_cv_path_RUCKUSRD=no
+     p_early+=" ruckusrd"
+    ])
+  ])
+
 
 # check for extlinux >= 4.x for ext4 support
-#AC_PATH_PROG(SYSLINUX, [syslinux])
-#AS_IF([test "$SYSLINUX" != ""], [], [p_early+=" syslinux"])
+AC_CACHE_CHECK([for extlinux >= 4.0], [ac_cv_path_EXTLINUX],
+  [AC_PATH_PROGS_FEATURE_CHECK([EXTLINUX], [extlinux],
+    [[result=`$ac_path_EXTLINUX --version 2>&1 | awk '{print $2}' | awk '{tmp=split($NF,v,"."); if (v[1] < 4) print "no"; else if (v[1] == 4 && v[2] < 0) print "no2"; else print "yes"}'`
+     test "x$result" = "xyes" && ac_cv_path_EXTLINUX=$ac_path_EXTLINUX ac_path_EXTLINUX_found=:
+    ]],
+
+    [ac_cv_path_EXTLINUX=no
+     p_early+=" syslinux"
+    ])
+  ])
 
 AC_SUBST(p_early)
 AC_SUBST(INSTALLROOT)

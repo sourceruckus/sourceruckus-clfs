@@ -9,113 +9,6 @@ toplevel=$PWD/../..
 . $toplevel/utils/bootstrap-early/functions
 
 
-packages=""
-
-# add rsync so we can use it to copy source trees for packages that don't
-# support out-of-tree builds
-packages+=" rsync"
-
-# gzip is needed so we can ensure tar can extract from tar.gz files
-#
-# FIXME: lots of the following types of warnings, then a failure on my
-#        netbook:
-#
-#        cc1: warning: command line option "-Wabi" is valid for C++/ObjC++
-#        but not for C
-packages+=" gzip"
-
-# bzip2 is also needed to make sure we can extract all our source tarballs
-packages+=" bzip2"
-
-# xz is needed to build syslinux (and potentially for uncompressing
-# source tarballs, patches, etc)
-packages+=" xz"
-
-# tar is needed to make sure that we have a new enough version to extract
-# tarballs compressed with xz and lzma
-packages+=" tar"
-
-# help2man is needed to build man pages for libtool and texinfo after
-# running autoreconf
-packages+=" help2man"
-
-# might also want to make sure that the host system has a usable ncurses
-# (and ncurses-devel) library.  otherwise we can't run the 'menuconfig'
-# target for kernel and busybox configuration
-#
-# NOTE: Both the kernel and busybox fail to look for ncurses anywhere
-#       other than in /usr... so in order to actually make use of
-#       this, their source trees will need to be patched to point to
-#       our bootstrap-early libraries.
-#
-# NOTE: texinfo also requires ncurses to compile
-packages+=" ncurses"
-
-# latest m4 needs a pretty recent version of texinfo (>= 4.13)
-#
-# FIXME: binutils needs special sed hackage to build w/ texinfo 5.x
-#
-# FIXME: texinfo 5.1 requires automake >= 1.13 and ncurses.  actually, it
-#        requires aclocal-1.13 and automake-1.13... so having automake 1.14
-#        doesn't help at all...
-#
-# FIXME: keeping this at 4.13 for now to avoid above issues.
-packages+=" texinfo"
-
-# gettext needs gperf to bootstrap propperly
-#
-# NOTE: As far as I can tell, any version will do
-packages+=" gperf"
-
-# install these to make sure the rest of the build is done using the GNU
-# build tools we test against
-#
-# NOTE: This is the bootstrap black whole mentioned elsewhere.  I have
-#       sucessfully worked around it a few different ways.
-#
-#       - Installed automake-1.12.4 from source.tar.xz in /scrap/staging and
-#         tweaked environment vars appropriately (e.g., PATH,
-#         LD_LIBRARY_PATH).
-#
-#       - My netbook already had automake 1.11.1 installed and configured
-#         properly in /usr/local (had done it via source.tar.xz a while
-#         back).  Of course, it ALSO had autoconf, m4, gettext, libtool,
-#         make, pkg-config, and bison of similar vintage installed... so
-#         just installing automake v1.11.1 might not be enough.
-#
-# NOTE: I've placed requirements in comments for each of these, for future
-#       reference.
-packages+=" m4" # automake >= 1.11.6, autoconf >= 2.62, help2man >= 1.29, makeinfo >= 4.13, xz
-packages+=" autoconf" # m4 >= 1.4.16
-packages+=" automake" # autoconf >= 2.69
-packages+=" gettext"
-packages+=" libtool" # warned about libtool.m4 bootstrap failure
-packages+=" pkg-config" # glib bits need libtool
-packages+=" make" # automake >= 1.11.1, gettext >= 0.18.1, pkg-config
-
-# FIXME: packages+=" gperf"
-# FIXME: flex?
-# FIXME: graphviz?
-# FIXME: valgrind?
-packages+=" bison"
-
-# to ensure that we don't inadvertantly use a modified version with
-# non-standard extensions to build our filesystems
-#
-# NOTE: e2fsprogs > v1.41.7 may not compile on systems with really old kernel
-#       headers.  This can be worked around by hacking it's misc/Makefile.in to
-#       not compile e4defrag.  It can also be worked around by rewinding the
-#       e2fsprogs submodule to v1.41.7 prior to building bootstrap-early, then
-#       fast forwarding it back to the modern day.  ;-)
-packages+=" e2fsprogs"
-
-# for ruckusrd?
-packages+=" cpio"
-
-packages+=" ruckusrd"
-
-packages+=" syslinux"
-
 
 build()
 {
@@ -213,7 +106,7 @@ if [ "`readlink $PREFIX_CROSS 2>/dev/null`" != "$CLFS$PREFIX_CROSS" ]; then
 fi
 
 # build and install each needed package
-for p in $packages; do
+for p in $p_early; do
     echo "building bootstrap-early package: $p"
     build $p || exit 1
 done
