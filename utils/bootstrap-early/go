@@ -168,6 +168,7 @@ build()
 	    autoreconf=yes \
 		LDFLAGS=-L$PREFIX_EARLY/lib \
 		build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	    ;;
 	gperf)
 	    # Won't build doc, at least on AVLinux 6, which is the
 	    # only system I've run into that doesn't have gperf
