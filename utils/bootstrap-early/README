@@ -7,8 +7,8 @@ necessary tools on the originating host system to ensure that we have
 everything needed to complete the build.
 
 All the packages built in this section will get compiled and installed in
-$BUILDROOT/bootstrap-early.  Actually using them will require tweaking of
-your user's environment (PATH, LD_LIBRARY_PATH, etc).
+$PREFIX_EARLY (defaults to $BUILDROOT/bootstrap-early).  Actually using them
+will require tweaking of your user's environment (PATH, LD_LIBRARY_PATH, etc).
 
 Note that this stage assumes the host system at least has git (to get this),
 wget (to get other sources), autotools (to configure this), and a sane
@@ -20,40 +20,10 @@ installing our own GNU bootstrapping toolchain (autoconf, automake, libtool,
 etc).  This way, we ensure that the versions of all the compile toolchain
 components are adequate for compiling our bootstrap environment.
 
+
 NOTE: There are cyclic dependencies that crop up when bootstrapping the
       toolchain (i.e., running bootstrap or autogen.sh from git checkouts).  The
       easiest way around this is to download and install the dist source tarball
       of automake (that matches the version we're tracking in our automake git
       submodule) on the host system (it's needed by m4 which is needed to
       bootstrap automake).
-
-NOTE: The version of git might need to be fairly recent (submodule wasn't very
-      good until around v1.6).
-
-FIXME: We should probably check for git submodule update --init --recursive if
-       we're going to rely on that to init recursive submodules...  since we
-       don't build git here, I guess it'll just issue a warning.  Work around
-       would be to either upgrade host system's git or traverse the system
-       initializing submodules by hand...
-
-NOTE: The system's tar command will need to be able to transparently decrompress
-      via gzip, bzip2, and xz (i.e., tar xf foo.tar.xz needs to work).  Some
-      really old distros might not support xz yet.
-
-
-
-* Need to always build
-** e2fsprogs (make sure created rootfs doesn't use vendor extensions)
-** GNU build toolchain (e.g., autoconf, automake, libtool, make, gettext)
-
-
-* Might need (add configure check)
-** help2man (needed for texinfo in bootstrap and for bootstrapping m4)
-** rsync (need to be able to rsync source trees)
-** gzip
-** bipz2
-** xz (needed to build syslinux)
-** tar (need -g incremental support, and xz support)
-
-* Optional
-** ncurses (needed for Kbuild's menuconfig)
