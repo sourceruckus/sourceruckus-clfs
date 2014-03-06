@@ -130,10 +130,13 @@ exit 0
 #
 # NOTE: using sudo for this to make sure our build user has appropriate
 #       permissions to read all the files we're backing up
+#
+# FIXME: do i really need this?
 cp $BUILDROOT/baby-bootstrap-stage1.snar \
     $BUILDROOT/baby-bootstrap-stage2.snar &&
-sudo tar -vcf $BUILDROOT/baby-bootstrap-stage2.tar \
-    -g $BUILDROOT/baby-bootstrap-stage2.snar -C $CLFS . || exit 1
+sudo tar -Jcf $BUILDROOT/baby-bootstrap-stage2.tar.xz \
+    -g $BUILDROOT/baby-bootstrap-stage2.snar \
+    -C $CLFS . || exit 1
 
 
 # NOTE: if the bootstrap system is feature-complete for my embedded

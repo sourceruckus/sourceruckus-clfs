@@ -419,7 +419,9 @@ done
 #       permissions to read all the files we're backing up... but that seems
 #       unneeded.
 #
-# NOTE: In fact, this whole thing might not really be all that necessary...
+# FIXME: In fact, this whole thing might not really be all that necessary...
 echo -n "creating bootstrap-cross backup... "
-tar -Jcf $BUILDROOT/baby-bootstrap-cross.tar.xz -C $CLFS . || exit 1
+tar -Jcf $BUILDROOT/baby-bootstrap-cross.tar.xz \
+    -g $BUILDROOT/baby-bootstrap-cross.snar \
+    -C $CLFS . || exit 1
 echo "done."

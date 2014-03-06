@@ -943,6 +943,18 @@ for p in $packages; do
     build $p || exit 1
 done
 
+# make a backup of our progress.
+#
+# FIXME: how exactly does all this snar business work...?
+echo -n "creating bootstrap-stage1 backup... "
+cp $BUILDROOT/baby-bootstrap-cross.snar \
+    $BUILDROOT/baby-bootstrap-stage1.snar &&
+tar -Jcf $BUILDROOT/baby-bootstrap-stage1.tar.xz \
+    -g $BUILDROOT/baby-bootstrap-stage1.snar \
+    -C $CLFS . || exit 1
+echo "done."
+
+
 
 # FIXME: Everything below this needs to be done as root (except the backup).
 #        Move the backup up here and run it non-root, then split the reset of
