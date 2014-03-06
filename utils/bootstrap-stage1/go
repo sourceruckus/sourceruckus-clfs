@@ -867,7 +867,7 @@ packages+=" create-symlinks"
 #        have diff behavior.
 #
 #packages+=" util-linux" # for transparent cryptoloop mounting?
-packages+=" e2fsprogs" # for bulletproof ext2/3/4 support
+#packages+=" e2fsprogs" # for bulletproof ext2/3/4 support
 
 # NOTE: We want this to be a pretty usable tiny bootstrap system, so we're
 #       gonna include propper NTFS support here as well.  Now we'll have
@@ -879,7 +879,7 @@ packages+=" e2fsprogs" # for bulletproof ext2/3/4 support
 #        going to be fixed...  if the transparent cryptoloop mount usage was
 #        the only reason i went with the real util-linux here, i should
 #        reconsider.
-packages+=" ntfs-3g"
+#packages+=" ntfs-3g"
 
 # FIXME: mdev vs udev.  I suspect that if we base our desktop image on our
 #        embedded image, parts of the desktop (GNOME, KDE, etc) are going to
@@ -926,7 +926,7 @@ packages+=" bootscripts"
 #        stage)... but why was i building it in bootstrap-cross as apposed to
 #        bootstrap-early?
 #
-packages+=" syslinux"
+#packages+=" syslinux"
 
 # this stage will set the ownership of our baby filesystem to root instead
 # of our build user
