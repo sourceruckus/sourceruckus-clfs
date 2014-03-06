@@ -379,7 +379,9 @@ packages=""
 #        cross-tools for CLFS because it's so easy/quick to install, why
 #        bother checking host system.  But we've got bootstrap-early to take
 #        care of that...
-packages+=" bc"
+#
+# FIXME: I'm handling this in bootstrap-early unless breakage is encountered.
+#packages+=" bc"
 packages+=" linux_headers"
 packages+=" file"
 packages+=" m4"
@@ -403,6 +405,7 @@ packages+=" gcc"
 
 
 mkdir -p $PWD/.build
+mkdir -p $CLFS$PREFIX_CROSS $CLFS$PREFIX_FINAL
 
 echo packages: $packages
 for p in $packages; do

@@ -1,6 +1,3 @@
-# The packages that we'll be building during bootstrap-early
-p_early="@p_early@"
-
 INSTALLROOT=@INSTALLROOT@
 BUILDROOT=@BUILDROOT@
 PREFIX_EARLY=@PREFIX_EARLY@
@@ -74,12 +71,16 @@ export BUILD64=@BUILD64@
 # NOTE: This variable seems to only be set in the embedded CLFS book and
 #       is used by busybox and the linux kernel.
 #
-# FIXME: shouldn't the x86 kernel use an ARCH newer than 386?  didn't they just
-#        remove 386 support a few releases ago?  CLFS book is using i386, but
-#        we've got our TARGET triplet set up as i686, so I'm going to use
-#        that...
-#
-# FIXME: the kernel section looks in arch/$CLFS_ARCH/boot for the finished
-#        kernel... is this correct for i686?
-#
+# NOTE: This is also a little misleading.  When building for i686, this needs
+#       to be set to i386 for historical purposes (i.e., kbuild expects x86 32
+#       bit files to be in the i386 dir).
 export CLFS_ARCH=@CLFS_ARCH@
+
+
+# --- Bootstrap Early Variables -------------------------------------------
+
+# The packages that we'll be building during bootstrap-early
+export p_early="@p_early@"
+
+# controls whether pkg-config needs to build it's internal glib snapshot
+export HOST_HAS_GLIB=@HOST_HAS_GLIB@

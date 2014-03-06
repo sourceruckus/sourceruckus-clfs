@@ -3,7 +3,8 @@
 packagedir=$toplevel/packages
 sourcedir=$toplevel/src
 
-. config
+# written out by configure
+. $toplevel/utils/bootstrap-early/config
 
 
 # this variable tells bootstrap scripts where to find gnulib, to avoid them
@@ -16,6 +17,10 @@ sourcedir=$toplevel/src
 #       recursively reconfigure and clone submodules using shared clones
 #       wherever available, so setting this variable would break things.
 #
+# NOTE: Poo.  Tar doesn't use .gitmodules for gnulib, so it wants to clone
+#       still... Either we leave this variable set, which means some trees may
+#       setup a submodule, but then not use it, or we write a custom rule for
+#       tar that sets GNULIB_SRCDIR just for tar.
 #export GNULIB_SRCDIR=$toplevel/src/gnulib
 
 # this variable tells bootstrap scripts (probably just cpio and tar) to use
@@ -62,7 +67,12 @@ fi
 # this variable will be used by default to determine the number of jobs to
 # pass into make.
 #
-# FIXME: this should be configurable via autoconf?
+# FIXME: should this be configurable via autoconf?  --enable-parallelism=N
+#        where N gets used instead of CPUCOUNT to calc JOBCOUNT and
+#        JOBCOUNT_KBUILD?
+#
+# FIXME: not really sure why you'd want to override this via configure
+#        script...
 export CPUCOUNT=$(grep "^processor" /proc/cpuinfo | wc -l)
 export JOBCOUNT=$((CPUCOUNT+1))
 export JOBCOUNT_KBUILD=$((CPUCOUNT*4))

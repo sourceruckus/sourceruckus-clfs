@@ -5,6 +5,27 @@ AC_INIT([Source Ruckus], [3.0-dev], [michael.d.labriola@gmail.com], sourceruckus
 AC_CANONICAL_BUILD
 CLFS_HOST=$build_cpu-cross-$build_os
 
+# check for automake >= 1.11.1
+#
+# NOTE: Cyclic dependencies of doom this way come.  Not having at least
+#       automake 1.11 DEFINATELY is a problem... I think having >= 1.11.1
+#       is OK, but I'm not even sure of that.  :-/
+#
+# NOTE: This is fatal.  Unlink the other checks, which are deciding what
+#       to build in bootstrap-early, a recent version of automake is
+#       NEEDED in order to even bootstrap the source trees for the
+#       bootstrap-early packages.
+AM_INIT_AUTOMAKE(1.11.1)
+
+# We don't direcetly need libtool here, but leaving this out may cause
+# source trees inside the src dir to fail to bootstrap unless we add
+# AC_CONFIG_AUX_DIR calls to each of them.  By default, automake and
+# autoconf will walk up the directory tree looking for auxilary files
+# instead of making new ones... and it looks like if ANY of the aux files
+# are found at ../.., it assumes they're ALL there.
+LT_INIT
+
+
 # NOTE: We do NOT use AC_CANONICAL_HOST or AC_CANONICAL_TARGET here, for
 #       the following reasons:
 #
@@ -50,17 +71,22 @@ done
 AS_IF([test "$build_arch_is_valid" != "yes"],
   [AC_MSG_ERROR([Invalid arch '$build_arch' specified (valid: m4_unquote(m4_split(valid_archs)))])])
 
-CLFS_ARCH=$build_arch
+# FIXME: probably not going to be used anywhere...
+AM_CONDITIONAL([MULTILIB],
+  [test x$build_multilib = xyes -a x$build_arch = xx86_64])
+
 
 # set variables based on build_arch
 AS_IF([test "$build_arch" = "i686"],
   [ # x86
+   CLFS_ARCH=i386
    BUILD32=
    BUILD64=
    CLFS_TARGET32=
    build_multilib=no
   ],
   [ # x86_64
+   CLFS_ARCH=x86_64
    AS_IF([test "$build_multilib" = "yes"],
      [ # x86_64 multilib
       BUILD32="-m32"
@@ -90,11 +116,12 @@ AC_ARG_VAR(PREFIX_FINAL, Prefix for bootstrap-final)
 AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 
 
-AM_INIT_AUTOMAKE
 
-# FIXME: probably not going to be used anywhere...
-AM_CONDITIONAL([MULTILIB],
-  [test x$build_multilib = xyes -a x$target_arch = xx86_64])
+# FIXME: check for git version w/ submodule --init --recursive?  if
+#        running autoconf happens after submodule work, it's too
+#        late... perhaps we should add this check to autogen prior to
+#        autoconf?
+
 
 
 # check for needed utils on the host system
@@ -137,6 +164,8 @@ AS_IF([test "$XZ" != ""], [], [p_early+=" xz"])
 
 # make sure that we have a version of tar that can extract tarballs
 # compressed with gzip, bzip2, and xz
+#
+# FIXME: might want to check for -g incremental support
 AC_PATH_PROG(TAR, [tar])
 AC_ARG_VAR(TAR, Path to tar binary (must support gzip, bzip2, and xz))
 AS_IF([test "$TAR" != ""],
@@ -243,6 +272,27 @@ AC_ARG_VAR(GPERF, Path to gperf binary)
 AS_IF([test "$GPERF" != ""], [], [p_early+=" gperf"])
 
 
+# check for glib
+#
+# NOTE: pkg-config has an internal glib snapshot that can be used if glib
+#       is missing on the host system, but it adds needless compile time
+#       (and might not build propperly on some host systems).
+#
+# FIXME: why not just use pkg-config for this check?  glib-2.0
+#
+#AC_CHECK_LIB([glib-2.0], [g_malloc],
+#  # lib found, check for header
+#  [AC_CHECK_HEADER(glib.h, [has_glib=yes], [has_glib=no], [-Iglib-2.0])],
+#  [has_glib=no])
+#
+# FIXME: was having a hard time getting glib.h to work... shying away from
+#        using the pkg-config macros because of the autotools cyclic deps
+#        probem...
+PKG_PROG_PKG_CONFIG
+PKG_CHECK_MODULES(GLIB, [glib-2.0], [has_glib=yes], [has_glib=no])
+AC_SUBST(HOST_HAS_GLIB, $has_glib)
+
+
 # always install these to make sure the rest of the build is done using
 # the GNU build tools we test against
 #
@@ -270,7 +320,6 @@ p_early+=" libtool" # warned about libtool.m4 bootstrap failure
 p_early+=" pkg-config" # glib bits need libtool
 p_early+=" make" # automake >= 1.11.1, gettext >= 0.18.1, pkg-config
 
-# FIXME: gperf?
 # FIXME: flex?
 # FIXME: graphviz?
 # FIXME: valgrind?
@@ -288,14 +337,40 @@ p_early+=" bison"
 p_early+=" e2fsprogs"
 
 
+# bc
+#
+# NOTE: CLFS added bc to cross-tools (and final system) on 2013-07-23... I
+#       remember seing something on the mailing list... but I don't really
+#       remember for sure why it was added.  I think it had something to do
+#       with prepping the linux headers.
+#
+# FIXME: I don't understand why this isn't a host system requirement as
+#        apposed to a cross-tools item... I suspect it ended up in
+#        cross-tools for CLFS because it's so easy/quick to install, why
+#        bother checking host system.  But we've got bootstrap-early to take
+#        care of that...
+#
+# FIXME: oldest version I've tested with is 1.06...
+AC_PATH_PROG(BC, [bc])
+AC_ARG_VAR(BC, Path to bc binary)
+AS_IF([test "$BC" != ""], [], [p_early+=" bc"])
+
+
 # for ruckusrd
 AC_PATH_PROG(CPIO, [cpio])
 AC_ARG_VAR(CPIO, Path to cpio binary)
 AS_IF([test "$CPIO" != ""], [], [p_early+=" cpio"])
 
 
-# check for ruckusrd >= 0.10.0
-AC_CACHE_CHECK([for ruckusrd >= 0.10.0], [ac_cv_path_RUCKUSRD],
+# check for ruckusrd >= 0.10
+#
+# FIXME: instead of checking for a certain version here, why don't I just
+#        always install what we've got controlled... it'll only take a we
+#        bit extra and then we're guaranteed to be using the right
+#        version.
+#
+# FIXME: need to actually add a submodule for ruckusrd and srp
+AC_CACHE_CHECK([for ruckusrd >= 0.10], [ac_cv_path_RUCKUSRD],
   [AC_PATH_PROGS_FEATURE_CHECK([RUCKUSRD], [ruckusrd],
     [[result=`$ac_path_RUCKUSRD --version | cut -b2- | awk '{tmp=split($NF,v,"."); if (v[1] < 0) print "no"; else if (v[1] == 0 && v[2] < 10) print "no2"; else print "yes"}'`
      test "x$result" = "xyes" && ac_cv_path_RUCKUSRD=$ac_path_RUCKUSRD ac_path_RUCKUSRD_found=:
