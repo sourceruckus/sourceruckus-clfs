@@ -7,12 +7,12 @@ will be used to compile the bootstrap-stage1 step for the correct
 architecture.
 
 All the packages built in this section will get compiled and installed in
-/cross-tools (via the symlink created in bootstrap-early).  Actually
-using them will require tweaking of your user's environment.
+$BUILDROOT/baby/$PREFIX_CROSS (via the /tools-cross symlink).  Actually using
+them will require tweaking of your user's environment.
 
 
-NOTE: kernel headers and glibc (32 and 64bit) are actually installed in
-      PREFIX_FINAL (/tools) here.  This is what the CLFS book does, and
+NOTE: Kernel headers and glibc (32 and 64bit) are actually installed in
+      $PREFIX_FINAL (/tools) here.  This is what the CLFS book does, and
       we follow suit... even though I'm not entirely sure why this is done.
       It does mean that the final bootstrap stage doesn't have to compile
       eglibc at all...

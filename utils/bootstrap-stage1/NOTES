@@ -27,3 +27,29 @@ host system or strip will hose the strip binary.
 This brings our rootfs size down to about 138M for 32bit builds.
 
 And there's still a bunch of waste in /tools/{man,info,share}
+
+
+* Busybox
+
+Should we install busybox in the actual root filesystem (as apposed to /tools)?
+Right now, we install it in /tools, but then populate the rootfs with zillions
+of symlinks.
+
+I guess a bigger question is: Are we going to replace ALL of busybox in the
+final system?  If we are, then it makes sense to leave it in /tools.  If not,
+it make more sense to install in / and then just overwrite symlinks of the bits
+that we're replacing with full-blown versions.
+
+FIXME: If we install in /, we'll end up with a busybox binary on our final
+       system (which could come in handy!) that's linked against the glibc
+       built in bootstrap-cross... This might be problematic...
+
+       Alternatively, we could rebuild busybox during the final build stage
+       (via SRP), link it against the appropriate glibc, and only create needed
+       symlinks...
+
+
+* Kernel
+
+Pretty much having the same thoughts as busybox... Do we really need the stage1
+kernel to be different than the final kernel?
