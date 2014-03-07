@@ -558,15 +558,27 @@ build()
 	    # go!
 	    pushd $builddir &&
 	    $MAKE -j$JOBCOUNT_KBUILD &&
+            $MAKE INSTALL_MOD_PATH=${CLFS} modules_install &&
 	    popd || exit 1
 
-            # FIXME: $MAKE INSTALL_MOD_PATH=${CLFS} modules_install
+            # FIXME: CLFS does a make firmware_install... but that doesn't seem
+            #        to be needed.  modules_install is installing the firmware
+            #        already.
+            #
+            #$MAKE INSTALL_FW_PATH=${CLFS}/lib/firmware firmware_install
 
-            # FIXME: $MAKE INSTALL_FW_PATH=${CLFS}/lib/firmware firmware_install
+            # FIXME: Do we need to run depmod -b $CLFS?  Looks like
+            #        modules_install does it at the end...
+
+            # FIXME: Let's try and use the same kernel config, but just sed
+            #        LOCALVERSION into it.  Then, after we've booted (and
+            #        automagically loaded needed modules), remove
+            #        lib/{modules,firmware}
 
 	    # now actually install the resulting kernel files
 	    pushd $builddir &&
-	    cp -v arch/$CLFS_ARCH/boot/bzImage $CLFS/boot/vmlinuz-ruckus-bootstrap &&
+	    cp -v arch/$CLFS_ARCH/boot/bzImage \
+                $CLFS/boot/vmlinuz-ruckus-bootstrap &&
 	    cp -v System.map $CLFS/boot/System.map-ruckus-bootstrap &&
 	    cp -v .config $CLFS/boot/config-ruckus-bootstrap &&
 	    popd || exit 1
