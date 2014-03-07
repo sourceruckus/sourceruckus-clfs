@@ -11,6 +11,16 @@ Source Ruckus Linux can be used out-of-the-box, but it's real strength lies
 in being used as a base to derive your OWN distro from.  In other words, it
 exists purely to be forked, although it can be used as-is.
 
+The build scripts for bootstrapping, cross-compiling, etc, are based on those
+docuemented by the Cross Linux From Scratch (CLFS) project, but the projects
+should deviate pretty wildly from there.  Super special thanks to all the
+LFS, BLFS, and CLFS contributors for making this possible!  See the following
+pages for more info on the Linux From Scratch projects.
+
+LFS - http://www.linuxfromscratch.org/
+BLFS - http://www.linuxfromscratch.org/blfs/
+CLFS - http://trac.cross-lfs.org/
+
 
 * Goals
 
@@ -39,6 +49,14 @@ Using --target-arch=x86_64 with --disable-multilib should result in a pure64
 system (64bit libs in /lib), but grub won't work...  So lilo or
 syslinux/isolinux will have to be used to boot (although this would be fine
 for a xen domU that doesn't use pvgrub).
+
+
+** Build missing host dependencies
+
+Unlike CLFS, we're going to not only detect missing host dependencies via
+autoconf, but we'll also build/install them so you don't have to wory about
+it.  Why not, right?  We've got the whole opensource universe cloned in here
+already.  This is handled by the bootstrap-early build stage.
 
 
 ** Support for building offline
