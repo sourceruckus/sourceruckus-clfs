@@ -477,90 +477,6 @@ build()
 	    echo done
 	    ;;
 
-	e2fsprogs)
-	    setup_generic $1 || exit 1
-
-	    if [ -n "$BUILD32" ]; then
-		# multilib only
-
-		# Make sure the libraries get installed to /tools/lib64
-		#
-		# NOTE: In $source!  Don't forget to undo this when we're
-		#	done...
-		pushd $source &&
-		[ -f configure.orig ] && exit 1
-		cp -v configure{,.orig} &&
-		sed -e "/libdir=.*\/lib/s@/lib@/lib64@g" configure.orig > configure &&
-		popd || exit 1
-	    fi
-
-	    # NOTE: PKG_CONFIG variable is used by e2fsprogs build scripts,
-	    #	    it's not something I added.
-	    #
-	    # FIXME: New command from CLFS 20130924 disables libblkid, libuuid,
-	    #	     and uuid... not sure how that will play with busybox's
-	    #	     mdev (as apposed to eudev)...
-	    #
-	    # FIXME: Actually, last time around I chose to not build these
-	    #	     because they weren't cross-compiling correctly... so it
-	    #	     must be ok?
-	    PKG_CONFIG=true \
-		configure_generic $1 $OPTS \
-		--enable-elf-shlibs \
-		--disable-libblkid --disable-libuuid --disable-fsck \
-		--disable-uuidd || exit 1
-
-	    # set some extra variables for building
-	    tmp_OPTS="LIBUUID=\"-luuid\" STATIC_LIBUUID=\"-luuid\""
-	    tmp_OPTS+=" LIBBLKID=\"-lblkid\" STATIC_LIBBLKID=\"-lblkid\""
-
-	    if [ -n "$BUILD32" ]; then
-		# x86_64 multilib only
-		tmp_OPTS+=" LDFLAGS=\"-Wl,-rpath,$PREFIX_FINAL/lib64\""
-
-	    elif [ -n "$BUILD64" ]; then
-		# x86_64 pure only
-		tmp_OPTS+=" LDFLAGS=\"-Wl,-rpath,$PREFIX_FINAL/lib\""
-	    fi
-
-	    pushd $builddir &&
-	    make -j$JOBCOUNT $tmp_OPTS &&
-	    make install &&
-	    make install-libs &&
-	    ln -sv $PREFIX_FINAL/sbin/{fsck.ext2,fsck.ext3,fsck.ext4,e2fsck} ${CLFS}/sbin &&
-	    popd || exit 1
-
-	    if [ -n "$BUILD32" ]; then
-		# NOTE: we need to undo the lib64 sed we did above, since we
-		#	could be working in-tree.
-		pushd $source &&
-		mv -v configure{.orig,} &&
-		popd || exit 1
-	    fi
-
-	    echo done
-	    ;;
-
-	ntfs-3g)
-	    # set build_in_tree because we have a bootstrap patch for
-	    # configure.ac
-	    build_in_tree=yes \
-		patches=$toplevel/utils/bootstrap-stage1/patches/$1/*.patch \
-		setup_generic $1 || exit 1
-
-	    configure_generic $1 $OPTS \
-		--disable-ldconfig \
-		--exec-prefix=$PREFIX_FINAL || exit 1
-
-	    pushd $builddir &&
-	    make -j$JOBCOUNT &&
-	    make DESTDIR=$CLFS install &&
-	    popd || exit 1
-
-	    # FIXME: this might need extra setuid magic
-
-	    ;;
-
 	create-conf)
 	    # this will handle config files for init, mdev, users/groups,
             # logfiles, login scripts, fstab, needed device nodes, etc
@@ -653,41 +569,6 @@ build()
 	    cp -v arch/$CLFS_ARCH/boot/bzImage $CLFS/boot/vmlinuz-ruckus-bootstrap &&
 	    cp -v System.map $CLFS/boot/System.map-ruckus-bootstrap &&
 	    cp -v .config $CLFS/boot/config-ruckus-bootstrap &&
-	    popd || exit 1
-	    ;;
-
-	bootscripts)
-	    setup_generic $1 || exit 1
-
-	    # install the scripts
-	    pushd $builddir &&
-	    make SOURCEDIR=$source -f $source/Makefile \
-		DESTDIR=$CLFS install-minimal &&
-	    popd || exit 1
-
-	    # groom them a bit
-	    echo "UTC=1" > $CLFS/etc/sysconfig/clock || exit 1
-
-	    ;;
-
-	syslinux)
-            # FIXME: should move this to stage2 and early
-            #
-            # FIXME: same with ruckusrd
-
-	    build_in_tree=yes setup_generic $1 || exit 1
-
-	    # NOTE: devel.mk uses sets development-only debug flags,
-	    #       which may or may not cause the build to fail
-	    #       (e.g., -Wno-clobbered doesn't seem to work with
-	    #       gcc-4.5.2
-	    rm -f $builddir/mk/devel.mk || exit 1
-
-	    pushd $builddir &&
-	    make CROSS_COMPILE=$CLFS_TARGET- -j$JOBCOUNT &&
-	    install -m 755 extlinux/extlinux $PREFIX_CROSS/bin &&
-	    install -d -m 755 $PREFIX_CROSS/syslinux &&
-	    install -m 644 mbr/mbr.bin $PREFIX_CROSS/syslinux &&
 	    popd || exit 1
 	    ;;
 
@@ -903,7 +784,11 @@ packages+=" create-symlinks"
 packages+=" create-conf"
 
 packages+=" kernel"
-packages+=" bootscripts"
+
+# FIXME: replace the CLFS bootscripts with a single consise custom boot script
+#        to kick off the stage2 builder.
+#
+#packages+=" bootscripts"
 
 # FIXME: CLFS doesn't install grub at this point, but if we're going to
 #        automate the whole build process (ie, automaticaly reboot into the
