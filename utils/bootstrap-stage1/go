@@ -483,7 +483,7 @@ build()
 	    
 	    # copy inittab and mdev.conf into etc
 	    mkdir -vp $CLFS/etc &&
-	    cp -v config/inittab $CLFS/etc &&
+	    #cp -v config/inittab $CLFS/etc &&
 	    cp -v config/mdev.conf $CLFS/etc || exit 1
 
 	    # copy passwd and group files into etc
@@ -517,7 +517,7 @@ build()
 
 	    # NOTE: now touch /.ruckus_bootstrap_stage2, which causes init
 	    #       to run the stage2 script on tty1 at boot
-	    touch $CLFS$RUCKUS_BOOTSTRAP_STAGE2_FILE || exit 1
+	    #touch $CLFS$RUCKUS_BOOTSTRAP_STAGE2_FILE || exit 1
 
 	    ;;
 
