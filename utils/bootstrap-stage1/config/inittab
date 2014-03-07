@@ -54,7 +54,8 @@
 # Boot-time system configuration/initialization script.
 # This is run first except when booting in single-user mode.
 #
-::sysinit:/etc/rc.d/init.d/rcS
+# FIXME: bootscripts are missing...
+::sysinit:/etc/init.d/rcS
 
 # /bin/sh invocations on selected ttys
 #
@@ -64,23 +65,28 @@
 # this yourself...
 #
 # Start an "askfirst" shell on the console (whatever that may be)
-#::askfirst:-/bin/sh
+::askfirst:-/bin/sh
 # Start an "askfirst" shell on /dev/tty2-4
-#tty2::askfirst:-/bin/sh
-#tty3::askfirst:-/bin/sh
-#tty4::askfirst:-/bin/sh
+tty2::askfirst:-/bin/sh
+tty3::askfirst:-/bin/sh
+tty4::askfirst:-/bin/sh
 
 # NOTE: tty1 is special.  this is set up so that ruckus_bootstrap_stage2 is
 #       run, followed by getty.  the stage2 script exits immediately if
 #       /.ruckus_bootstrap_stage2 isn't present.
-tty1::respawn:-/ruckus/utils/bootstrap-stage2/init
+#tty1::respawn:-/ruckus/utils/bootstrap-stage2/init
 
 # /sbin/getty invocations for selected ttys
-tty2::respawn:/sbin/getty 38400 tty2
-tty3::respawn:/sbin/getty 38400 tty3
-tty4::respawn:/sbin/getty 38400 tty4
+#tty2::respawn:/sbin/getty 38400 tty2
+#tty3::respawn:/sbin/getty 38400 tty3
+#tty4::respawn:/sbin/getty 38400 tty4
 tty5::respawn:/sbin/getty 38400 tty5
-tty6::respawn:/sbin/getty 38400 tty6
+tty6::respawn:/sbin/getty tty6
+
+# FIXME: what should the tty speed be?
+
+# FIXME: does our getty support --noclear?
+
 
 # Example of how to put a getty on a serial line (for a terminal)
 #::respawn:/sbin/getty -L ttyS0 9600 vt100
@@ -89,6 +95,8 @@ tty6::respawn:/sbin/getty 38400 tty6
 # Example how to put a getty on a modem line.
 #::respawn:/sbin/getty 57600 ttyS2
 
+::respawn:/sbin/getty -L ttyS0 115200
+
 # Stuff to do when restarting the init process
 ::restart:/sbin/init
 
@@ -96,4 +104,3 @@ tty6::respawn:/sbin/getty 38400 tty6
 ::ctrlaltdel:/sbin/reboot
 ::shutdown:/bin/umount -a -r
 ::shutdown:/sbin/swapoff -a
-

@@ -1,7 +1,14 @@
 # -*- mode: sh -*-
+
+# for bash, set +h turns off PATH lookup caching
+# set +h
+
 PS1='\u:\w\$ '
 LC_ALL=POSIX
+
+# NOTE: CLFS uses slightly different PATH w/out /usr/local/*
 PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/tools/bin:/tools/sbin
+
 export LC_ALL PATH PS1
 
 alias ls='ls -FC --color'
