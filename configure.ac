@@ -102,18 +102,36 @@ AS_IF([test "$build_arch" = "i686"],
 
 
 abs_srcdir=$(cd $srcdir && pwd)
-INSTALLROOT=$abs_srcdir/..
+#INSTALLROOT=$abs_srcdir/..
 BUILDROOT=$abs_srcdir/.build
 PREFIX_EARLY=$BUILDROOT/bootstrap-early
 PREFIX_CROSS=/cross-tools
 PREFIX_FINAL=/tools
 CLFS=$BUILDROOT/baby
-AC_ARG_VAR(INSTALLROOT, Root of our final rootfs)
+#AC_ARG_VAR(INSTALLROOT, Root of our final rootfs)
 AC_ARG_VAR(BUILDROOT, The build dir)
 AC_ARG_VAR(PREFIX_EARLY, Prefix for bootstrap-early)
 AC_ARG_VAR(PREFIX_CROSS, Prefix for bootstrap-cross)
 AC_ARG_VAR(PREFIX_FINAL, Prefix for bootstrap-final)
 AC_ARG_VAR(CLFS, Location of baby filesystem during build)
+
+
+# FIXME: add flags for installation and kickoff of stage2
+#
+# ./configure --enable-arch=i686 --install-dev=/dev/sdf --auto-stage2 --fstype
+#
+# --install-dev=/dev/sdX
+#
+# --install-md=/dev/sda,/dev/sdb,/dev/sdc,...
+#
+# autocreate a RAID device
+#
+# if we want to use RAID0 for stage2 build, we'll need a separate /ruckus
+# partition (/boot has to be RAID1)
+#
+# instead of creating our final device at the end and then copying the
+# source tree in, why don't we create it at the beginning and just build
+# in it from the get go?
 
 
 
@@ -165,7 +183,8 @@ AS_IF([test "$XZ" != ""], [], [p_early+=" xz"])
 # make sure that we have a version of tar that can extract tarballs
 # compressed with gzip, bzip2, and xz
 #
-# FIXME: might want to check for -g incremental support
+# FIXME: might want to check for -g incremental support, although, if it's
+#        got xz support, I can't imagine it wouldn't have -g...
 AC_PATH_PROG(TAR, [tar])
 AC_ARG_VAR(TAR, Path to tar binary (must support gzip, bzip2, and xz))
 AS_IF([test "$TAR" != ""],
@@ -431,12 +450,8 @@ AS_IF([test "$prefix_final_link" = "$CLFS$PREFIX_FINAL"],
 
 
 
-# FIXME: I need to work out something better for INSTALLROOT...
-
-
-
 AC_SUBST(p_early)
-AC_SUBST(INSTALLROOT)
+#AC_SUBST(INSTALLROOT)
 AC_SUBST(CLFS_HOST)
 AC_SUBST(CLFS_TARGET)
 AC_SUBST(CLFS_TARGET32)
@@ -479,7 +494,7 @@ echo "  BUILD32..............: $BUILD32"
 echo "  BUILD64..............: $BUILD64"
 echo
 echo "Other Variables:"
-echo "  INSTALLROOT..........: $INSTALLROOT"
+#echo "  INSTALLROOT..........: $INSTALLROOT"
 echo "  BUILDROOT............: $BUILDROOT"
 echo "  PREFIX_EARLY.........: $PREFIX_EARLY"
 echo "  PREFIX_CROSS.........: $PREFIX_CROSS"
