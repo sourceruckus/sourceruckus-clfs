@@ -206,16 +206,8 @@ build()
 
 	    # create .config
 	    #
-            # FIXME: update all these comments once we have this all
-            #        straightened out.  ;-)
-            #
-	    # NOTE: planning on using the busybox variants of everything
-	    #       possible except for programs provided by the following
-	    #       packages:
-	    #
-	    #       - e2fsprogs (findfs, fsck.ext2, mkfs.ext2, etc)
-	    #       - util-linux (blkid, mount, losetup, agetty, etc)
-	    #       - dhcpd, dnsd (dnsmasq instead)
+	    # NOTE: We're planning on using the busybox variants of everything
+	    #       possible.  Any exceptions will be noted.
 	    #
 	    # NOTE: if you want to do a make menuconfig to tweak .config,
 	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL in order
@@ -455,7 +447,22 @@ build()
 	    # CLFS used bash for this one, but we're using busybox's ash
 	    # instead.  in case we change this later, we just symlink our
 	    # bootstrap sh symlink to our baby system's /bin/sh
+            #
+            # FIXME: should this point at ash or sh?
 	    ln -sv $PREFIX_FINAL/bin/sh ${CLFS}/bin/sh 2>/dev/null
+
+            # remove the broken bash symlink created by the copy-n-pasted CLFS
+            # scriptlet above.
+            #
+            # FIXME: instead of removing, should i make this point as ash?
+            #
+            # FIXME: actually, the new version of busybox installs it's own
+            #        /bin/bash symlink down below.
+	    rm -f $CLFS/bin/bash
+
+            # remove the broken agetty symlink created by the copy-n-pasted
+            # CLFS scriptlet above.
+            rm -f $CLFS/sbin/agetty
 
 	    # we've got some more symlinks to make, because we use our
 	    # boostrap busybox install in place of a bunch of extra packages
