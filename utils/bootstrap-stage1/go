@@ -584,76 +584,6 @@ build()
 	    popd || exit 1
 	    ;;
 
-	fix-perms)
-	    # this has to chown everything to root, so root permissions are
-	    # required...
-
-	    # NOTE: bootstrap-early already assumes sudo is configured for
-	    #       the build user, so we'll silently use it here as well.
-	    #
-	    # NOTE: using multiple sudo calls here instead of a single one
-	    #       just to make this easier to read/maintain.  assuming
-	    #       sudo is configured to work correctly, the additional
-	    #       overhead should be negligible.
-            #
-            # FIXME: Actually, I'm not assuming sudo work in bootstrap-early
-            #        anymore... not sure how I want to handle this...  Perhaps
-            #        split the final fix-perms and install type stuff out into
-            #        a seperate script that the user runs as root (like with
-            #        make install)?
-	    sudo chown -Rc 0:0 $CLFS &&
-	    sudo chgrp -c 13 $CLFS/var/{run/utmp,log/lastlog} || exit 1
-	    if [ ! -c $CLFS/dev/console ]; then
-		sudo mknod -m 600 $CLFS/dev/console c 5 1 || exit 1
-	    fi
-	    if [ ! -c $CLFS/dev/null ]; then
-		sudo mknod -m 666 $CLFS/dev/null c 1 3 || exit 1
-	    fi
-
-	    # FIXME: double check that files that were setuid build_user are
-	    #        now setuid root.  pretty sure this should be the case.
-	    #        $PREFIX_FINAL/bin/{mount,umount}, for example, should
-	    #        have mode of 4755
-	    #
-	    # NOTE: i was right to wory about setuid stuff.  looks like
-	    #       somewhere along the line the setuid bit is getting
-	    #       dropped.
-	    setuid_list=""
-	    setuid_list+=" /tools/bin/mount"
-	    setuid_list+=" /tools/bin/umount"
-	    setuid_list+=" /tools/bin/busybox"
-	    #setuid_list+=" /tools/bin/ping" #bb
-	    #setuid_list+=" /tools/bin/ping6" #bb
-	    #setuid_list+=" /tools/bin/su" #bb
-	    #setuid_list+=" /tools/bin/at" #at
-	    #setuid_list+=" /tools/bin/chage" #shadow-utils
-	    setuid_list+=" /tools/bin/chfn"
-	    setuid_list+=" /tools/bin/chsh"
-	    #setuid_list+=" /tools/bin/crontab" #vixie-cron
-	    #setuid_list+=" /tools/bin/cu" #uucp
-	    #setuid_list+=" /tools/bin/gpasswd" #shadow-utils
-	    setuid_list+=" /tools/bin/newgrp"
-	    #setuid_list+=" /tools/bin/newrole" #policycoreutils
-	    #setuid_list+=" /tools/bin/passwd" #passwd #????
-	    #setuid_list+=" /tools/bin/Xorg" #xorg-server
-	    #setuid_list+=" /tools/bin/dumpcap" #wireshark
-	    #setuid_list+=" /tools/bin/fusermount" #fuse
-	    setuid_list+=" /tools/bin/ntfs-3g"
-	    #setuid_list+=" /tools/bin/rlogin" #inetutils
-	    #setuid_list+=" /tools/bin/rsh" #inetutils
-	    #setuid_list+=" /tools/sbin/ccreds_validate" #pam_ccreds
-	    #setuid_list+=" /tools/sbin/userhelper" #usermode
-	    #setuid_list+=" /tools/sbin/uucico" #uucp
-	    #setuid_list+=" /tools/sbin/uuxqt" #uucp
-	    #setuid_list+=" /tools/sbin/pam_timestamp_check" #pam
-	    #setuid_list+=" /tools/sbin/unix_chkpwd" #pam
-
-	    for x in $setuid_list; do
-		sudo chmod -c u+s $CLFS$x || exit 1
-	    done
-
-	    ;;
-
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
@@ -696,6 +626,8 @@ packages+=" busybox"
 #       compress with xz from the bootstrap system, we'll need to install the
 #       real xz package.  However, this does mean we're perfectly capable of
 #       untarring tar.xz files transparently using busybox.
+#
+# FIXME: is that still true?
 
 packages+=" bison"
 
@@ -802,36 +734,6 @@ packages+=" kernel"
 #
 #packages+=" bootscripts"
 
-# FIXME: CLFS doesn't install grub at this point, but if we're going to
-#        automate the whole build process (ie, automaticaly reboot into the
-#        baby system), we'll need to not only install it on the system,
-#        we'll have to actually install it in the MBR and configure it
-#        appropriately...
-#
-# FIXME: some of this will have to be done as root, and there will have to
-#        be some variable substitution in the grub.conf file
-#
-# FIXME: we're actually gonna use syslinux (extlinux), which is sooo
-#        much easier.
-#
-#packages+=" grub"
-#packages+=" grub-mbr"
-#packages+=" grub-conf"
-#
-# NOTE: syslinux needs nasm in bootstrap-cross
-#
-# FIXME: syslinux should ONLY need nasm if you rebuild all the stuff that the
-#        maintainer pretty much begs you not to...  and even if we did need it
-#        here, we would need to cross-compile it HERE, not build it in
-#        bootstrap-cross (which BUILDS the cross-compiler).
-#
-#        wait, i'm all confused now.  we need it to RUN on our HOST system
-#        (i.e., so it DOES need to be built PRIOR to this bootstrap
-#        stage)... but why was i building it in bootstrap-cross as apposed to
-#        bootstrap-early?
-#
-#packages+=" syslinux"
-
 # this stage will set the ownership of our baby filesystem to root instead
 # of our build user
 #packages+=" fix-perms"
@@ -850,6 +752,8 @@ done
 # make a backup of our progress.
 #
 # FIXME: how exactly does all this snar business work...?
+#
+# FIXME: perhaps i should ditch the compression on these backups?
 echo -n "creating bootstrap-stage1 backup... "
 cp $BUILDROOT/baby-bootstrap-cross.snar \
     $BUILDROOT/baby-bootstrap-stage1.snar &&
@@ -868,64 +772,3 @@ echo "done."
 #        to kick off stage2!  Woo!
 exit 0
 
-
-
-# remove the cross-compiler and it's utilities
-#
-# NOTE: we're all done cross-compiling at this point and we're about to
-#       reboot into our stage2 bootstrap environment using our new native
-#       bootstrap compiler.
-sudo rm -rf $CLFS$PREFIX_CROSS || exit 1
-
-# remove the bootstrap and bootstrap-cross symlinks
-sudo rm -f $PREFIX_CROSS $PREFIX_FINAL || exit 1
-
-# make a backup of our progress.
-#
-# NOTE: This is not an incremental backup because we've just chowned every
-#       single file since the last backup, so an incremental backup would
-#       include every single file... which would be pretty silly.
-#
-# NOTE: using sudo for this to make sure our build user has appropriate
-#       permissions to read all the files we're backing up
-echo -n "creating bootstrap-stage1 backup... "
-sudo tar -zcf $BUILDROOT/baby-bootstrap-stage1.tar.gz -C $CLFS . || exit 1
-echo "done."
-
-
-# NOTE: now we have to move $CLFS/* to $INSTALLROOT.  we can either do a
-#       globbing mv, or we can untar our baby*.tar files... depends on how
-#       much we care about preserving the original contents of $CLFS.
-#       considering that we already have the tar files backing up CLFS, we
-#       might as well do a globbing mv
-sudo mv $CLFS/* $INSTALLROOT
-sudo rmdir $CLFS
-
-# FIXME: ownership of $CLFS's new toplevel directory (which becomes / once
-#        we boot up into stage2) has not been modified by these scripts, so
-#        it's probably inappropriate (i.e., owned by non-root).
-
-echo -e "\n\nNow it's time to actually make the bootstrap-stage2 environment bootable!  Good luck!"
-echo -e "\n1. Install and configure bootloader (e.g., extlinux)"
-echo -e "\n2. Edit /etc/fstab rootfs and swap entries"
-exit 0
-
-
-
-# NOTE: The following CLFS final system packages are replaced by our busybox
-#       package's equivilent tools
-#
-#packages+=" inetd"
-#packages+=" less/more"
-#packages+=" iproute2"
-
-
-# NOTE: The following non-CLFS packages are also replaced by our busybox
-#       setup
-#
-#packages+=" cpio"
-#packages+=" rpm"
-#packages+=" httpd"
-#packages+=" dhcpd"
-#packages+=" dhcpclient"
-#pacakges+=" bind"

@@ -1,0 +1,156 @@
+#!/bin/bash
+
+# should set toplevel via autoconf?
+toplevel=$PWD/../..
+
+# source our common variables and functions
+. $toplevel/utils/bootstrap-early/functions
+
+
+# NOTE: Everything that used to be done at the end of the stage1 go script is
+#       in here.  This stuff needs to be run as root.  It will do the final
+#       groom/install onto some type of media so that the user can go boot it
+#       up to kick off stage2!  Woo!
+
+
+fix_perms()
+{
+    chown -R 0:0 $CLFS &&
+    chgrp 13 $CLFS/var/{run/utmp,log/lastlog} || exit 1
+    if [ ! -c $CLFS/dev/console ]; then
+	mknod -m 600 $CLFS/dev/console c 5 1 || exit 1
+    fi
+    if [ ! -c $CLFS/dev/null ]; then
+	mknod -m 666 $CLFS/dev/null c 1 3 || exit 1
+    fi
+
+    # setuid for special needs binaries
+    #
+    # NOTE: Any file that was installed setuid by build_user will drop the
+    #       setuid bit when chowned to 0:0.
+    #
+    # NOTE: Since we're using busybox for pretty much everything now, this list
+    #       is pretty short... ;-)
+    setuid_list=""
+    setuid_list+=" /tools/bin/busybox"
+
+    for x in $setuid_list; do
+	chmod -v u+s $CLFS$x || exit 1
+    done
+}
+
+
+# prep block device(s)
+#
+# FIXME: device name via autoconf?
+#
+# FIXME: single bootable partition?
+#
+# FIXME: For faster building, let's make /boot seperate (RAID1) and make /
+#        RAID0 if multiple devices supplied.
+#
+# FIXME: Might need to check host system for mdadm and maybe add it to
+#        bootstrap-early.
+#
+DEVICE=/dev/vg00/ruckus
+
+
+# create actual baby fs
+#
+# FIXME: should the fstype be supplied via autoconf?
+#
+# FIXME: can BusyBox handle fsck on anything newer than ext2?
+#
+# FIXME: how do ext2/3/4 compare for compilation time?
+mkfs.ext4 $DEVICE
+
+
+# mount it and update CLFS variable
+CLFS=/mnt/ruckus
+mkdir -p $CLFS &&
+mount $DEVICE $CLFS || exit 1
+
+
+# populate with our non-root-owned tree
+#
+# NOTE: We do this by untarring our backup tarballs
+#
+# NOTE: I used to deal with this and the installing the /ruckus source tree
+#       step bellow by cloning my source tree originally into
+#       /path/to/eventual_fs/ruckus and then just moving $CLFS/* to
+#       $INSTALLROOT.  That requires quite a bit of forethought, though...  And
+#       it makes the assumption that the stage2 build is going to continue on
+#       the same host (or you're going to move the whole HDD to a different
+#       box).
+pushd $CLFS &&
+for x in baby-bootstrap-cross.tar.xz baby-bootstrap-stage1.tar.xz; do
+    echo -n "extracting $BUILDROOT/$x... "
+    tar -psxf $BUILDROOT/$x || exit 1
+    echo "done"
+done
+popd || exit 1
+
+
+# remove the cross-compiler and it's utilities
+#
+# NOTE: we're all done cross-compiling at this point and we're about to
+#       reboot into our stage2 bootstrap environment using our new native
+#       bootstrap compiler.
+echo -n "removing the cross-compiler ($CLFS$PREFIX_CROSS)... "
+rm -rf $CLFS$PREFIX_CROSS || exit 1
+echo "done"
+
+
+# permissions magic
+fix_perms || exit 1
+
+
+# copy sourcetree into /ruckus
+#
+# FIXME: This adds 8G to what was a bootable 500M system...
+#
+# FIXME: Assuming we're booting a DIFFERENT machine (or a virtual machine), can
+#        we use NFS to access the source tree?  Might be kinda slow...
+#
+# FIXME: If we don't use NFS, we'll probably want to rsync the resulting
+#        fully-built source tree back to the original box or something... I'm
+#        picturing having a half built system on one box, a fully-built tree on
+#        another, and then getting busy and nuking the wrong one.  This will be
+#        needed for any type of sane build history...
+#
+# FIXME: I can't seem to get NFS working... even after insmoding modules by
+#        hand because modprobe is segfaulting.
+#
+#        WOOOO!  mount -t nfs -o nolock works!  Now, why do I need nolock...?
+go="rsync -a $toplevel/ $CLFS/ruckus/"
+echo $go
+exit 0
+
+
+# create initrd
+#
+# FIXME: RuckusRD was installed via bootstrap-early, but it is going to go snag
+#        binaries from the host system and shove them into the initramfs it
+#        creates.  This means our initramfs stage WILL USE UDEV from the host
+#        system, then it will hand off control to our BusyBox init system which
+#        will use mdev... which might work.  :-/
+#
+# FIXME: Actually, might this be more convenient to do in the non-root go
+#        script?  Do you need to be root to run ruckusrd?
+
+
+
+# install extlinux
+
+
+# configure extlinux
+
+
+# remove the bootstrap and bootstrap-cross symlinks
+#
+# FIXME: do i really want to do this?
+#rm -f $PREFIX_CROSS $PREFIX_FINAL || exit 1
+
+
+
+exit 0
