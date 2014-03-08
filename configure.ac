@@ -189,6 +189,41 @@ AS_IF([test "$build_fstype_is_valid" != "yes"],
 AC_SUBST(BOOTSTRAP_FSTYPE, $build_fstype)
 
 
+install_type=none
+AC_ARG_ENABLE(install,
+  AS_HELP_STRING([--disable-install], [Disable sandbox and install targets (enable via specific --enable-install-* options) [default=disabled]]),
+  build_install=$enableval,
+  build_install=no)
+
+AC_ARG_ENABLE(install-part,
+  AS_HELP_STRING([--enable-install-part=PARTITION], [Install into specified PARTITION.]),
+  [install_part=$enableval
+   install_type=part
+   build_install=yes
+  ],
+  install_part=no)
+
+AC_ARG_ENABLE(install-dev,
+  AS_HELP_STRING([--enable-install-dev=BLOCKDEV], [Install into specified BLOCKDEV.  ALL DATA ON BLOCKDEV WILL BE DESTROYED!]),
+  [install_dev=$enableval
+   install_type=dev
+   build_install=yes
+  ],
+  install_dev=no)
+
+AC_ARG_ENABLE(install-raid0,
+  AS_HELP_STRING([--enable-install-raid0=DISK_LIST], [Install into RAID0 device created from comma-delimited DISK_LIST.  ALL DATA ON DISKS WILL BE DESTROYED!]),
+  [install_raid0=$enableval
+   install_type=raid0
+   build_install=yes
+  ],
+  install_raid0=no)
+
+# FIXME: handle multiple --enable-install flags
+
+# FIXME: handle --enable-install-* w/out arg (install_dev == yes)
+
+
 
 
 # FIXME: let's get this all sorted out in my head... build order!
@@ -595,6 +630,18 @@ echo "Options:"
 echo "  Final Target Arch....: $build_arch"
 echo "  Multilib.............: $build_multilib"
 echo "  Bootstrap fstype.....: $build_fstype"
+echo "  Install Type.........: $install_type"
+case "$install_type" in
+  part)
+    echo "  Install Partition....: $install_part"
+    ;;
+  dev)
+    echo "  Install Device.......: $install_dev"
+    ;;
+  raid0)
+    echo "  Install Device.......: $install_raid0"
+    ;;
+esac
 echo
 echo "CLFS Variables:"
 echo "  CLFS_HOST............: $CLFS_HOST"

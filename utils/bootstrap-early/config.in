@@ -23,10 +23,16 @@ BOOTSTRAP_FSTYPE=@BOOTSTRAP_FSTYPE@
 unset CFLAGS
 unset CXXFLAGS
 
-# this is where our baby filesystem lives while we're building it.  at the
-# end of the bootstrap-stage1 stage, we'll move this to $INSTALLROOT.
-# keeping it inside a different directory until then make maintainence
-# easier (e.g., chown -R root:root $CLFS won't mess with our source tree)
+# this is where our baby filesystem lives while we're building it.  the
+# bootstrap_install target will install it in an appropraite place with
+# appropriate permissions.  keeping it inside a different directory until then
+# make maintainence easier (e.g., chown -R root:root $CLFS won't mess with our
+# source tree)
+#
+# FIXME: sandbox target just broke this... sorta.  sandbox will create
+#        /mnt/sandbox/ruckus at the get go.  we'll still be building/installing
+#        into /mnt/sandbox/ruckus/.build/baby, but we'll want to be sure to
+#        chown prior to installing into /mnt/sandbox/
 CLFS=@CLFS@
 
 # set host and target variables.
