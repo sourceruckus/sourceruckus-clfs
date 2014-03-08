@@ -275,6 +275,12 @@ AC_ARG_ENABLE(install-raid0,
 #     rootfs images.  All opensource source code should be included in an
 #     additional IS09660 image for easy GPL compliance.
 #
+#     FIXME: The dist target should get plumbed up so that it creates
+#            a tarball of all the required sources to build a
+#            system... So we need to make sure that the build system
+#            is robust enough to not fail if certain packages get left
+#            out.
+#
 #     FIXME: This stage has really only been half-baked so far... ;-)
 
 
@@ -605,11 +611,19 @@ AC_SUBST(BUILD64)
 AC_SUBST(CLFS_ARCH)
 
 
-#AC_CONFIG_FILES(Makefile, src/Makefile, packages/Makefile, utils/Makefile)
+# FIXME: can i include other files and append to AC_CONFIG_FILES
+#        dynamically? maintaining another list of all the packages to
+#        be built is gonna get ugly...
 AC_CONFIG_FILES([
   Makefile
+  packages/Makefile
+  packages/ruckusrd/Makefile
   utils/Makefile
+  utils/bootstrap-early/Makefile
   utils/bootstrap-early/config
+  utils/bootstrap-cross/Makefile
+  utils/bootstrap-stage1/Makefile
+  utils/bootstrap-stage2/Makefile
 ])
 
 AC_OUTPUT

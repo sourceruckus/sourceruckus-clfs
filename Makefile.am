@@ -1,1 +1,3 @@
-SUBDIRS=utils
+SUBDIRS=
+SUBDIRS+=packages
+SUBDIRS+=utils
