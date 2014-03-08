@@ -166,6 +166,27 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 # NOTE: If configured w/out an --enable-install* option, the sandbox and
 #       install targets will be disabled.
 
+# FIXME: add ext4-no-jounal?
+AC_DEFUN([valid_fstypes], [ext2 ext3 ext4])
+m4_define(default_fstype, ext2)
+AC_ARG_WITH(fstype,
+  AS_HELP_STRING([--with-fstype=FSTYPE], [Filesystem type for bootstrap system (valid: m4_unquote(m4_split(valid_fstypes))) [default=default_fstype]]),
+  build_fstype=$withval,
+  build_fstype=default_fstype)
+
+# check for propper fstype usage
+build_fstype_is_valid=no
+for x in valid_fstypes; do
+  AS_IF([test "$build_fstype" = "$x"],
+    [build_fstype_is_valid=yes
+     break
+    ])
+done
+
+AS_IF([test "$build_fstype_is_valid" != "yes"],
+  [AC_MSG_ERROR([Invalid fstype '$build_fstype' specified (valid: m4_unquote(m4_split(valid_fstypes)))])])
+
+AC_SUBST(BOOTSTRAP_FSTYPE, $build_fstype)
 
 
 
@@ -573,6 +594,7 @@ echo
 echo "Options:"
 echo "  Final Target Arch....: $build_arch"
 echo "  Multilib.............: $build_multilib"
+echo "  Bootstrap fstype.....: $build_fstype"
 echo
 echo "CLFS Variables:"
 echo "  CLFS_HOST............: $CLFS_HOST"
