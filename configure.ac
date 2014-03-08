@@ -45,9 +45,9 @@ LT_INIT
 #
 AC_DEFUN([valid_archs], [i686 x86_64])
 m4_define(default_arch, x86_64)
-AC_ARG_ENABLE(arch,
-  AS_HELP_STRING([--enable-arch=ARCH], [Final target architecture of build (valid: m4_unquote(m4_split(valid_archs))) [default=default_arch]]),
-  build_arch=$enableval,
+AC_ARG_WITH(arch,
+  AS_HELP_STRING([--with-arch=ARCH], [Final target architecture of build (valid: m4_unquote(m4_split(valid_archs))) [default=default_arch]]),
+  build_arch=$withval,
   build_arch=default_arch)
 
 CLFS_TARGET=$build_arch-ruckus-linux-gnu
