@@ -102,13 +102,11 @@ AS_IF([test "$build_arch" = "i686"],
 
 
 abs_srcdir=$(cd $srcdir && pwd)
-#INSTALLROOT=$abs_srcdir/..
 BUILDROOT=$abs_srcdir/.build
 PREFIX_EARLY=$BUILDROOT/bootstrap-early
 PREFIX_CROSS=/cross-tools
 PREFIX_FINAL=/tools
 CLFS=$BUILDROOT/baby
-#AC_ARG_VAR(INSTALLROOT, Root of our final rootfs)
 AC_ARG_VAR(BUILDROOT, The build dir)
 AC_ARG_VAR(PREFIX_EARLY, Prefix for bootstrap-early)
 AC_ARG_VAR(PREFIX_CROSS, Prefix for bootstrap-cross)
@@ -543,7 +541,6 @@ AS_IF([test "$prefix_final_link" = "$CLFS$PREFIX_FINAL"],
 
 
 AC_SUBST(p_early)
-#AC_SUBST(INSTALLROOT)
 AC_SUBST(CLFS_HOST)
 AC_SUBST(CLFS_TARGET)
 AC_SUBST(CLFS_TARGET32)
@@ -586,7 +583,6 @@ echo "  BUILD32..............: $BUILD32"
 echo "  BUILD64..............: $BUILD64"
 echo
 echo "Other Variables:"
-#echo "  INSTALLROOT..........: $INSTALLROOT"
 echo "  BUILDROOT............: $BUILDROOT"
 echo "  PREFIX_EARLY.........: $PREFIX_EARLY"
 echo "  PREFIX_CROSS.........: $PREFIX_CROSS"
