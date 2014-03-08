@@ -118,20 +118,112 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 
 # FIXME: add flags for installation and kickoff of stage2
 #
-# ./configure --enable-arch=i686 --install-dev=/dev/sdf --auto-stage2 --fstype
+# ./configure --with-arch=i686 --enable-install-dev=/dev/sdf
 #
-# --install-dev=/dev/sdX
+# --enable-install-part=/dev/sdXN
 #
-# --install-md=/dev/sda,/dev/sdb,/dev/sdc,...
+#     Install bootstrap system into the specified partition.  This is
+#     going to assume that the partition and filesystem are already
+#     created and it WILL NOT install a bootloader.  This is perfect for
+#     when you want to boot the resulting bootstrap system as a virtual
+#     machine.
 #
-# autocreate a RAID device
+# --enable-install-dev=/dev/sdX
 #
-# if we want to use RAID0 for stage2 build, we'll need a separate /ruckus
-# partition (/boot has to be RAID1)
+#     Install bootstrap system onto the specified block device.  ALL DATA
+#     ON DEVICE WILL BE LOST, because the sandbox stage will re-partition
+#     and create filesystems as needed.  The bootstrap_install stage will
+#     install and configure the bootloader.
 #
-# instead of creating our final device at the end and then copying the
-# source tree in, why don't we create it at the beginning and just build
-# in it from the get go?
+# --enable-install-raid0=/dev/md99:/dev/sda,/dev/sdb,/dev/sdc,...
+#
+#     Just like --enable-install-dev, except that multiple block devices
+#     are used in a RAID0 array to get better disk performance.
+#
+#     FIXME: If we want to use RAID0 for stage2 build, we'll need a
+#            separate RAID1 /boot partition.  Should we make the user
+#            specify two md devs via configure?  Autodetect next available
+#            minor md number?
+#
+# --enable-auto-stage2
+#
+#    Bootstrap system will automatically kick off the stage2 builder.
+#
+#    FIXME: I'm not so sure this is a good idea... Sure, we can do it, but
+#           you probably want to manually kick it off.  This way nothing
+#           can blow up your source tree w/out you explicitly kicking off
+#           the command.
+#
+# --with-fstype=ext2
+#
+#    Specify fstype for bootable bootstrap system (created in sandbox
+#    stage).  Valid options are ext2, ext3, ext4.  You almost certainly
+#    want ext2 to avoid journaling overhead and improve disk performance,
+#    but I'd like to benchmark this before hardcoding it.
+#
+#
+# NOTE: Only a single --enable-install* option can be supplied.  Default
+#       is --disable-install.
+#
+# NOTE: If configured w/out an --enable-install* option, the sandbox and
+#       install targets will be disabled.
+
+
+
+
+
+# FIXME: let's get this all sorted out in my head... build order!
+#
+# FIXME: instead of creating our final device at the end and then copying
+#        the source tree in, why don't we create it at the beginning and
+#        just build in it from the get go?
+#
+#        Because, we'd have to do all the RAID magic prior to running
+#        init_submodules and get_sources... which I was planning on
+#        eventually sticking in autogen.sh.  So it would have to happen
+#        before configure.
+#
+#
+# --> ./autogen.sh --enable-install-md=/dev/sda,...
+#
+#     Will run autoreconf, configure, etc.  Nothing special here.
+#
+# --> sudo make sandbox
+#
+#     Only needed if an --enable-install option was supplied.  Will create
+#     raid device(s), filesystem(s), mount them, move our whole tree over
+#     into the sanbox.  (should we mv or cp?)
+#
+# --> cd sandbox (if you made one)
+# --> make download
+#
+#     Run init_submodules, get_sources.  (This could be done before
+#     sandbox, but will be much faster to do it afterwords.)
+#
+# --> make bootstrap
+#
+#     Build bootstrap-early, bootstrap-cross, bootstrap-stage1.
+#
+# --> sudo make bootstrap_install
+#
+#     Do the prep work for booting the bootstrap system (requires root).
+#     This includes chmoding, bootloader installation, etc.
+#
+# ... boot it ..
+#
+# --> cd /ruckus
+# --> make all
+#
+#     Iterate through all the packages, building and installing each one.
+#     There will be some special work to be done (e.g., compile toolchain
+#     tweaking, dumping installation images), but should result in a
+#     bootable IS09660 installer image containing install scripts and
+#     rootfs images.  All opensource source code should be included in an
+#     additional IS09660 image for easy GPL compliance.
+#
+#     FIXME: This stage has really only been half-baked so far... ;-)
+
+
 
 
 
