@@ -15,7 +15,10 @@ CLFS_HOST=$build_cpu-cross-$build_os
 #       to build in bootstrap-early, a recent version of automake is
 #       NEEDED in order to even bootstrap the source trees for the
 #       bootstrap-early packages.
-AM_INIT_AUTOMAKE(1.11.1)
+#
+# NOTE: We set 'foreign' to allow for GNU Make extensions in our automake
+#       files
+AM_INIT_AUTOMAKE(1.11.1 foreign)
 
 # We don't direcetly need libtool here, but leaving this out may cause
 # source trees inside the src dir to fail to bootstrap unless we add
