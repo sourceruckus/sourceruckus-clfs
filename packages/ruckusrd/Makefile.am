@@ -1,15 +1,16 @@
-# FIXME: pkgname is blank... ${shell or ${exec or something like that...?
-pkgname=${dirname ${srcdir}}
-
-
-sourcecode_dir=${top_srcdir}/src/ruckusrd
-sourcecode=${sourcecode_dir}/ruckusrd-0.10.2.tar.bz2
+pkgname=$(shell basename $(abs_srcdir))
+sourcecode_dir=${top_srcdir}/src/${pkgname}
+sourcecode=$(sourcecode_dir)/*.tar.*
 
 dist_noinst_DATA=${sourcecode}
 
+all:
+	@echo pkg: ${pkgname}
+	@echo sourcecode: ${sourcecode}
+	@echo sourcecode_dir: ${sourcecode_dir}
+
 ${sourcecode}: ${sourcecode_dir}/Makefile
 	make -C ${sourcecode_dir} dist
-	echo pkg: ${pkgname}
 
 ${sourcecode_dir}/Makefile:
 	cd ${sourcecode_dir} && ./autogen.sh
