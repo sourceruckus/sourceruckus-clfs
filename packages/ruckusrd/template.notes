@@ -1,0 +1,14 @@
+# -*- mode: conf -*-
+
+[header]
+name = @pkgname@
+version = @pkgvers@
+pkg_rev = @pkgrev@
+source_filename = @sourcecode@
+description = @description@
+extra_content = @extra_content@
+features = @features@
+
+@script@
+
+@extra_sections@

@@ -1,0 +1,40 @@
+# -*- mode: conf -*-
+
+[header]
+name = @pkgname@
+version = @pkgvers@
+pkg_rev = @pkgrev@
+source_filename = @sourcecode@
+description = @description@
+extra_content = @extra_content@
+features = @features@
+
+[script]
+%%BUFFER_BEGIN%%
+#!/bin/bash
+CC="gcc ${BUILD32}" ./configure @configure_opts@ &&
+make @numjobs@ &&
+make DESTDIR=$PAYLOAD_DIR install || exit 1
+
+# build again if multilib
+#
+# FIXME: where should we specify the 64bit libdir?  configure_opts_64?
+#        generate it w/ assumptions of doom?
+#
+#        I'm thinking we should always specify --prefix and --libdir.
+#        We could assume that libdir is $prefix/lib unless --libdir is
+#        specified explicitly...
+#
+#        Alternatively, we could assume there are NO libs if libdir
+#        isn't specified... that way we don't go compiling things
+#        twice if there are no libs to install.
+if [ -n "$BUILD64" ]; then
+    CC="gcc ${BUILD64}" ./configure @configure_opts@ --libdir=/lib64 &&
+    make @numjobs@ &&
+    make DESTDIR=$PAYLOAD_DIR install || exit 1
+fi
+
+@extra_install@
+%%BUFFER_END%%
+
+@extra_sections@
