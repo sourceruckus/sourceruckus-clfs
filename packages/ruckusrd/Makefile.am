@@ -1,10 +1,10 @@
-pkgname=$(shell basename $(abs_srcdir))
-sourcecode_dir=${top_srcdir}/src/${pkgname}
-sourcecode=$(sourcecode_dir)/*.tar.*
+pkgname=$(notdir $(abs_srcdir))
+sourcecode_dir=$(top_srcdir)/src/$(pkgname)
+sourcecode=$(wildcard $(sourcecode_dir)/*.tar.*)
+
 dist_noinst_DATA=${sourcecode}
 
-# FIXME: why can't i scarf this out of $sourcecode?
-pkgvers=0.10.2
+pkgvers=$(basename $(basename $(subst $(sourcecode_dir)/$(pkgname)-,,$(sourcecode))))
 
 pkgrev=1
 
@@ -13,12 +13,18 @@ extra_content=
 features=
 
 notes_template=supergeneric
-configure_opts=
+
+# Ok, DO NOT put --prefix or --libdir in configure_opts.
+#
+# FIXME: should i check for this?
+configure_opts=--foo
 prefix=/usr
 libdir=
 extra_install=
 extra_sections=
 
+
+$(if $(findstring --prefix,$(configure_opts)),$(error CANNOT HAVE --prefix IN configure_opts.  USE prefix VARIABLE INSTEAD))
 
 
 all:
@@ -26,7 +32,6 @@ all:
 	@echo sourcecode: ${sourcecode}
 	@echo sourcecode_dir: ${sourcecode_dir}
 	@echo pkgvers: ${pkgvers}
-	@echo ${sourcecode} | sed 's|^${sourcecode_dir}/${pkgname}-\(.*\)\.tar\..*|\1|'
 
 ${sourcecode}: ${sourcecode_dir}/Makefile
 	make -C ${sourcecode_dir} dist
