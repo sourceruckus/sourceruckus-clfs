@@ -146,6 +146,13 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 #            specify two md devs via configure?  Autodetect next available
 #            minor md number?
 #
+# --enable-xen-stage2
+#
+#    Generate a xen domU config file for booting into the stage2 bootstrap
+#    builder.  This can only be used along with --enable-install-part and will
+#    cause bootstrap-early to check for the Xen4 Hypervisor and a kernel w/
+#    pvops_dom0 support, triggering their compilation if needed.
+#
 # --enable-auto-stage2
 #
 #    Bootstrap system will automatically kick off the stage2 builder.
@@ -226,6 +233,19 @@ AC_ARG_ENABLE(install-raid0,
 
 # FIXME: handle --enable-install-* w/out arg (install_dev == yes)
 
+
+AC_ARG_ENABLE(xen-stage2,
+  AS_HELP_STRING([--enable-xen-stage2], [Generate a xen domU config file for booting the stage2 builder]),
+  [stage2_xen=$enableval],
+  [stage2_xen=no])
+
+# FIXME: xen requires --enable-install-part w/ a valid partition
+
+
+AC_ARG_ENALBE(auto-stage2,
+  AS_HELP_STRING([--enable-auto-stage2], [Bootstrap system will automatically kick off the stage2 builder]),
+  [stage2_auto=$enableval],
+  [stage2_auto=no])
 
 
 
@@ -569,6 +589,15 @@ AC_CACHE_CHECK([for extlinux >= 4.0], [ac_cv_path_EXTLINUX],
   ])
 
 
+# FIXME: if stage2_xen, check for xen hypervisor, add to p_early if needed
+
+# FIXME: if stage2_xen, check for pvops_dom0 kernel, maybe add to p_early if
+#        needed?
+
+# FIXME: if stage2_xen, check that we're actually booted into Xen.  this might
+#        require root...? not sure. check /proc/xen?
+
+
 # check for CLFS symlinks...
 #
 # FIXME: Put a decent description of the CLFS /tools and /cross-tools
@@ -660,6 +689,8 @@ case "$install_type" in
     echo "  Install Device.......: $install_raid0"
     ;;
 esac
+echo "  Xen stage2...........: $stage2_xen"
+echo "  Auto stage2..........: $stage2_auto"
 echo
 echo "CLFS Variables:"
 echo "  CLFS_HOST............: $CLFS_HOST"
