@@ -28,14 +28,14 @@ CLFS - http://trac.cross-lfs.org/
 
 At build time, the user should be able to select a specific architecture to
 cross-compile the Linux distro for (x86, x86_64 (pure64 or multilib), sparc,
-ppc, etc).  Obviously, there are some limitations (pure64 can't use grub,
-etc) and if the target system isn't bootable on the build hardware (ie,
+ppc, etc).  Obviously, there are some limitations (e.g., pure64 can't use grub
+v1, etc) and if the target system isn't bootable on the build hardware (ie,
 building sparc on an x86 machine), the second half of the build will have to
 be done elsewhere.
 
 configure opts
 
-  --enable-arch={x86, x86_64, etc}
+  --with-arch={i686, x86_64, etc}
 
   --disable-multilib
 
@@ -45,10 +45,15 @@ scripts and notes files (lib64, 2nd compilation, etc).
 
 If building for 32bit, --disable-multilib will automatically be set.
 
-Using --target-arch=x86_64 with --disable-multilib should result in a pure64
-system (64bit libs in /lib), but grub won't work...  So lilo or
-syslinux/isolinux will have to be used to boot (although this would be fine
-for a xen domU that doesn't use pvgrub).
+Using --with-arch=x86_64 with --disable-multilib should result in a pure64
+system (64bit libs in /lib).
+
+NOTE: Although the CLFS books officially have instructions for x86, x86_64,
+      PowerPC, MIPS, and Sparc and have developmental ARM support, Source
+      Ruckus will be limited to x86 and x86_64 (at least for now).  The reason
+      is simple: I only have x86 and x86_64 hardware.  There's nothing to keep
+      YOU from taking this and the CLFS books and your own funky hardware and
+      hacking up the build scripts.  ;-)
 
 
 ** Build missing host dependencies
@@ -86,9 +91,8 @@ kernel-rt package in addition to the standard kernel package).
 
 ** Nicely integrated Xen4 virtualization
 
-The Xen pvops dom0 kernel is now in mainline!  The default kernel setup will
-be for a Xen pvops dom0 using the latest Xen4 hypervisor and management
-tools.
+The default kernel setup will be for a Xen pvops dom0 using the latest Xen4
+hypervisor and management tools.
 
 Source Ruckus's use of Xen will NOT involve using 3rd party management tools
 (e.g., libvirt), but will instead concentrate on only the mainline xen
@@ -136,3 +140,18 @@ Big Fat Desktop Environments (GNOME, KDE), java, seamonkey, additional
 multimedia stuff.
 
 ALL debug symbols added back in!
+
+
+* Version 3.0? But I've never heard of it...
+
+Yeah, my bad.  Source Ruckus Linux has been my baby since back in 2000 when I
+first started dabbling with Linux From Scratch.  I had a very low profile
+1.0.0 release at college (Spring of 2002?), but once I got out and got a job,
+development ceased.  A few years later, I started work on 2.0 (complete w/ a
+full rewrite of SRP, my package manager)... but it never got off the ground.
+Life, work, and other fun things got in the way.
+
+This latest incarnation, started taking shape in my imagination back in 2010,
+eventually resulting in this git repo being started.  Development has been
+very on-and-off (same for SRP and RuckusRD), but it's come a long way since
+then.  :-)

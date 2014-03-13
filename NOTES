@@ -1,26 +1,6 @@
 -*- mode: outline; mode: flyspell -*-
 
-* version
-v3.0?  Pretty sure last version was 2.0... 3.0 never actually got out of the
-planning stages last time... maybe I should start this at 4.0?  maybe jump
-it all the way to 5.0 just to show how much time there's been (mozilla-ish,
-i know).  Or it could be 6.x since it's based off version 6.x of the LFS
-book... although it's actually following v1.0 of the CLFS book more
-closely... i don't konw.
- 
-
 * source tree layout
-just have everything in a packages directory?  or a src directory?
-splitting things up into contrib and src doesn't really make sense...
-
-How about all the packages live in a 'packages' directory, and all the
-automated build utilities live in utils.
-
-RUCKUS/docs
-RUCKUS/packages
-RUCKUS/utils
-...
-
 
 -- RUCKUS/src/pkgname --
 
@@ -34,7 +14,7 @@ Each of these directories is UNDER ITS OWN LICENSE!
 These directories will contain our SRP package files for creating
 installable packages.
 
-The contents of these directories is licensed under the GPL just like the
+The contents of these directories are licensed under the GPL just like the
 rest of Source Ruckus (See COPYING).  However, installation scripts for
 proprietary packages don't make a whole lot of sense w/out the actual source
 code... so contributions for installation scripts for proprietary software
