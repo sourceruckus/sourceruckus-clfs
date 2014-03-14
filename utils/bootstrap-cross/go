@@ -54,6 +54,17 @@ build()
 	    ;;
 
 	gmp)
+            # If you are building with a host which has 32-bit user-space with
+            # a 64-bit capable CPU, cross-tools GMP will attempt to link with
+            # 64-bit libraries. Adding ABI=32 to the configure call fixes
+            # it.
+            #
+            # NOTE: We forcefully set ABI=32 if our host system's cpu (as
+            #       reported by autoconf) doesn't have 64 in it... which could
+            #       be incorrect in some bizarre case?
+            if $(echo $CLFS_HOST | awk -F- '{print $1}' | grep -vq 64); then
+                OPTS+=" ABI=32"
+            fi
 	    build_generic $1 $OPTS --enable-cxx || exit 1
 	    ;;
 
