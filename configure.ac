@@ -117,9 +117,58 @@ AC_ARG_VAR(PREFIX_FINAL, Prefix for bootstrap-final)
 AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 
 
-# FIXME: add flags for installation and kickoff of stage2
+# xen checks
 #
-# ./configure --with-arch=i686 --enable-install-dev=/dev/sdf
+# NOTE: By default we're going to build Xen, at the very least for use in
+#       the final system.  However, recent Xen versions only support a 64bit
+#       hypervisor.  We can still build a 32bit userland and dom0 kernel,
+#       but the hypervisor will need to be cross-compiled.
+#
+#       If we're bulding for a 32bit architecture, we need to throw a
+#       warning about cross-compiling the hypervisor for x86_64 1st.  We can
+#       accomplish this very easily by building xen in bootstrap-cross, but
+#       not deleting the hypervisor when making clean, so when we go to
+#       build for i686 (which just silently doesn't build a hypervisor),
+#       we'll still have the x86_64 one laying around.
+#
+#       So, if bulding for i686, we'll check for a built x86_64 hypervisor
+#       in .build, and unless the user supplied --disable-xen, we'll throw
+#       an error message if it's not there.
+#
+# NOTE: We'll also have to keep the x86_64 hypervisor around for the
+#       final build phase, at which point we'll be rebuilding the i686
+#       userland tools.
+AC_ARG_ENABLE(xen,
+  AS_HELP_STRING([--disable-xen], [Disable building Xen in bootstrap and final system.]),
+  xen_enabled=$enableval,
+  [AS_IF([test "$build_arch" != x86_64],
+     [# need to check for prebuilt x86_64 hypervisor
+      AS_IF([test -f $PREFIX_EARLY/boot/xen.gz],
+        xen_enabled=yes,
+        [AC_MSG_ERROR([
+		*************************************************************
+		Xen requires a 64bit hypervisor.  You need to configure for
+		x86_64 and build up through the end of bootstrap-cross, then
+                use the cross-compiler to build an x86_64 xen.gz and put it in
+                $PREFIX_EARLY/boot.
+                Then reconfigure for i686.
+
+                Or, disable Xen in both the bootstrap and final systems w/
+                the --disable-xen flag.
+		*************************************************************])
+        ])
+     ],
+     xen_enabled=yes)
+  ])
+
+# FIXME: we probably want an automake conditional for building the final
+#        stage xen package.
+
+# FIXME: what clean targets are we going to have regarding bootstrap
+#        stages... we'll have to make sure that make clean doesn't remove xen.gz.
+
+
+# flags for installation and kickoff of stage2
 #
 # --enable-install-part=/dev/sdXN
 #
@@ -182,29 +231,6 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 # NOTE: If configured w/out an --enable-install* option, the sandbox and
 #       install targets will be disabled.
 
-# FIXME: add ext4-no-jounal?
-AC_DEFUN([valid_fstypes], [ext2 ext3 ext4])
-m4_define(default_fstype, ext2)
-AC_ARG_WITH(fstype,
-  AS_HELP_STRING([--with-fstype=FSTYPE], [Filesystem type for bootstrap system (valid: m4_unquote(m4_split(valid_fstypes))) [default=default_fstype]]),
-  build_fstype=$withval,
-  build_fstype=default_fstype)
-
-# check for propper fstype usage
-build_fstype_is_valid=no
-for x in valid_fstypes; do
-  AS_IF([test "$build_fstype" = "$x"],
-    [build_fstype_is_valid=yes
-     break
-    ])
-done
-
-AS_IF([test "$build_fstype_is_valid" != "yes"],
-  [AC_MSG_ERROR([Invalid fstype '$build_fstype' specified (valid: m4_unquote(m4_split(valid_fstypes)))])])
-
-AC_SUBST(BOOTSTRAP_FSTYPE, $build_fstype)
-
-
 install_type=none
 AC_ARG_ENABLE(install,
   AS_HELP_STRING([--disable-install], [Disable sandbox and install targets (enable via specific --enable-install-* options) [default=disabled]]),
@@ -239,27 +265,30 @@ AC_ARG_ENABLE(install-raid0,
 
 # FIXME: handle --enable-install-* w/out arg (install_dev == yes)
 
+# FIXME: add ext4-no-jounal?
+AC_DEFUN([valid_fstypes], [ext2 ext3 ext4])
+m4_define(default_fstype, ext2)
+AC_ARG_WITH(fstype,
+  AS_HELP_STRING([--with-fstype=FSTYPE], [Filesystem type for bootstrap system (valid: m4_unquote(m4_split(valid_fstypes))) [default=default_fstype]]),
+  build_fstype=$withval,
+  build_fstype=default_fstype)
 
-# FIXME: --disable-xen.  By default we're going to build Xen, at the
-#        very least for use in the final system.  However, recent Xen
-#        versions only support a 64bit hypervisor.  We can still build
-#        a 32bit userland and dom0 kernel, but the hypervisor will
-#        need to be cross-compiled.
-#
-# if with-arch=i686, we need to throw a warning about cross-compiling
-# the hypervisor for x86_64 1st.  We can accomplish this very easily
-# by building xen in bootstrap-early all the time, but not deleting
-# the hypervisor when making clean, so when we go to build for i686
-# (which just silently doesn't build a hypervisor), we'll still have
-# the x86_64 one laying around.
-#
-# so, if i686, we'll check for a built x86_64 hypervisor in .build,
-# and unless the user supplied --disable-xen, we'll throw an error
-# message.
-#
-# NOTE: We'll also have to keep the x86_64 hypervisor around for the
-#       final build phase, at which point we'll be rebuilding the i686
-#       userland tools.
+# check for propper fstype usage
+build_fstype_is_valid=no
+for x in valid_fstypes; do
+  AS_IF([test "$build_fstype" = "$x"],
+    [build_fstype_is_valid=yes
+     break
+    ])
+done
+
+AS_IF([test "$build_fstype_is_valid" != "yes"],
+  [AC_MSG_ERROR([Invalid fstype '$build_fstype' specified (valid: m4_unquote(m4_split(valid_fstypes)))])])
+
+AC_SUBST(BOOTSTRAP_FSTYPE, $build_fstype)
+
+
+
 
 AC_ARG_ENABLE(stage2-xen,
   AS_HELP_STRING([--enable-stage2-xen], [Generate a xen domU config file for booting the stage2 builder]),
@@ -595,8 +624,6 @@ AS_IF([test "$CPIO" != ""], [], [p_early+=" cpio"])
 #        always install what we've got controlled... it'll only take a we
 #        bit extra and then we're guaranteed to be using the right
 #        version.
-#
-# FIXME: need to actually add a submodule for ruckusrd and srp
 AC_CACHE_CHECK([for ruckusrd >= 0.10], [ac_cv_path_RUCKUSRD],
   [AC_PATH_PROGS_FEATURE_CHECK([RUCKUSRD], [ruckusrd],
     [[result=`$ac_path_RUCKUSRD --version | cut -b2- | awk '{tmp=split($NF,v,"."); if (v[1] < 0) print "no"; else if (v[1] == 0 && v[2] < 10) print "no2"; else print "yes"}'`
@@ -610,6 +637,9 @@ AC_CACHE_CHECK([for ruckusrd >= 0.10], [ac_cv_path_RUCKUSRD],
 
 
 # check for extlinux >= 4.x for ext4 support
+#
+# FIXME: really only needed if we're not doing stage2_xen
+AS_IF([test "$stage2_xen" != "yes"],
 AC_CACHE_CHECK([for extlinux >= 4.0], [ac_cv_path_EXTLINUX],
   [AC_PATH_PROGS_FEATURE_CHECK([EXTLINUX], [extlinux],
     [[result=`$ac_path_EXTLINUX --version 2>&1 | awk '{print $2}' | awk '{tmp=split($NF,v,"."); if (v[1] < 4) print "no"; else if (v[1] == 4 && v[2] < 0) print "no2"; else print "yes"}'`
@@ -620,17 +650,20 @@ AC_CACHE_CHECK([for extlinux >= 4.0], [ac_cv_path_EXTLINUX],
      p_early+=" syslinux"
     ])
   ])
+)
 
-
-# FIXME: if stage2_xen, check for xen hypervisor, add to p_early if needed
-
+# FIXME: if stage2_xen, check for xen hypervisor and useland, add to p_early
+#        if needed
+#
 # FIXME: if stage2_xen, check for pvops_dom0 kernel, maybe add to p_early if
 #        needed?
-
+#
 # FIXME: if stage2_xen, check that we're actually booted into Xen.  this might
 #        require root...? not sure. check /proc/xen?
-
-# FIXME: if building 64bit, we'll need a 64bit hypervisor too.
+#
+# FIXME: do i really want to tackle building Xen in bootstrap-early?  Maybe
+#        just xen itself (i.e., don't check for other xen deps? and just
+#        print a warning regarding kernel and being booted into xen?)
 
 
 
@@ -712,7 +745,7 @@ echo
 echo "Options:"
 echo "  Final Target Arch....: $build_arch"
 echo "  Multilib.............: $build_multilib"
-echo "  Bootstrap fstype.....: $build_fstype"
+echo "  Xen Enabled..........: $xen_enabled"
 echo "  Install Type.........: $install_type"
 case "$install_type" in
   part)
@@ -724,6 +757,12 @@ case "$install_type" in
   raid0)
     echo "  Install Device.......: $install_raid0"
     ;;
+esac
+case "$install_type" in
+  part|none)
+    ;;
+  *)
+    echo "  Bootstrap fstype.....: $build_fstype"
 esac
 echo "  Xen stage2...........: $stage2_xen"
 echo "  Auto stage2..........: $stage2_auto"
