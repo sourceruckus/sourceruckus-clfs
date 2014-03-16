@@ -129,6 +129,12 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 #     when you want to boot the resulting bootstrap system as a virtual
 #     machine.
 #
+# FIXME: We should try and detect if the specified partition IS the partition
+#        that our source tree already resides on, before we do anything
+#        silly...  Maybe we should just, as a rule, require that our source
+#        tree already resides at /ruckus of the specified partition's
+#        filesystem?
+#
 # --enable-install-dev=/dev/sdX
 #
 #     Install bootstrap system onto the specified block device.  ALL DATA
@@ -234,6 +240,27 @@ AC_ARG_ENABLE(install-raid0,
 # FIXME: handle --enable-install-* w/out arg (install_dev == yes)
 
 
+# FIXME: --disable-xen.  By default we're going to build Xen, at the
+#        very least for use in the final system.  However, recent Xen
+#        versions only support a 64bit hypervisor.  We can still build
+#        a 32bit userland and dom0 kernel, but the hypervisor will
+#        need to be cross-compiled.
+#
+# if with-arch=i686, we need to throw a warning about cross-compiling
+# the hypervisor for x86_64 1st.  We can accomplish this very easily
+# by building xen in bootstrap-early all the time, but not deleting
+# the hypervisor when making clean, so when we go to build for i686
+# (which just silently doesn't build a hypervisor), we'll still have
+# the x86_64 one laying around.
+#
+# so, if i686, we'll check for a built x86_64 hypervisor in .build,
+# and unless the user supplied --disable-xen, we'll throw an error
+# message.
+#
+# NOTE: We'll also have to keep the x86_64 hypervisor around for the
+#       final build phase, at which point we'll be rebuilding the i686
+#       userland tools.
+
 AC_ARG_ENABLE(stage2-xen,
   AS_HELP_STRING([--enable-stage2-xen], [Generate a xen domU config file for booting the stage2 builder]),
   [stage2_xen=$enableval
@@ -243,6 +270,7 @@ AC_ARG_ENABLE(stage2-xen,
 		Using the stage2 xen option requires --enable-install-part
 		to specify a partition to install into.
 		*************************************************************]))
+   # check for xen_enabled
   ],
   [stage2_xen=no])
 
