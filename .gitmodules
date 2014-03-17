@@ -103,3 +103,6 @@
 [submodule "src/xen"]
 	path = src/xen
 	url = git://xenbits.xen.org/xen.git
+[submodule "src/dev86"]
+	path = src/dev86
+	url = https://github.com/lkundrak/dev86.git
