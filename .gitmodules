@@ -100,3 +100,6 @@
 [submodule "src/ruckusrd"]
 	path = src/ruckusrd
 	url = ../ruckusrd.git
+[submodule "src/xen"]
+	path = src/xen
+	url = git://xenbits.xen.org/xen.git
