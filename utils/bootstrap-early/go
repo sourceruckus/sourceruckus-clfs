@@ -108,6 +108,21 @@ build()
             GNULIB_SRCDIR=$toplevel/src/gnulib \
 	        build_generic $1 --prefix=$PREFIX_EARLY || exit 1
             ;;
+        xen)
+	    # FIXME: This has a bunch of requirements we're not
+	    #        checking for (e.g., dev86, acpica).
+	    #
+	    # FIXME: It also goes and downloads a bunch of things
+	    #        during the build... I should do something about
+	    #        that.  ;-)
+	    setup_generic $1 &&
+	    configure_generic $1 --prefix=$PREFIX_EARLY \
+		--disable-kernels --disable-docs --disable-stubdom || exit 1
+
+	    pushd $builddir &&
+	    make -j$JOBCOUNT world && make install &&
+	    popd || exit 1
+	    ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;

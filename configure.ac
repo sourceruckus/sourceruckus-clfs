@@ -664,7 +664,47 @@ AC_CACHE_CHECK([for extlinux >= 4.0], [ac_cv_path_EXTLINUX],
 # FIXME: do i really want to tackle building Xen in bootstrap-early?  Maybe
 #        just xen itself (i.e., don't check for other xen deps? and just
 #        print a warning regarding kernel and being booted into xen?)
-
+#
+#
+# on avlinux host, had to install first:
+#* dev86
+#git clone https://github.com/lkundrak/dev86.git
+#git checkout v0.16.21
+#make
+#
+#turned everything on
+#
+#make DIST=$PWD/FOO install
+#
+#
+#* iasl
+#git clone https://github.com/acpica/acpica.git
+#git checkout R02_14_14
+#make -j5
+#mkdir -p $DESTDIR/usr/bin &&
+#install -pD generate/unix/bin*/* $DESTDIR/usr/bin/ &&
+#echo yay
+#
+#
+#* libaio
+#git clone https://git.fedorahosted.org/git/libaio.git
+#git checkout libaio-0.3.110-1
+#make -j5
+#
+#make install prefix=$DESTDIR/usr \
+# libdir=$DESTDIR/usr/lib \
+# root=$DESTDIR
+#
+#
+#* xen
+#./autogen.sh &&
+#./configure --disable-kernels --disable-docs --disable-stubdom &&
+#
+#
+AS_IF([test "$stage2_xen" != "no"],
+  [p_early+=" dev86 acpica libaio xen"
+  ]
+)
 
 
 # check for CLFS symlinks...
