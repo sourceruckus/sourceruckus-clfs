@@ -109,3 +109,6 @@
 [submodule "src/acpica"]
 	path = src/acpica
 	url = https://github.com/acpica/acpica.git
+[submodule "src/libaio"]
+	path = src/libaio
+	url = https://git.fedorahosted.org/git/libaio.git
