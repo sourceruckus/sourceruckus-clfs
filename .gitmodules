@@ -106,3 +106,6 @@
 [submodule "src/dev86"]
 	path = src/dev86
 	url = https://github.com/lkundrak/dev86.git
+[submodule "src/acpica"]
+	path = src/acpica
+	url = https://github.com/acpica/acpica.git
