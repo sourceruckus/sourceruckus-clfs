@@ -22,5 +22,9 @@
      "git://ntfs-3g.git.sourceforge.net/gitroot/ntfs-3g",
      "git://repo.or.cz",
      "http://git.tukaani.org",
-     ],
+    ],
+ "git://sourceruckus.org/mirror/xen":
+    [
+     "git://xenbits.xen.org",
+    ]
  }

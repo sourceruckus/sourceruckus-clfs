@@ -102,7 +102,7 @@
 	url = ../ruckusrd.git
 [submodule "src/xen"]
 	path = src/xen
-	url = git://xenbits.xen.org/xen.git
+	url = ../contrib/xen.git
 [submodule "src/dev86"]
 	path = src/dev86
 	url = https://github.com/lkundrak/dev86.git
