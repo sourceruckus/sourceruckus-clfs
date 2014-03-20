@@ -10,6 +10,7 @@
 
 {"git://sourceruckus.org/mirror":
     [
+     "git://anongit.freedesktop.org",
      "git://busybox.net",
      "git://git.code.sf.net/p/flex",
      "git://git.kernel.org/pub/scm/fs/ext2",
@@ -19,6 +20,8 @@
      "git://git.sv.gnu.org",
      "git://github.com/bagder",
      "git://github.com/git",
+     "git://github.com/rth7680",
+     "git://git.ipxe.org",
      "git://ntfs-3g.git.sourceforge.net/gitroot/ntfs-3g",
      "git://repo.or.cz",
      "http://git.tukaani.org",
@@ -26,5 +29,9 @@
  "git://sourceruckus.org/mirror/xen":
     [
      "git://xenbits.xen.org",
+    ],
+ "git://sourceruckus.org/mirror/qemu":
+    [
+     "git://git.qemu.org",
     ]
  }
