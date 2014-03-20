@@ -165,8 +165,15 @@ build()
             # NOTE: I'm doing a make dist instead of make world because I
             #       don't feel like doing a clean on a freshly cloned source
             #       tree.  Saves a bunch of time, and shouldn't be needed.
+            #
+            # NOTE: We've patched Xen so that we can easily set CONFIG_DIR and
+            #       VAR_DIR to be rooted inside PREFIX_EARLY.  Upstream
+            #       hardcodes these to /etc and /var.
 	    pushd $builddir &&
-	    make -j$JOBCOUNT dist && make install &&
+            CONFIG_DIR=$PREFIX_EARLY/etc VAR_DIR=$PREFIX_EARLY/var \
+	        make -j$JOBCOUNT dist &&
+            CONFIG_DIR=$PREFIX_EARLY/etc VAR_DIR=$PREFIX_EARLY/var \
+                make install &&
 	    popd || exit 1
 	    ;;
 	*)
