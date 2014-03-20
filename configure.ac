@@ -186,6 +186,48 @@ AC_ARG_ENABLE(xen,
 # FIXME: what clean targets are we going to have regarding bootstrap
 #        stages... we'll have to make sure that make clean doesn't remove xen.gz.
 
+AC_ARG_WITH(stage1-xen-only,
+  AS_HELP_STRING([--with-stage1-xen-only], [Just build the Xen hypervisor in bootstrap-stage1.  This is usefull when you just need to cross-compile the Xen hypervisor for x86_64.]),
+  stage1_xen_only=$withval,
+  stage1_xen_only=no)
+
+# FIXME: actually tell stage1 to just build xen.  automake conditional?
+#
+# FIXME: make sure xen is enabled?  error if disabled.
+p_stage1_base+=""
+p_stage1_base+=" gmp"
+p_stage1_base+=" mpfr"
+p_stage1_base+=" mpc"
+p_stage1_base+=" isl"
+p_stage1_base+=" cloog"
+p_stage1_base+=" zlib"
+p_stage1_base+=" binutils"
+p_stage1_base+=" gcc"
+p_stage1_base+=" ncurses"
+p_stage1_base+=" busybox"
+p_stage1_base+=" bison"
+p_stage1_base+=" file"
+p_stage1_base+=" flex"
+p_stage1_base+=" gettext"
+p_stage1_base+=" m4"
+p_stage1_base+=" make"
+p_stage1_base+=" texinfo"
+p_stage1_base+=" create-dirs"
+p_stage1_base+=" create-symlinks"
+p_stage1_base+=" create-conf"
+p_stage1_base+=" kernel"
+
+p_stage1_xen=""
+p_stage1_xen+=" dev86"
+p_stage1_xen+=" acpica"
+p_stage1_xen+=" libaio"
+p_stage1_xen+=" xen"
+
+AS_IF([test "$stage1_xen_only" != "yes"],
+  [p_stage1=$p_stage1_base
+   p_stage1+=$p_stage1_xen
+  ],
+  [p_stage1=$p_stage1_xen])
 
 # flags for installation and kickoff of stage2
 #
@@ -786,6 +828,9 @@ echo "Configuration Options Summary:"
 echo
 echo "Bootstrap Early Packages:"
 echo " $p_early"
+echo
+echo "Bootstrap Stage1 Packages:"
+echo " $p_stage1"
 echo
 echo "Options:"
 echo "  Final Target Arch....: $build_arch"
