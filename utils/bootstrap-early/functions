@@ -220,11 +220,29 @@ setup_generic()
 	# out-of-tree builds for one reason or another.  instead of setting
 	# up for out-of-tree, it simply rsync's the source into where it
 	# would be if we were using a tarball
+        #
+        # NOTE: I was sticking --exclude .git in this rsync command to save
+        #       time copying stuff around... but some packages need the .git
+        #       history to bootstrap propperly.  For example, xen tries to use
+        #       some submodule commands during its build.
+        #
+        # FIXME: Conditionally excluding .git might be kinda silly... new
+        #        versions of git don't actually keep the .git files in
+        #        submodules, the .git file is just a reference to the
+        #        toplevel/.git/modules/...
+        opts="-a --delete"
+        if [ -z "$copy_git" ]; then
+            opts+=" --exclude .git"
+        fi
 	echo "copying source tree from $source to $builddir/source..."
-	rsync -a --delete --exclude .git $source/ $builddir/source || exit 1
+	rsync $opts $source/ $builddir/source || exit 1
 	source=$builddir/source
 	builddir=$builddir/build
 	mkdir -p $builddir || exit 1
+
+        # fix relative paths in copied .git file(s)
+        find $source -name .git -exec \
+            sed -i "s|^gitdir: [./]*|gitdir: $toplevel/.|" {} \;
     fi
 
     if [ -n "$build_in_tree" ]; then
