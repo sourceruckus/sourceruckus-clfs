@@ -124,12 +124,12 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 #       hypervisor.  We can still build a 32bit userland and dom0 kernel,
 #       but the hypervisor will need to be cross-compiled.
 #
-#       If we're bulding for a 32bit architecture, we need to throw a
-#       warning about cross-compiling the hypervisor for x86_64 1st.  We can
-#       accomplish this very easily by building xen in bootstrap-cross, but
-#       not deleting the hypervisor when making clean, so when we go to
-#       build for i686 (which just silently doesn't build a hypervisor),
-#       we'll still have the x86_64 one laying around.
+#       If we're bulding for a 32bit architecture, we need to throw a warning
+#       about cross-compiling the hypervisor for x86_64 1st.  We can
+#       accomplish this very easily by reconfiguring for x86_64 and building
+#       xen in bootstrap-stage1, but not deleting the hypervisor when making
+#       clean, so when we go to build for i686 (which just silently doesn't
+#       build a hypervisor), we'll still have the x86_64 one laying around.
 #
 #       So, if bulding for i686, we'll check for a built x86_64 hypervisor
 #       in .build, and unless the user supplied --disable-xen, we'll throw
@@ -138,6 +138,25 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 # NOTE: We'll also have to keep the x86_64 hypervisor around for the
 #       final build phase, at which point we'll be rebuilding the i686
 #       userland tools.
+#
+# host 32bit, building 32bit, stage2xen: final, stage1 (64bit), early
+# host 32bit, building 32bit: final, stage1 (64bit)
+# host 32bit, building 64bit, stage2xen: final, stage1, early
+# host 32bit, building 64bit: final, stage1
+#
+# host 64bit, building 32bit, stage2xen: final, early
+# host 64bit, building 32bit: final, early
+# host 64bit, building 64bit, stage2xen: final, early
+# host 64bit, building 64bit: final
+#
+# FIXME: --stage1-xen-only
+#
+# so on a 32bit host, ./configure --with-arch=i686 ... will print a warning
+# during configure.  It should then automatically ./configure
+# --with-arch=x86_64 --disable-multilib ... --stage1-xen-only, build through
+# stage1 (which will ONLY include Xen and it's deps), then make clean and
+# ./configure --with-arch=i686 ... again, then build more.
+
 AC_ARG_ENABLE(xen,
   AS_HELP_STRING([--disable-xen], [Disable building Xen in bootstrap and final system.]),
   xen_enabled=$enableval,
@@ -692,9 +711,6 @@ AS_IF([test "$stage2_xen" != "no"],
   ]
 )
 
-# XEN_ENABLED: final, cross (if 32bit)
-# STAGE2_XEN: final, cross (if 32bit), early
-# DISABLED: none
 
 # check for CLFS symlinks...
 #
