@@ -108,8 +108,28 @@ build()
             GNULIB_SRCDIR=$toplevel/src/gnulib \
 	        build_generic $1 --prefix=$PREFIX_EARLY || exit 1
             ;;
+	dev86)
+	    # very strange Makefile, no parallel build, no configure, no
+	    # out-of-tree building
+	    build_in_tree=1 setup_generic $1 || exit 1
+
+	    pushd $builddir &&
+	    make PREFIX=$PREFIX_EARLY < /dev/null &&
+	    make install &&
+	    popd || exit 1
+	    ;;
+	acpica)
+	    # no configure, no out-of-tree building
+	    build_in_tree=1 setup_generic $1 || exit 1
+
+	    pushd $builddir &&
+	    make -j$JOBCOUNT &&
+	    mkdir -p $$PREFIX_EARLY/bin &&
+	    install -pD generate/unix/bin*/* $PREFIX_EARLY/bin/ &&
+	    popd || exit 1
+	    ;;
         libaio)
-            # no configure, no DESTDIR, probably can't build out-of-tree
+            # no configure, probably can't build out-of-tree
 	    build_in_tree=1 setup_generic $1 || exit 1
 
             pushd $builddir &&
