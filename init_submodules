@@ -115,8 +115,15 @@ def do_submod(path):
         if not x.startswith("submodule "):
             continue
 
+        # strip off trailing slashes... apparently, this happens (e.g.,
+        # git://git.qemu.org/vgabios.git/ in qemu)
+        url = c[x]["url"]
+        if url.endswith("/"):
+            url = url[:-1]
+
         # figure out if we've already set this submod up
-        shared=toplevel+"/src/"+os.path.basename(c[x]["url"]).split('.git')[0]
+        shared=toplevel+"/src/"+os.path.basename(url).split('.git')[0]
+        #print("CHECKING '{}' for shared mod at".format(url), shared)
         config_done = False
         try:
             for y in shared_ones[shared]:
@@ -153,11 +160,11 @@ def do_submod(path):
 
         # override url if in mirror
         for m in config.mirrors:
-            for url in config.mirrors[m]:
-                if c[x]["url"].startswith(url) and not config_done:
+            for murl in config.mirrors[m]:
+                if url.startswith(murl) and not config_done:
                     try:
                         git_config("submodule.{}.url".format(c[x]["path"]),
-                                   c[x]["url"].replace(url, m),
+                                   url.replace(murl, m),
                                    cwd=path)
                     except Exception as e:
                         print("WARNING: failed to configure mirror:", e)
