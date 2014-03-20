@@ -38,7 +38,10 @@ done
 #       because we're just friendly like that.  ;-)
 fetch_list=$(find packages src utils -name SOURCE_URL)
 for x in $fetch_list; do
-    pushd $(dirname $x) && $WGET -nc -i $(basename $x) && popd || break
+    pushd $(dirname $x) &&
+    $WGET -nc --no-check-certificate -i $(basename $x) &&
+    popd || exit 1
+
     if [ -n "$MAKE_CACHE" ]; then
         tar -rf $cache $(sed "s|.*/|$(dirname $x)/|" $x)
     fi
