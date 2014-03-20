@@ -327,24 +327,6 @@ autoreconf_generic()
     fi
     unset NOCONFIGURE
 
-    # make sure we're unconfigured.  some bootstrap and autogen.sh scripts
-    # run configure at the end, but not all.  we have to be able to assume
-    # consistent behavior here, so do a make distclean if Makefile exists
-    # already.
-    #
-    # NOTE: This isn't just done for consistency.  Some packages (e.g.,
-    #       make) will fail to configure for out-of-tree building if they
-    #       were previously configured for in-tree building (e.g., by simply
-    #       running configure from within the source tree).  You end up
-    #       getting an error saying that the sources are already configured
-    #       and you need to make distclean first.
-    #
-    # NOTE: This probably isn't needed now that we're setting NOCONFIGURE
-    #       above, but just to be sure I'm keeping this here.
-    if [ -z "$nothing_to_do" ] && [ -f Makefile ]; then
-	make distclean || exit 1
-    fi
-
     # if we were previously set up to use our cross-compiler.  set it back
     # up now
     if [ "$should_cross_compile" = "true" ]; then
