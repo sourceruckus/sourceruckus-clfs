@@ -108,19 +108,45 @@ build()
             GNULIB_SRCDIR=$toplevel/src/gnulib \
 	        build_generic $1 --prefix=$PREFIX_EARLY || exit 1
             ;;
+        libaio)
+            # no configure, no DESTDIR, probably can't build out-of-tree
+	    build_in_tree=1 setup_generic $1 || exit 1
+
+            pushd $builddir &&
+            make -j$JOBCOUNT &&
+            make install prefix=$PREFIX_EARLY &&
+            popd || exit 1
+            ;;
         xen)
+            # NOTE: The idea here is to just build enough of xen to be able to
+            #       boot our stage2 system as a paravirtual domU.  This means
+            #       we need the hypervisor and basic userland tools.
+            #
+            # NOTE: Xen can't build out-of-tree, because of it's strange
+            #       half-breed autotools build system.
+            #
+            # NOTE: The build system needs the .git dir(s) to get copied as
+            #       well.
+            #
 	    # FIXME: This has a bunch of requirements we're not
-	    #        checking for (e.g., dev86, acpica).
-	    #
-	    # FIXME: It also goes and downloads a bunch of things
-	    #        during the build... I should do something about
-	    #        that.  ;-)
-	    setup_generic $1 &&
-	    configure_generic $1 --prefix=$PREFIX_EARLY \
+	    #        checking for.
+	    build_in_tree=1 copy_git=1 setup_generic $1 || exit 1
+
+            # NOTE: It also needs to be explicitly configured (i.e., Makefile
+            #       already exists).
+            #
+            # NOTE: We disable building kernels, docs, and stubdom for
+            #       bootstrap-early.  We'll want docs and stubdom in our final
+            #       build, but we don't need them here or in stage1.
+	    autoreconf=yes \
+	        configure_generic $1 --prefix=$PREFIX_EARLY \
 		--disable-kernels --disable-docs --disable-stubdom || exit 1
 
+            # NOTE: I'm doing a make dist instead of make world because I
+            #       don't feel like doing a clean on a freshly cloned source
+            #       tree.  Saves a bunch of time, and shouldn't be needed.
 	    pushd $builddir &&
-	    make -j$JOBCOUNT world && make install &&
+	    make -j$JOBCOUNT dist && make install &&
 	    popd || exit 1
 	    ;;
 	*)

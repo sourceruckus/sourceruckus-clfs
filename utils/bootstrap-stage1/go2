@@ -15,6 +15,7 @@ toplevel=$PWD/../..
 
 fix_perms()
 {
+    # FIXME: could use find to do the chowning, so we can skip /ruckus
     chown -R 0:0 $CLFS &&
     chgrp 13 $CLFS/var/{run/utmp,log/lastlog} || exit 1
     if [ ! -c $CLFS/dev/console ]; then
@@ -107,7 +108,7 @@ fix_perms || exit 1
 
 # copy sourcetree into /ruckus
 #
-# FIXME: This adds 8G to what was a bootable 500M system...
+# FIXME: This adds 8-10G to what was a bootable 500M system...
 #
 # FIXME: Assuming we're booting a DIFFERENT machine (or a virtual machine), can
 #        we use NFS to access the source tree?  Might be kinda slow...

@@ -293,11 +293,11 @@ AC_SUBST(BOOTSTRAP_FSTYPE, $build_fstype)
 AC_ARG_ENABLE(stage2-xen,
   AS_HELP_STRING([--enable-stage2-xen], [Generate a xen domU config file for booting the stage2 builder]),
   [stage2_xen=$enableval
-   AS_IF([test "$install_type" != "part"],
+   AS_IF([test "$install_type" != "part" -a "$install_type" != "none"],
      AC_MSG_ERROR([
 		*************************************************************
-		Using the stage2 xen option requires --enable-install-part
-		to specify a partition to install into.
+		The stage2 Xen option is incompatible with any install type
+		other than 'part' or 'none'.  You chose '$install_type'.
 		*************************************************************]))
    # check for xen_enabled
   ],
@@ -342,6 +342,10 @@ AC_ARG_ENABLE(stage2-auto,
 # --> make bootstrap
 #
 #     Build bootstrap-early, bootstrap-cross, bootstrap-stage1.
+#
+#     NOTE: bootstrap-early, bootstrap-cross, bootstrap-stage1, clean,
+#           reconfig, bootstrap-cross, bootstrap-stage1 if we're building
+#           on or for 32bit
 #
 # --> sudo make bootstrap_install
 #
@@ -702,10 +706,31 @@ AC_CACHE_CHECK([for extlinux >= 4.0], [ac_cv_path_EXTLINUX],
 #
 #
 AS_IF([test "$stage2_xen" != "no"],
-  [p_early+=" dev86 acpica libaio xen"
+  [# We've got a few extra deps for Xen to check for
+   #
+   # NOTE: as86, ld86, bcc, and iasl or only needed for x86* builds.  That's
+   #       really all we're supporting for now, but this was pretty easy to
+   #       copy-n-tweak from xen's tools/configure.ac, so I did.
+   case "$build_arch" in
+     i[[3456]]86|x86_64)
+       AC_PATH_PROG([AS86], [as86])
+       AC_PATH_PROG([LD86], [ld86])
+       AC_PATH_PROG([BCC], [bcc])
+       AS_IF([test -z "$AS86" -o -z "$LD86" -o -z "$BCC"], [p_early+=" dev86"])
+       AC_PATH_PROG([IASL], [iasl])
+       AS_IF([test -z "$IASL"], [p_early+=" acpica"])
+       ;;
+   esac
+
+   AC_CHECK_LIB([aio], [io_setup], [], [p_early+=" libaio"])
+
+   p_early+=" xen"
   ]
 )
 
+# XEN_ENABLED: final, cross (if 32bit)
+# STAGE2_XEN: final, cross (if 32bit), early
+# DISABLED: none
 
 # check for CLFS symlinks...
 #
