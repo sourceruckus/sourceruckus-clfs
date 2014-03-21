@@ -744,7 +744,7 @@ mkdir -p $PWD/.build
 
 # now iterate through building for our target architecture using our
 # cross-compiler.
-for p in $packages; do
+for p in $p_stage1; do
     echo "building bootstrap-stage1 package: $p"
     build $p || exit 1
 done

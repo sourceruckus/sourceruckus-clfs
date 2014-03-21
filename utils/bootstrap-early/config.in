@@ -91,3 +91,7 @@ export p_early="@p_early@"
 
 # controls whether pkg-config needs to build it's internal glib snapshot
 export HOST_HAS_GLIB=@HOST_HAS_GLIB@
+
+
+# --- Bootstrap Stage1 Variables ------------------------------------------
+export p_stage1="@p_stage1@"

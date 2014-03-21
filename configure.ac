@@ -791,6 +791,7 @@ AS_IF([test "$prefix_final_link" = "$CLFS$PREFIX_FINAL"],
 
 
 AC_SUBST(p_early)
+AC_SUBST(p_stage1)
 AC_SUBST(CLFS_HOST)
 AC_SUBST(CLFS_TARGET)
 AC_SUBST(CLFS_TARGET32)
