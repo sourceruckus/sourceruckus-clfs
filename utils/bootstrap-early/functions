@@ -130,6 +130,19 @@ shopt -s nullglob >/dev/null 2>&1
 # FIXME: shopt is bash specific.  look into ash's behavior.
 shopt -s dotglob > /dev/null 2>&1
 
+# turn off bash's hash function.  we don't want bash caching PATH lookups
+# while we're installing things all over the place...
+#
+# FIXME: bash only?  look into ash and/or whatever shell we'll be using later
+#        on in stage2 bootstrap and final build.
+set +h
+
+# make sure we have a sane umask
+umask 022
+
+# make sure we don't run into localization issues on old host systems
+export LC_ALL=POSIX
+
 # NOTE: make sure we have pushd/popd, since we use it all over the place
 #
 # NOTE: these two aliases are only set if a check for pushd fails.
