@@ -9,6 +9,12 @@ toplevel=$PWD/../..
 
 build()
 {
+    # FIXME: CLFS book says CFLAGS and CXXFLAGS NEED to be unset
+    #        during cross stage, but it writes the unset commands into
+    #        .bashrc, which is still in use in later stages prior to
+    #        booting/chrooting into the baby system...  Do we need to
+    #        unset them here?
+
     # set some common variables for all targets
     #
     # NOTE: We don't need any conditionals here because all supported build

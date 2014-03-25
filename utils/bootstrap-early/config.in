@@ -18,11 +18,6 @@ BOOTSTRAP_FSTYPE=@BOOTSTRAP_FSTYPE@
 
 # --- CLFS Variables ------------------------------------------------------
 
-# these cannot be set (CLFS book says so, I assume because massive breakage
-# will ensue)
-unset CFLAGS
-unset CXXFLAGS
-
 # this is where our baby filesystem lives while we're building it.  the
 # bootstrap_install target will install it in an appropraite place with
 # appropriate permissions.  keeping it inside a different directory until then

@@ -10,6 +10,10 @@ toplevel=$PWD/../..
 
 build()
 {
+    # CLFS book says these NEED to be unset during cross stage
+    unset CFLAGS
+    unset CXXFLAGS
+
     # set some common variables for all targets
     OPTS="--prefix=$PREFIX_CROSS"
     OPTS+=" --disable-static"
