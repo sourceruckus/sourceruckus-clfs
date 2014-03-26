@@ -52,20 +52,6 @@ if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
     else
 	export LD_LIBRARY_PATH=$PREFIX_EARLY/lib:$LD_LIBRARY_PATH
     fi
-    # FIXME: configure for xen/tools suggests using {APPEND,PREPEND}_LIB
-    #        instead of LDFLAGS... do I really care?
-    if [ -z "$LDFLAGS" ]; then
-        export LDFLAGS=-L$PREFIX_EARLY/lib
-    else
-        export LDFLAGS="-L$PREFIX_EARLY/lib $LDFLAGS"
-    fi
-    # FIXME: configure for xen/tools suggests using {APPEND,PREPEND}_INCLUDES
-    #        instead of CPPFLAGS... do I really care?
-    if [ -z "CPPFLAGS" ]; then
-        export CPPFLAGS=-I$PREFIX_EARLY/include
-    else
-        export CPPFLAGS="-I$PREFIX_EARLY/include $CPPFLAGS"
-    fi
 
     # and now add in the bootstrap-cross tools
     export PATH=$PREFIX_CROSS/bin:$PREFIX_CROSS/sbin:$PATH
@@ -76,22 +62,6 @@ if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
     else
 	export LD_LIBRARY_PATH=$PREFIX_CROSS/lib:$LD_LIBRARY_PATH
     fi
-    # FIXME: configure for xen/tools suggests using {APPEND,PREPEND}_LIB
-    #        instead of LDFLAGS... do I really care?
-    if [ -z "$LDFLAGS" ]; then
-        export LDFLAGS=-L$PREFIX_CROSS/lib
-    else
-        export LDFLAGS="-L$PREFIX_CROSS/lib $LDFLAGS"
-    fi
-    # FIXME: configure for xen/tools suggests using {APPEND,PREPEND}_INCLUDES
-    #        instead of CPPFLAGS... do I really care?
-    if [ -z "CPPFLAGS" ]; then
-        export CPPFLAGS=-I$PREFIX_CROSS/include
-    else
-        export CPPFLAGS="-I$PREFIX_CROSS/include $CPPFLAGS"
-    fi
-    # FIXME: actually, we probably only want to setup LDFLAGS/CPPFLAGS for
-    #        early.  pretty sure cross unsets these before it starts.
 fi
 
 # this variable will be used by default to determine the number of jobs to

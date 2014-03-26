@@ -14,6 +14,12 @@ build()
     unset CFLAGS
     unset CXXFLAGS
 
+    # I'll unset these, too.  We set them in functions so that things building
+    # during bootstrap-early can find other libraries installed in
+    # PREFIX_EARLY.
+    unset CPPFLAGS
+    unset LDFLAGS
+
     # set some common variables for all targets
     OPTS="--prefix=$PREFIX_CROSS"
     OPTS+=" --disable-static"

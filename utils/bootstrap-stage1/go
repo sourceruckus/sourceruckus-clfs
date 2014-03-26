@@ -14,6 +14,10 @@ build()
     #        .bashrc, which is still in use in later stages prior to
     #        booting/chrooting into the baby system...  Do we need to
     #        unset them here?
+    unset CFLAGS
+    unset CXXFLAGS
+    unset CPPFLAGS
+    unset LDFLAGS
 
     # set some common variables for all targets
     #

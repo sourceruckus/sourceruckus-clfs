@@ -9,6 +9,22 @@ toplevel=$PWD/../..
 # source our common variables and functions
 . $toplevel/utils/bootstrap-early/functions
 
+# make sure we can find libs/includes installed in PREFIX_EARLY
+#
+# FIXME: configure for xen/tools suggests using {APPEND,PREPEND}_LIB
+#        instead of LDFLAGS... do I really care?
+if [ -z "$LDFLAGS" ]; then
+    export LDFLAGS=-L$PREFIX_EARLY/lib
+else
+    export LDFLAGS="-L$PREFIX_EARLY/lib $LDFLAGS"
+fi
+# FIXME: configure for xen/tools suggests using {APPEND,PREPEND}_INCLUDES
+#        instead of CPPFLAGS... do I really care?
+if [ -z "CPPFLAGS" ]; then
+    export CPPFLAGS=-I$PREFIX_EARLY/include
+else
+    export CPPFLAGS="-I$PREFIX_EARLY/include $CPPFLAGS"
+fi
 
 
 build()
