@@ -2,6 +2,18 @@
 AC_PREREQ(2.62)
 AC_INIT([Source Ruckus], [3.0-dev], [michael.d.labriola@gmail.com], sourceruckus)
 
+# figure out our host system
+#
+# NOTE: We use AC_CANONICAL_BUILD for this, but it gets slightly
+#       different results than CLFS' sed script.  But it doesn't
+#       depend on the MACHTYPE variable being set correctly (it wasn't
+#       on my SUSE netbook).
+#
+#       CLFS_HOST=$(echo ${MACHTYPE} | sed -e 's/-[^-]*/-cross/')
+#
+#       That gives you 'i486' for build_cpu on my AMD A-series box,
+#       whereas AC_CANONICAL_BUILD results in 'i686'.  Doesn't seem to
+#       be hurting anything so far...
 AC_CANONICAL_BUILD
 CLFS_HOST=$build_cpu-cross-$build_os
 
