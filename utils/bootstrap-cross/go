@@ -127,6 +127,9 @@ build()
             # disable multilib if we're building pure 32 or 64 bit
             if [ -z "$BUILD32" ]; then
                 OPTS+=" --disable-multilib"
+                OPTS+=" --with-lib-path=$PREFIX_FINAL/lib"
+            else
+                OPTS+=" --with-lib-path=$PREFIX_FINAL/lib:$PREFIX_FINAL/lib64"
             fi
 
 	    # NOTE: The CLFS book sets lib-path to /tools as apposed to
