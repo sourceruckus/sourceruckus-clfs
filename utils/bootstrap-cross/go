@@ -195,8 +195,13 @@ build()
 	    #       so we're going to follow the CLFS book exactly.
 	    OPTS=""
 
+            # disable multilib if we're building pure 32 or 64 bit
+            if [ -z "$BUILD32" ]; then
+                OPTS+=" --disable-multilib"
+            fi
+
             AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-                configure_generic gcc --prefix=$PREFIX_CROSS \
+                configure_generic gcc $OPTS --prefix=$PREFIX_CROSS \
                 --build=${CLFS_HOST} --host=${CLFS_HOST} --target=${CLFS_TARGET} \
                 --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_FINAL \
                 --with-native-system-header-dir=$PREFIX_FINAL/include --disable-nls \
@@ -365,8 +370,13 @@ build()
 	    #       so we're going to follow the CLFS book exactly.
             OPTS=""
 
+            # disable multilib if we're building pure 32 or 64 bit
+            if [ -z "$BUILD32" ]; then
+                OPTS+=" --disable-multilib"
+            fi
+
             AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-                configure_generic gcc --prefix=$PREFIX_CROSS \
+                configure_generic gcc $OPTS --prefix=$PREFIX_CROSS \
                 --build=${CLFS_HOST} --target=${CLFS_TARGET} --host=${CLFS_HOST} \
                 --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_FINAL \
                 --with-native-system-header-dir=$PREFIX_FINAL/include \
