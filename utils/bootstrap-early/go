@@ -89,6 +89,12 @@ build()
             ;;
 	texinfo)
 	    # We have a configure.ac patch and need to force an autoreconf
+            #
+            # FIXME: Woah, we don't ALWAYS want to autoreconf... what about the
+            #        2nd time through here when the tree's already been patched
+            #        and autoreconfd... we should be able to jump write to
+            #        building.  Maybe we should just patch the Makefile.in or
+            #        configure script directly...
 	    #
 	    # We need to set LDFLAGS like this so that texinfo's build can
 	    # find our bootstrap-early stuff (ncurses, specifically).
@@ -216,6 +222,6 @@ build()
 
 # build and install each needed package
 for p in $p_early; do
-    echo "building bootstrap-early package: $p"
+    echo -e "\n+++++ building bootstrap-early package: $p"
     build $p || exit 1
 done

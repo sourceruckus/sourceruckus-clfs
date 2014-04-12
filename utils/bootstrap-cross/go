@@ -443,7 +443,7 @@ mkdir -p $CLFS$PREFIX_CROSS $CLFS$PREFIX_FINAL
 
 echo packages: $packages
 for p in $packages; do
-    echo "building bootstrap-cross package: $p"
+    echo -e "\n+++++ building bootstrap-cross package: $p"
     build $p || exit 1
 done
 

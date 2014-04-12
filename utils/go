@@ -1,6 +1,0 @@
-#!/bin/bash
-
-for x in bootstrap-early bootstrap-cross bootstrap-stage1; do
-    echo "entering: $x"
-    pushd $x && ./go && popd || exit 1
-done

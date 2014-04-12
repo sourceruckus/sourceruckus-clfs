@@ -161,8 +161,6 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 # host 64bit, building 64bit, stage2xen: final, early
 # host 64bit, building 64bit: final
 #
-# FIXME: --stage1-xen-only
-#
 # so on a 32bit host, ./configure --with-arch=i686 ... will print a warning
 # during configure.  It should then automatically ./configure
 # --with-arch=x86_64 --disable-multilib ... --stage1-xen-only, build through
@@ -193,10 +191,17 @@ AC_ARG_ENABLE(xen,
   ])
 
 # FIXME: we probably want an automake conditional for building the final
-#        stage xen package.
+#        stage xen package.  for example, if we disable xen and build32
+#        bit, the final build stage xen package will silently not build
+#        the xen hypervisor... making it pretty useless.
 
 # FIXME: what clean targets are we going to have regarding bootstrap
-#        stages... we'll have to make sure that make clean doesn't remove xen.gz.
+#        stages... we'll have to make sure that make clean doesn't remove
+#        xen.gz.
+#
+# FIXME: we also want to make sure that bootstrap-early doesn't get
+#        cleaned at the end of a --with-stage1-xen-only build.  there's no
+#        point in rebuilding it.
 
 AC_ARG_WITH(stage1-xen-only,
   AS_HELP_STRING([--with-stage1-xen-only], [Just build the Xen hypervisor in bootstrap-stage1.  This is usefull when you just need to cross-compile the Xen hypervisor for x86_64.]),
@@ -447,6 +452,7 @@ AC_ARG_ENABLE(stage2-auto,
 
 
 
+AM_EXTRA_RECURSIVE_TARGETS([bootstrap])
 
 
 # FIXME: check for git version w/ submodule --init --recursive?  if
