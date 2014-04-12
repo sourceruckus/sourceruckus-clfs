@@ -122,6 +122,10 @@ if [ $need_pushd -eq 1 ]; then
     #echo "defining pushd and popd"
     alias pushd='wd="$(pwd) ${wd}"; cd'
     alias popd='cd ${wd%% *}; wd=${wd#* }'
+else
+    # make bash's pushd/popd be quiet
+    alias pushd='pushd >/dev/null'
+    alias popd='popd >/dev/null'
 fi
 
 # NOTE: and this is so we can have the illusion of sudo in stage2, via
