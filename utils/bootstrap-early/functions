@@ -213,7 +213,11 @@ setup_generic()
         #        versions of git don't actually keep the .git files in
         #        submodules, the .git file is just a reference to the
         #        toplevel/.git/modules/...
-        opts="-a --delete"
+        #
+        # NOTE: I was originally sticking --delete in the opts, but that forces
+        #       us to completely rebuild every time through.  I'd rather we
+        #       only rebuilt if needed.
+        opts="-a"
         if [ -z "$copy_git" ]; then
             opts+=" --exclude .git"
         fi
@@ -231,7 +235,12 @@ setup_generic()
     if [ -n "$build_in_tree" ]; then
 	# some packages can't build out-of-tree.  we'll replace $builddir
 	# with a symlink to our local source tree
-	rmdir $builddir && ln -s $source $builddir || exit 1
+        #
+        # NOTE: We need to check for the case where builddir is a symlink
+        #       pointing to sourcedir (i.e., building in-tree).  You can't
+        #       rmmdir a symlink... ;-)
+        [ ! -h $builddir ] && (rmdir $builddir || exit 1)
+        ln -fs $source $builddir || exit 1
 	configure=$builddir/configure
     fi
 
