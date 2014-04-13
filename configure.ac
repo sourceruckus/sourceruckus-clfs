@@ -208,43 +208,8 @@ AC_ARG_WITH(stage1-xen-only,
   stage1_xen_only=$withval,
   stage1_xen_only=no)
 
-# FIXME: actually tell stage1 to just build xen.  automake conditional?
-#
 # FIXME: make sure xen is enabled?  error if disabled.
-p_stage1_base+=""
-p_stage1_base+=" gmp"
-p_stage1_base+=" mpfr"
-p_stage1_base+=" mpc"
-p_stage1_base+=" isl"
-p_stage1_base+=" cloog"
-p_stage1_base+=" zlib"
-p_stage1_base+=" binutils"
-p_stage1_base+=" gcc"
-p_stage1_base+=" ncurses"
-p_stage1_base+=" busybox"
-p_stage1_base+=" bison"
-p_stage1_base+=" file"
-p_stage1_base+=" flex"
-p_stage1_base+=" gettext"
-p_stage1_base+=" m4"
-p_stage1_base+=" make"
-p_stage1_base+=" texinfo"
-p_stage1_base+=" create-dirs"
-p_stage1_base+=" create-symlinks"
-p_stage1_base+=" create-conf"
-p_stage1_base+=" kernel"
-
-p_stage1_xen=""
-p_stage1_xen+=" dev86"
-p_stage1_xen+=" acpica"
-p_stage1_xen+=" libaio"
-p_stage1_xen+=" xen"
-
-AS_IF([test "$stage1_xen_only" != "yes"],
-  [p_stage1=$p_stage1_base
-   p_stage1+=$p_stage1_xen
-  ],
-  [p_stage1=$p_stage1_xen])
+AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 
 # flags for installation and kickoff of stage2
 #

@@ -89,4 +89,4 @@ export HOST_HAS_GLIB=@HOST_HAS_GLIB@
 
 
 # --- Bootstrap Stage1 Variables ------------------------------------------
-export p_stage1="@p_stage1@"
+export STAGE1_XEN_ONLY=@STAGE1_XEN_ONLY@

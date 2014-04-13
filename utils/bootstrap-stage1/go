@@ -749,12 +749,23 @@ packages+=" kernel"
 #packages+=" fix-perms"
 
 
+# FIXME: need to weed through this list... what do we REALLY need in order
+#        to cross-compile just the hypervisor.
+p_stage1_xen=""
+p_stage1_xen+=" dev86"
+p_stage1_xen+=" acpica"
+p_stage1_xen+=" libaio"
+p_stage1_xen+=" xen"
+if [ "$STAGE1_XEN_ONLY" = "yes" ]; then
+    packages=$p_stage1_xen
+fi
+
 
 mkdir -p $PWD/.build
 
 # now iterate through building for our target architecture using our
 # cross-compiler.
-for p in $p_stage1; do
+for p in $packages; do
     echo -e "\n+++++ building bootstrap-stage1 package: $p"
     build $p || exit 1
 done
