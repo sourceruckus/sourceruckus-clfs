@@ -9,5 +9,7 @@ EXTRA_DIST+=patches
 # NOTE: Each individual package being built just simply does a re-install
 #       if .build dir already exists.
 bootstrap-local:
-	@echo bootstrapping in bootstrap-stage1
-#	env -i ./go
+	env -i ./go
+
+clean-local:
+	rm -rf .build

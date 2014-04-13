@@ -9,3 +9,6 @@ EXTRA_DIST+=init
 bootstrap-local:
 	@echo bootstrapping in bootstrap-stage2
 #	env -i ./go
+
+clean-local:
+	rm -rf .build

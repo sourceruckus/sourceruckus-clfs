@@ -8,3 +8,6 @@ EXTRA_DIST+=patches
 #       if .build dir already exists.
 bootstrap-local:
 	env -i ./go
+
+clean-local:
+	rm -rf .build
