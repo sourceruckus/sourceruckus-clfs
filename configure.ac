@@ -451,6 +451,8 @@ AC_ARG_ENABLE(stage2-auto,
 #     FIXME: This stage has really only been half-baked so far... ;-)
 
 
+AC_ARG_VAR(INIT_SUBMOD_ARGS, Arguments to be passed to init_submodules)
+AC_ARG_VAR(GET_SOURCES_ARGS, Arguments to be passed to get_sources)
 
 AM_EXTRA_RECURSIVE_TARGETS([bootstrap])
 
