@@ -105,10 +105,10 @@
 	url = ../contrib/xen.git
 [submodule "src/dev86"]
 	path = src/dev86
-	url = https://github.com/lkundrak/dev86.git
+	url = git://github.com/lkundrak/dev86.git
 [submodule "src/acpica"]
 	path = src/acpica
-	url = https://github.com/acpica/acpica.git
+	url = git://github.com/acpica/acpica.git
 [submodule "src/libaio"]
 	path = src/libaio
-	url = https://git.fedorahosted.org/git/libaio.git
+	url = git://git.fedorahosted.org/git/libaio.git
