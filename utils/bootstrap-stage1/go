@@ -750,15 +750,14 @@ packages+=" kernel"
 
 
 
-# FIXME: need to weed through this list... what do we REALLY need in order
-#        to cross-compile just the hypervisor.
-p_stage1_xen=""
-p_stage1_xen+=" dev86"
-p_stage1_xen+=" acpica"
-p_stage1_xen+=" libaio"
-p_stage1_xen+=" xen"
+# If we have STAGE1_XEN_ONLY set, replace the entire pacakges list with just
+# xen.  Otherwise, if we're building for 64bit, but building on 32bit, and
+# want to use Xen for stage2, we need to cross-compile the hypervisor here in
+# addition to the other packages.
 if [ "$STAGE1_XEN_ONLY" = "yes" ]; then
-    packages=$p_stage1_xen
+    packages=xen
+elif [ "$NEED_CROSS_COMPILED_XEN" = "yes" ]; then
+    packages+=" xen"
 fi
 
 

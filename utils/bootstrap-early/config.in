@@ -90,3 +90,4 @@ export HOST_HAS_GLIB=@HOST_HAS_GLIB@
 
 # --- Bootstrap Stage1 Variables ------------------------------------------
 export STAGE1_XEN_ONLY=@STAGE1_XEN_ONLY@
+export NEED_CROSS_COMPILED_XEN=@NEED_CROSS_COMPILED_XEN@
