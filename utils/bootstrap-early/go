@@ -150,7 +150,7 @@ build()
 
 	    pushd $builddir &&
 	    make -j$JOBCOUNT &&
-	    mkdir -p $$PREFIX_EARLY/bin &&
+	    mkdir -p $PREFIX_EARLY/bin &&
 	    install -pD generate/unix/bin*/* $PREFIX_EARLY/bin/ &&
 	    popd || exit 1
 	    ;;
