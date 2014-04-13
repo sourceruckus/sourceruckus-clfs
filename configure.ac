@@ -166,7 +166,12 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 # --with-arch=x86_64 --disable-multilib ... --stage1-xen-only, build through
 # stage1 (which will ONLY include Xen and it's deps), then make clean and
 # ./configure --with-arch=i686 ... again, then build more.
-
+#
+# FIXME: Make this a giant note in the config summary, and automate it using
+#        config.status (i.e., configuring for 32bit should alert the user of
+#        lots of extra work, bootstrap target should then backup
+#        config.status, configure for 64bit w/ xen only, bootstrap, clean,
+#        restore and run original config.status, cary on w/ bootstrap).
 AC_ARG_ENABLE(xen,
   AS_HELP_STRING([--disable-xen], [Disable building Xen in bootstrap and final system.]),
   xen_enabled=$enableval,
@@ -737,7 +742,10 @@ AS_IF([test "$stage2_xen" != "no"],
 
    p_early+=" xen"
 
-   AS_IF([test "$build_cpu" != "x86_64"], [need_cross_compiled_xen=yes])
+   AS_IF([test "$build_cpu" != "x86_64"],
+     [AS_IF([test ! -f $PREFIX_EARLY/boot/xen.gz],
+        [need_cross_compiled_xen=yes])
+     ])
   ]
 )
 AC_SUBST(NEED_CROSS_COMPILED_XEN, $need_cross_compiled_xen)
