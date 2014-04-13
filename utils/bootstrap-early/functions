@@ -243,7 +243,11 @@ setup_generic()
         # NOTE: We need to check for the case where builddir is a symlink
         #       pointing to sourcedir (i.e., building in-tree).  You can't
         #       rmmdir a symlink... ;-)
-        [ ! -h $builddir ] && (rmdir $builddir || exit 1)
+        if [ -h $builddir ]; then
+	    rm $builddir || exit 1
+	else
+	    rmdir $builddir || exit 1
+	fi
         ln -fs $source $builddir || exit 1
 	configure=$builddir/configure
     fi
