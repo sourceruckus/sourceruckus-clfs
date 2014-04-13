@@ -7,12 +7,15 @@ EXTRA_DIST+=go
 # NOTE: Each individual package being built just simply does a re-install
 #       if .build dir already exists.
 #
-# FIXME: True.  However, some packages' install targets may fail if files
-#        already exist (e.g., pkg-config hard link)
+# NOTE: True.  However, some packages' install targets may fail if
+#       files already exist (e.g., pkg-config hard link).  I patched
+#       my pkg-config tree for this.
 #
-#        i fixed my pkg-config...
+# NOTE: To avoid further breakage, to save time, and to make sure we
+#       don't mess up a perfectly fine build, I've rigged this up to
+#       only build to completion a single time.
 bootstrap-local:
-	env -i ./go
+	[ ! -f .build/ALL_DONE ] && env -i ./go || echo nothing to build
 
 
 # NOTE: We remove the .build directory for the other bootstrap stages

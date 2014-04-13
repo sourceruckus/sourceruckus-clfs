@@ -225,3 +225,5 @@ for p in $p_early; do
     echo -e "\n+++++ building bootstrap-early package: $p"
     build $p || exit 1
 done
+
+touch .build/ALL_DONE
