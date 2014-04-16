@@ -202,14 +202,6 @@ AC_ARG_ENABLE(xen,
 #        bit, the final build stage xen package will silently not build
 #        the xen hypervisor... making it pretty useless.
 
-# FIXME: what clean targets are we going to have regarding bootstrap
-#        stages... we'll have to make sure that make clean doesn't remove
-#        xen.gz.
-#
-# FIXME: we also want to make sure that bootstrap-early doesn't get
-#        cleaned at the end of a --with-stage1-xen-only build.  there's no
-#        point in rebuilding it.
-
 AC_ARG_WITH(stage1-xen-only,
   AS_HELP_STRING([--with-stage1-xen-only], [Just build the Xen hypervisor in bootstrap-stage1.  This is usefull when you just need to cross-compile the Xen hypervisor for x86_64.]),
   stage1_xen_only=$withval,
@@ -241,6 +233,8 @@ AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 #     and create filesystems as needed.  The bootstrap_install stage will
 #     install and configure the bootloader.
 #
+#     FIXME: that really only makes sense for removable media...
+#
 # --enable-install-raid0=/dev/md99:/dev/sda,/dev/sdb,/dev/sdc,...
 #
 #     Just like --enable-install-dev, except that multiple block devices
@@ -257,6 +251,16 @@ AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 #    builder.  This can only be used along with --enable-install-part and will
 #    cause bootstrap-early to check for the Xen4 Hypervisor and a kernel w/
 #    pvops_dom0 support, triggering their compilation if needed.
+#
+# FIXME: we don't check for pvops_dom0... we do build tools and
+#        cross-compile hypervisor, though.  prior to actually using xen,
+#        system bootloader config will need to be edited, any
+#        distro-provided xen services need to be disabled, and system will
+#        have to be rebooted.  after all that, the following (as root)
+#        will give you usable xl commands:
+#
+#            export toplevel=/path/to/ruckus
+#            . $toplevel/utils/bootstrap-early/functions
 #
 # --enable-stage2-auto
 #
@@ -913,3 +917,19 @@ echo "  PREFIX_CROSS.........: $PREFIX_CROSS"
 echo "  PREFIX_FINAL.........: $PREFIX_FINAL"
 echo "  CLFS.................: $CLFS"
 echo
+
+
+# FIXME: we need bootstrap-early to be OUTSIDE of CLFS if we're going to
+#        boot via xen.  otherwise, when we umount $CLFS prior to xl
+#        create, we'll also loose our xen userland...
+#
+#        --with-prefix-early=
+#
+#        or maybe we just go ahead and use the standard --prefix for it?
+#
+#        Either way, putting it outside our source tree means we should
+#        probably plumb up an uninstall target...
+
+# FIXME: we should move the backup tar into the the install target... or
+#        at least just make sure it doesn't get done during stag1_xen_only
+#        phase... it's a waste of 5 mins

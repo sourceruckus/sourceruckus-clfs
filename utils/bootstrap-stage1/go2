@@ -15,8 +15,10 @@ toplevel=$PWD/../..
 
 fix_perms()
 {
-    # FIXME: could use find to do the chowning, so we can skip /ruckus
-    chown -R 0:0 $CLFS &&
+    # FIXME: We do this w/ find instead of chown -R so that we can /ruckus.  It
+    #        doesn't track failure, though...
+    find $CLFS --wholename $CLFS/ruckus -prune -o \
+        -exec chown 0:0 {} \;
     chgrp 13 $CLFS/var/{run/utmp,log/lastlog} || exit 1
     if [ ! -c $CLFS/dev/console ]; then
 	mknod -m 600 $CLFS/dev/console c 5 1 || exit 1
@@ -41,6 +43,17 @@ fix_perms()
 }
 
 
+# FIXME: actually, i'm going to make the sandbox target do all this ahead of
+#        time.  so, by the time we get here, we'll be guaranteed:
+#
+#        - device exists, partition exists, filesystem created, and mounted
+#          already at $CLFS.
+#
+#        - $CLFS/ruckus already populated
+#
+
+
+
 # prep block device(s)
 #
 # FIXME: device name via autoconf?
@@ -53,7 +66,10 @@ fix_perms()
 # FIXME: Might need to check host system for mdadm and maybe add it to
 #        bootstrap-early.
 #
-DEVICE=/dev/vg00/ruckus
+# FIXME: disable if install-part (entire script should actually get disabled if
+#        install is disabled).
+#
+#DEVICE=/dev/vg00/ruckus
 
 
 # create actual baby fs
@@ -63,13 +79,19 @@ DEVICE=/dev/vg00/ruckus
 # FIXME: can BusyBox handle fsck on anything newer than ext2?
 #
 # FIXME: how do ext2/3/4 compare for compilation time?
-mkfs.ext4 $DEVICE
+#
+# FIXME: skip if install-part
+#
+#mkfs.ext4 $DEVICE
 
 
 # mount it and update CLFS variable
-CLFS=/mnt/ruckus
-mkdir -p $CLFS &&
-mount $DEVICE $CLFS || exit 1
+#
+# FIXME: skip if install-part
+#
+#CLFS=/mnt/ruckus
+#mkdir -p $CLFS &&
+#mount $DEVICE $CLFS || exit 1
 
 
 # populate with our non-root-owned tree
@@ -83,8 +105,10 @@ mount $DEVICE $CLFS || exit 1
 #       it makes the assumption that the stage2 build is going to continue on
 #       the same host (or you're going to move the whole HDD to a different
 #       box).
+#
+# FIXME: my incrementals are not working right...
 pushd $CLFS &&
-for x in baby-bootstrap-cross.tar.xz baby-bootstrap-stage1.tar.xz; do
+for x in baby-bootstrap-stage1.tar.xz; do
     echo -n "extracting $BUILDROOT/$x... "
     tar -psxf $BUILDROOT/$x || exit 1
     echo "done"
@@ -123,8 +147,10 @@ fix_perms || exit 1
 #        hand because modprobe is segfaulting.
 #
 #        WOOOO!  mount -t nfs -o nolock works!  Now, why do I need nolock...?
-go="rsync -a $toplevel/ $CLFS/ruckus/"
-echo $go
+#
+# FIXME: skip if install-part
+#go="rsync -a $toplevel/ $CLFS/ruckus/"
+#echo $go
 exit 0
 
 
