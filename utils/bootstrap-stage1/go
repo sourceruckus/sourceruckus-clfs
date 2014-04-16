@@ -772,16 +772,13 @@ done
 
 # make a backup of our progress.
 #
-# FIXME: how exactly does all this snar business work...?
-#
 # FIXME: perhaps i should ditch the compression on these backups?
-echo -n "creating bootstrap-stage1 backup... "
-cp $BUILDROOT/baby-bootstrap-cross.snar \
-    $BUILDROOT/baby-bootstrap-stage1.snar &&
-tar -Jcf $BUILDROOT/baby-bootstrap-stage1.tar.xz \
-    -g $BUILDROOT/baby-bootstrap-stage1.snar \
-    -C $CLFS . || exit 1
-echo "done."
+if [ "$STAGE1_XEN_ONLY" != "yes" ]; then
+    echo -n "creating bootstrap-stage1 backup... "
+    tar -Jcf $BUILDROOT/baby-bootstrap-stage1.tar.xz \
+        -C $CLFS . || exit 1
+    echo "done."
+fi
 
 
 
