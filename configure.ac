@@ -144,8 +144,9 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 #       build a hypervisor), we'll still have the x86_64 one laying around.
 #
 #       So, if bulding for i686, we'll check for a built x86_64 hypervisor
-#       in .build, and unless the user supplied --disable-xen, we'll throw
-#       an error message if it's not there.
+#       in .build, and unless the user supplied --disable-xen, we'll display
+#       a warning message and do some cross-compiling magic to build it if
+#       it's missing.
 #
 # NOTE: We'll also have to keep the x86_64 hypervisor around for the
 #       final build phase, at which point we'll be rebuilding the i686
@@ -162,16 +163,12 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 # host 64bit, building 64bit: final
 #
 # so on a 32bit host, ./configure --with-arch=i686 ... will print a warning
-# during configure.  It should then automatically ./configure
+# during configure.  It will then automatically ./configure
 # --with-arch=x86_64 --disable-multilib ... --stage1-xen-only, build through
-# stage1 (which will ONLY include Xen and it's deps), then make clean and
-# ./configure --with-arch=i686 ... again, then build more.
+# stage1 (which will ONLY include Xen), then make clean and ./configure
+# --with-arch=i686 ... again, then build more.
 #
-# FIXME: Make this a giant note in the config summary, and automate it using
-#        config.status (i.e., configuring for 32bit should alert the user of
-#        lots of extra work, bootstrap target should then backup
-#        config.status, configure for 64bit w/ xen only, bootstrap, clean,
-#        restore and run original config.status, cary on w/ bootstrap).
+# FIXME: did i get this right?
 AC_ARG_ENABLE(xen,
   AS_HELP_STRING([--disable-xen], [Disable building Xen in bootstrap and final system.]),
   xen_enabled=$enableval,
@@ -179,17 +176,22 @@ AC_ARG_ENABLE(xen,
      [# need to check for prebuilt x86_64 hypervisor
       AS_IF([test -f $PREFIX_EARLY/boot/xen.gz],
         xen_enabled=yes,
-        [AC_MSG_ERROR([
+        [AC_MSG_WARN([
 		*************************************************************
-		Xen requires a 64bit hypervisor.  You need to configure for
-		x86_64 and build up through the end of bootstrap-cross, then
-                use the cross-compiler to build an x86_64 xen.gz and put it in
-                $PREFIX_EARLY/boot.
-                Then reconfigure for i686.
+		Xen requires a 64bit hypervisor.  The build will go on a
+		detour to cross-compile the hypervisor automatically.  This
+		entails reconfiguring, building the cross-compilation
+		toolchain, cross-compiling xen, removing the
+		cross-compilation toolchain, reconfiguring back to the
+		original config, and carrying on with the build.  Log files
+		may look confusing, and it may take longer than expected,
+		but it does work.  ;-)
 
-                Or, disable Xen in both the bootstrap and final systems w/
-                the --disable-xen flag.
-		*************************************************************])
+                If you don't really care about Xen, you can disable it in
+                both the bootstrap and final systems w/ the --disable-xen
+                flag.
+                *************************************************************])
+	 xen_enabled=yes
         ])
      ],
      xen_enabled=yes)
