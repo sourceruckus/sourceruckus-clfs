@@ -3,18 +3,24 @@ EXTRA_DIST+=README
 EXTRA_DIST+=go
 EXTRA_DIST+=patches
 
+.PHONY: bootstrap-local-xen
 bootstrap-local-xen:
 	pushd $(top_srcdir) && \
-	mv config.status config.status.bak && \
+	grep -m1 "./configure" config.log | sed 's|.*configure ||' \
+	    > .previous_flags && \
 	./configure --with-arch=x86_64 --disable-multilib \
 	    --with-stage1-xen-only && \
 	make bootstrap && \
 	make clean && \
-	mv config.status.bak config.status && \
-	./config.status && \
+	./configure `cat .previous_flags` && \
+	rm .previous_flags && \
 	popd
 
 
+# Add the xen hook as a dependent of the local hook if needed
+if NEED_CROSS_COMPILED_XEN
+bootstrap-local: bootstrap-local-xen
+endif
 
 # NOTE: Each individual package being built just simply does a re-install
 #       if .build dir already exists.

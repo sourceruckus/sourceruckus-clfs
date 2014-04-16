@@ -749,6 +749,8 @@ AS_IF([test "$stage2_xen" != "no"],
   ]
 )
 AC_SUBST(NEED_CROSS_COMPILED_XEN, $need_cross_compiled_xen)
+AM_CONDITIONAL([NEED_CROSS_COMPILED_XEN],
+  [test x$need_cross_compiled_xen = xyes])
 
 
 # check for CLFS symlinks...
