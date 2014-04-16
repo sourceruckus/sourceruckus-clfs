@@ -292,6 +292,46 @@ AC_ARG_ENABLE(install-part,
   [install_part=$enableval
    install_type=part
    build_install=yes
+   # check that partition is mounted
+   mtab=`grep "^$install_part" /proc/mounts`
+   AS_IF([test -z "$mtab"],
+     [AC_MSG_ERROR([
+		*************************************************************
+		The installation partition must already exist and be
+		mounted.  Note that if you're using LVM, you need to
+		specify as /dev/mapper/VG-LV (i.e., /dev/VG/LV won't
+		work).
+
+                You specified: --enable-install-part=$install_part
+		*************************************************************])
+     ])
+   # check that $top_srcdir is at /ruckus of partition
+   mp=`echo $mtab | awk '{print $2}'`
+   AS_IF([test "$mp/ruckus" != "$abs_srcdir"],
+     [AC_MSG_ERROR([
+		*************************************************************
+		The srcdir must be at /ruckus of the installation
+		partition (e.g., /path/to/partition/ruckus).
+
+                You specified: --enable-install-part=$install_part
+		Mountpoint: $mp
+		Srcdir: $abs_srcdir
+		*************************************************************])
+     ])
+   # check that $toplevel/.. is writeable
+   #
+   # FIXME: i might not need this if we're going to leave CLFS pointing at
+   #        .build/baby until boot-prep.
+   AS_IF([touch $mp/.foo],
+     [rm $mp/.foo],
+     [AC_MSG_ERROR([
+		*************************************************************
+		The installation partition must be writeable by the build
+		user.
+
+                You specified: --enable-install-part=$install_part
+		*************************************************************])
+     ])
   ],
   install_part=no)
 
