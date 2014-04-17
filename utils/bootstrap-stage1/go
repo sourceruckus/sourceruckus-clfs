@@ -300,16 +300,20 @@ build()
 
             # NOTE: We can't let flex build manpage, because help2man tries to
             #       run ../flex --help, which is cross-compiled for a
-            #       non-native architecture.  The following sed statement
-            #       disables manpage generation for now.
+            #       non-native architecture.  The following sed statements
+            #       disable manpage and pdf generation for now.
             #
             # NOTE: CLFS doesn't run into this because they use dist tarballs
             #       as apposed to git trees.
 	    #
-	    # FIXME: Flex is still failing during doc on my avlinux
-	    #        box... not sure why...
+	    # FIXME: I think?  I'm not entirely sure why the behavior isn't
+	    #        more consistent accross host systems... definately
+	    #        barfs on avlinux, but even when "cross-compiling" for
+	    #        i686 on an i686.  And I swear I got past this w/out any
+	    #        issues on a really old 32bit fedora box...
             pushd $builddir &&
             sed -i 's|^dist_man_MANS|#dist_man_MANS|' doc/Makefile &&
+            sed -i 's|^dist_doc_DATA|#dist_doc_DATA|' doc/Makefile &&
             popd || exit 1
 
 	    compile_generic $1 || exit 1
