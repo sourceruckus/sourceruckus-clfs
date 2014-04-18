@@ -9,7 +9,7 @@ bootstrap-local-xen:
 	grep -m1 "./configure" config.log | sed 's|.*configure ||' \
 	    > .previous_flags && \
 	./configure --with-arch=x86_64 --disable-multilib \
-	    --with-stage1-xen-only && \
+	    --with-stage1-xen-only --disable-install && \
 	make bootstrap && \
 	make clean && \
 	./configure `cat .previous_flags` && \
@@ -20,11 +20,9 @@ bootstrap-local-xen:
 # Add the xen hook as a dependent of the local hook if needed
 if NEED_CROSS_COMPILED_XEN
 bootstrap-local: bootstrap-local-xen
-endif
-
-# NOTE: Each individual package being built just simply does a re-install
-#       if .build dir already exists.
+else
 bootstrap-local:
+endif
 	env -i ./go
 
 clean-local:

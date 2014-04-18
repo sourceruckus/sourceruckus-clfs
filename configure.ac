@@ -203,6 +203,7 @@ AC_ARG_ENABLE(xen,
 #        stage xen package.  for example, if we disable xen and build32
 #        bit, the final build stage xen package will silently not build
 #        the xen hypervisor... making it pretty useless.
+AM_CONDITIONAL([XEN_ENABLED], [test x$xen_enabled = xyes])
 
 AC_ARG_WITH(stage1-xen-only,
   AS_HELP_STRING([--with-stage1-xen-only], [Just build the Xen hypervisor in bootstrap-stage1.  This is usefull when you just need to cross-compile the Xen hypervisor for x86_64.]),
@@ -220,13 +221,10 @@ AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 #     going to assume that the partition and filesystem are already
 #     created and it WILL NOT install a bootloader.  This is perfect for
 #     when you want to boot the resulting bootstrap system as a virtual
-#     machine.
+#     machine or dual boot it on the build system.
 #
-# FIXME: We should try and detect if the specified partition IS the partition
-#        that our source tree already resides on, before we do anything
-#        silly...  Maybe we should just, as a rule, require that our source
-#        tree already resides at /ruckus of the specified partition's
-#        filesystem?
+#     NOTE: This will require that our source tree already resides at
+#           /ruckus of the specified partition's filesystem.
 #
 # --enable-install-dev=/dev/sdX
 #
@@ -246,6 +244,15 @@ AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 #            separate RAID1 /boot partition.  Should we make the user
 #            specify two md devs via configure?  Autodetect next available
 #            minor md number?
+#
+# FIXME: I'm pretty sure I'm going to remove the -raid0 and -dev
+#        installation flags and put that code into a standalone build
+#        wrapper script.  The driver behind this is: boot off of LiveCD,
+#        clone wrapper script, execute it.  The script can then set up the
+#        HDDs appropriately and clone the whole ruckus tree into them
+#        AFTERWARDS.  Otherwise, we have to be able to clone the whole
+#        ruckus tree on the LiveCD, which may not work (i.e., not enough
+#        drive space?)
 #
 # --enable-stage2-xen
 #
@@ -268,10 +275,17 @@ AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 #
 #    Bootstrap system will automatically kick off the stage2 builder.
 #
-#    FIXME: I'm not so sure this is a good idea... Sure, we can do it, but
-#           you probably want to manually kick it off.  This way nothing
-#           can blow up your source tree w/out you explicitly kicking off
-#           the command.
+#    NOTE: It sounds like not such a good idea... you probably want to
+#          manually kick it off.  This way nothing can blow up your source
+#          tree w/out you explicitly kicking off the command.
+#
+#          However!  If it takes 2-ish hours to get to this point, and we
+#          eventually want to automate the whole build, you want want to
+#          have to come back 2 hrs later and kick off the stage2 builder.
+#          With this flag (and maybe another one to automagically boot as
+#          a domU or reboot), we'll be able to automate the entire build
+#          process to a single command to kick-off and come back when it's
+#          all done.
 #
 # --with-fstype=ext2
 #
@@ -280,18 +294,25 @@ AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 #    want ext2 to avoid journaling overhead and improve disk performance,
 #    but I'd like to benchmark this before hardcoding it.
 #
+# FIXME: fstype might get swallowed up into build script along with -raid0
+#        and -dev sandbox targets.
 #
 # NOTE: Only a single --enable-install* option can be supplied.  Default
 #       is --disable-install.
 #
+# FIXME: default SHOULD be to require either a valid --enable-install-part
+#        or --disable-install.
+#
 # NOTE: If configured w/out an --enable-install* option, the sandbox and
 #       install targets will be disabled.
+#
+# FIXME: still true?
 
 install_type=none
 AC_ARG_ENABLE(install,
-  AS_HELP_STRING([--disable-install], [Disable sandbox and install targets (enable via specific --enable-install-* options) [default=disabled]]),
+  AS_HELP_STRING([--disable-install], [Disable sandbox and install targets (enable via specific --enable-install-* options) [default=enabled]]),
   build_install=$enableval,
-  build_install=no)
+  build_install=yes)
 
 AC_ARG_ENABLE(install-part,
   AS_HELP_STRING([--enable-install-part=PARTITION], [Install into specified PARTITION.]),
@@ -356,6 +377,15 @@ AC_ARG_ENABLE(install-raid0,
    build_install=yes
   ],
   install_raid0=no)
+
+AS_IF([test "$build_install" = "yes" -a "$install_type" = "none"],
+  [AC_MSG_ERROR([
+		*************************************************************
+		You must either specify a valid installation partition via
+		the --enable-install-part option or disable installation
+		entirely via the --disable-install option.
+		*************************************************************])
+  ])
 
 # FIXME: handle multiple --enable-install flags
 
@@ -522,9 +552,6 @@ AS_IF([test "$XZ" != ""], [], [p_early+=" xz"])
 
 # make sure that we have a version of tar that can extract tarballs
 # compressed with gzip, bzip2, and xz
-#
-# FIXME: might want to check for -g incremental support, although, if it's
-#        got xz support, I can't imagine it wouldn't have -g...
 AC_PATH_PROG(TAR, [tar])
 AC_ARG_VAR(TAR, Path to tar binary (must support gzip, bzip2, and xz))
 AS_IF([test "$TAR" != ""],
@@ -727,6 +754,10 @@ AS_IF([test "$CPIO" != ""], [], [p_early+=" cpio"])
 #        always install what we've got controlled... it'll only take a we
 #        bit extra and then we're guaranteed to be using the right
 #        version.
+#
+# FIXME: also, we should hack up ruckusrd to use a busybox submodule
+#        instead of using host system executables.  this way we can rig it
+#        to cross-compile.  and it'll be smaller, and snazzier.  ;-)
 AC_CACHE_CHECK([for ruckusrd >= 0.10], [ac_cv_path_RUCKUSRD],
   [AC_PATH_PROGS_FEATURE_CHECK([RUCKUSRD], [ruckusrd],
     [[result=`$ac_path_RUCKUSRD --version | cut -b2- | awk '{tmp=split($NF,v,"."); if (v[1] < 0) print "no"; else if (v[1] == 0 && v[2] < 10) print "no2"; else print "yes"}'`

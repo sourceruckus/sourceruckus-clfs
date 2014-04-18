@@ -42,6 +42,17 @@ RUCKUS_BOOTSTRAP_STAGE2_FILE=/.ruckus_bootstrap_stage2
 
 # only add BOOTSTRAP_EARLY and BOOTSTRAP_CROSS to PATH if we haven't booted
 # into the stage2 bootstrap system yet.
+#
+# FIXME: we need to be more careful here...
+#
+#        1. We may not want EARLY in our path anymore once we get into stage1
+#           (i.e., we don't want to link against host system things while
+#           cross-compiling stage1).  I ran into this on my avlinux box w/ make
+#           accidentally detecing host system's guile, then trying to link
+#           against it (this was actually because our pkg-config compiles in
+#           the host system's pkg-config search path too, but illustrates the
+#           point).
+#
 if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
     # setup environment to use our bootstrap-early stuff
     export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH

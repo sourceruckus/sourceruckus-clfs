@@ -28,6 +28,14 @@ BOOTSTRAP_FSTYPE=@BOOTSTRAP_FSTYPE@
 #        /mnt/sandbox/ruckus at the get go.  we'll still be building/installing
 #        into /mnt/sandbox/ruckus/.build/baby, but we'll want to be sure to
 #        chown prior to installing into /mnt/sandbox/
+#
+# FIXME: thinking about moving all the sandbox stuff into a build wrapper
+#        script in a different git tree...
+#
+# FIXME: Do we want to change this variable to point at the installed system
+#        during/after the install target?  In other words, prior to installing
+#        it would be /mountpoint/ruckus/.build/baby, but afterwards it would be
+#        /mountpoint.
 CLFS=@CLFS@
 
 # set host and target variables.
