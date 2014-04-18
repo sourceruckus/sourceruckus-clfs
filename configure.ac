@@ -116,14 +116,16 @@ AS_IF([test "$build_arch" = "i686"],
   ])
 
 
+# FIXME: isn't there a better way to do this? some m4 or ac macro?
 abs_srcdir=$(cd $srcdir && pwd)
 BUILDROOT=$abs_srcdir/.build
-PREFIX_EARLY=$BUILDROOT/bootstrap-early
+#PREFIX_EARLY=$BUILDROOT/bootstrap-early
+PREFIX_EARLY=$prefix
 PREFIX_CROSS=/cross-tools
 PREFIX_FINAL=/tools
 CLFS=$BUILDROOT/baby
 AC_ARG_VAR(BUILDROOT, The build dir)
-AC_ARG_VAR(PREFIX_EARLY, Prefix for bootstrap-early)
+AC_ARG_VAR(PREFIX_EARLY, [Prefix for bootstrap-early (i.e., --prefix)])
 AC_ARG_VAR(PREFIX_CROSS, Prefix for bootstrap-cross)
 AC_ARG_VAR(PREFIX_FINAL, Prefix for bootstrap-final)
 AC_ARG_VAR(CLFS, Location of baby filesystem during build)
@@ -921,7 +923,7 @@ echo
 
 # FIXME: we need bootstrap-early to be OUTSIDE of CLFS if we're going to
 #        boot via xen.  otherwise, when we umount $CLFS prior to xl
-#        create, we'll also loose our xen userland...
+#        create, we'll also lose our xen userland...
 #
 #        --with-prefix-early=
 #
@@ -929,7 +931,34 @@ echo
 #
 #        Either way, putting it outside our source tree means we should
 #        probably plumb up an uninstall target...
+#
+# FIXME: We probably also need to make sure that all the src/ sourcetrees
+#        have been bootstrapped prior to booting into the stage2 builder
+#        w/out the bootstrap-early content...  And we probably need to
+#        build bootstrap-early prior to even attempting to bootstrap all
+#        the src submodules.
+#
+# FIXME: Using --prefix for PREFIX_EARLY.  However, this means that we now
+#        have to worry about root perms for bootstrap-early's install
+#        commands...  /usr/local is the default, after all...
+#
+#        Could take a classic not-my-problem stance here... which is
+#        probably the most appropriate thing to do... but then I should
+#        probably also split bootstrap and bootstrap-install into seperate
+#        targets... chich breaks my current scripts.
+#
+#        Really can't split boostrap into build/install targets because the
+#        install from package a is going to be required to build package
+#        b...
+#
+#        1) Gonna have to use sudo for install targets, which means we
+#           should probably check for it.  Maybe add a --with-sudo-install
+#           flag?
+#
+#        or
+#
+#        2) Check for user writability in PREFIX_EARLY and use the scripts
+#           as-is?  Feels pretty odd to require writability in /usr/local...
+#
+#        or both and let the user decide?
 
-# FIXME: we should move the backup tar into the the install target... or
-#        at least just make sure it doesn't get done during stag1_xen_only
-#        phase... it's a waste of 5 mins
