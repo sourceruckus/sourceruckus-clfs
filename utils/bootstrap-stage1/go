@@ -370,6 +370,10 @@ build()
 	    compile_generic || exit 1
 	    ;;
 
+	make)
+	    build_generic $1 $OPTS --without-guile || exit 1
+	    ;;
+
 	texinfo)
 	    # We have a configure.ac patch and need to force an autoreconf
 	    autoreconf=yes \
