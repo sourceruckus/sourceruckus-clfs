@@ -112,3 +112,6 @@
 [submodule "src/libaio"]
 	path = src/libaio
 	url = git://git.fedorahosted.org/git/libaio.git
+[submodule "src/kernel-firmware"]
+	path = src/kernel-firmware
+	url = git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware
