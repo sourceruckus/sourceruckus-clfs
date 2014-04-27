@@ -15,7 +15,7 @@ EXTRA_DIST+=go
 #       don't mess up a perfectly fine build, I've rigged this up to
 #       only build to completion a single time.
 bootstrap-local:
-	[ ! -f .build/ALL_DONE ] && env -i ./go || echo nothing to build
+	[ ! -f .build/ALL_DONE ] && ( env -i ./go || exit 1 ) || echo nothing to build
 
 
 # NOTE: We remove the .build directory for the other bootstrap stages

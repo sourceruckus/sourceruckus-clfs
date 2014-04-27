@@ -771,8 +771,9 @@ AC_CACHE_CHECK([for extlinux >= 4.0], [ac_cv_path_EXTLINUX],
 #        just xen itself (i.e., don't check for other xen deps? and just
 #        print a warning regarding kernel and being booted into xen?)
 #
-need_cross_compiled_xen=no
-AS_IF([test "$stage2_xen" != "no"],
+stage1_xen=no
+stage1_xen_detour=no
+AS_IF([test "$xen_enabled" != "no"],
   [# We've got a few extra deps for Xen to check for
    #
    # NOTE: as86, ld86, bcc, and iasl or only needed for x86* builds.  That's
@@ -795,13 +796,22 @@ AS_IF([test "$stage2_xen" != "no"],
 
    AS_IF([test "$build_cpu" != "x86_64"],
      [AS_IF([test ! -f $PREFIX_EARLY/boot/xen.gz],
-        [need_cross_compiled_xen=yes])
+        [stage1_xen=yes
+         case "$build_arch" in
+           *64)
+	     ;;
+	   *)
+	     stage1_xen_detour=yes
+	     ;;
+	 esac
+        ])
      ])
   ]
 )
-AC_SUBST(NEED_CROSS_COMPILED_XEN, $need_cross_compiled_xen)
-AM_CONDITIONAL([NEED_CROSS_COMPILED_XEN],
-  [test x$need_cross_compiled_xen = xyes])
+AC_SUBST(STAGE1_XEN, $stage1_xen)
+AC_SUBST(STAGE1_XEN_DETOUR, $stage1_xen_detour)
+AM_CONDITIONAL([STAGE1_XEN], [test x$stage1_xen = xyes])
+AM_CONDITIONAL([STAGE1_XEN_DETOUR], [test x$stage1_xen_detour = xyes])
 
 
 # check for CLFS symlinks...
@@ -884,6 +894,9 @@ echo "Options:"
 echo "  Final Target Arch....: $build_arch"
 echo "  Multilib.............: $build_multilib"
 echo "  Xen Enabled..........: $xen_enabled"
+echo "  Stage1 Xen...........: $stage1_xen"
+echo "  Stage1 Xen Detour....: $stage1_xen_detour"
+echo "  Stage1 Xen Only......: $stage1_xen_only"
 echo "  Install Type.........: $install_type"
 case "$install_type" in
   part)
@@ -903,8 +916,6 @@ case "$install_type" in
     echo "  Bootstrap fstype.....: $build_fstype"
 esac
 echo "  Xen stage2...........: $stage2_xen"
-echo "  Cross-compile Xen....: $need_cross_compiled_xen"
-echo "  Stage1 Xen Only......: $stage1_xen_only"
 echo "  Auto stage2..........: $stage2_auto"
 echo
 echo "CLFS Variables:"
@@ -965,3 +976,5 @@ echo
 #
 #        or both and let the user decide?
 
+
+# FIXME: PREFIX_EARLY gets set to NONE if --prefix isn't specified...

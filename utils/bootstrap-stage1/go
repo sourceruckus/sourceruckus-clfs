@@ -764,7 +764,7 @@ packages+=" kernel"
 # addition to the other packages.
 if [ "$STAGE1_XEN_ONLY" = "yes" ]; then
     packages=xen
-elif [ "$NEED_CROSS_COMPILED_XEN" = "yes" ]; then
+elif [ "$STAGE1_XEN" = "yes" ]; then
     packages+=" xen"
 fi
 

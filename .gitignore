@@ -1,6 +1,7 @@
 *~
 
 .build
+.build-detour
 
 /get_sources.tar
 /utils/bootstrap-early/config

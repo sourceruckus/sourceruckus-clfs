@@ -12,4 +12,4 @@ bootstrap-local:
 	env -i ./go
 
 clean-local:
-	rm -rf .build
+	rm -rf .build*
