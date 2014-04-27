@@ -742,34 +742,6 @@ AC_ARG_VAR(BC, Path to bc binary)
 AS_IF([test "$BC" != ""], [], [p_early+=" bc"])
 
 
-# for ruckusrd
-AC_PATH_PROG(CPIO, [cpio])
-AC_ARG_VAR(CPIO, Path to cpio binary)
-AS_IF([test "$CPIO" != ""], [], [p_early+=" cpio"])
-
-
-# check for ruckusrd >= 0.10
-#
-# FIXME: instead of checking for a certain version here, why don't I just
-#        always install what we've got controlled... it'll only take a we
-#        bit extra and then we're guaranteed to be using the right
-#        version.
-#
-# FIXME: also, we should hack up ruckusrd to use a busybox submodule
-#        instead of using host system executables.  this way we can rig it
-#        to cross-compile.  and it'll be smaller, and snazzier.  ;-)
-AC_CACHE_CHECK([for ruckusrd >= 0.10], [ac_cv_path_RUCKUSRD],
-  [AC_PATH_PROGS_FEATURE_CHECK([RUCKUSRD], [ruckusrd],
-    [[result=`$ac_path_RUCKUSRD --version | cut -b2- | awk '{tmp=split($NF,v,"."); if (v[1] < 0) print "no"; else if (v[1] == 0 && v[2] < 10) print "no2"; else print "yes"}'`
-     test "x$result" = "xyes" && ac_cv_path_RUCKUSRD=$ac_path_RUCKUSRD ac_path_RUCKUSRD_found=:
-    ]],
-
-    [ac_cv_path_RUCKUSRD=no
-     p_early+=" ruckusrd"
-    ])
-  ])
-
-
 # check for extlinux >= 4.x for ext4 support
 #
 # FIXME: really only needed if we're not doing stage2_xen
