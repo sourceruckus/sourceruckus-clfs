@@ -8,7 +8,7 @@
 # For example:
 #
 
-{"git://sourceruckus.org/mirror":
+{"/mnt/root-true/mirror":
     [
      "git://anongit.freedesktop.org",
      "git://busybox.net",
@@ -30,11 +30,11 @@
      "git://git.fedorahosted.org/git",
      "git://git.kernel.org/pub/scm/linux/kernel/git/firmware",
     ],
- "git://sourceruckus.org/mirror/xen":
+ "/mnt/root-true/mirror/xen":
     [
      "git://xenbits.xen.org",
     ],
- "git://sourceruckus.org/mirror/qemu":
+ "/mnt/root-true/mirror/qemu":
     [
      "git://git.qemu.org",
     ]
