@@ -1,5 +1,5 @@
 # -*- mode: autoconf -*-
-AC_PREREQ(2.62)
+AC_PREREQ(2.65)
 AC_INIT([Source Ruckus], [3.0-dev], [michael.d.labriola@gmail.com], sourceruckus)
 
 # figure out our host system
@@ -17,22 +17,22 @@ AC_INIT([Source Ruckus], [3.0-dev], [michael.d.labriola@gmail.com], sourceruckus
 AC_CANONICAL_BUILD
 CLFS_HOST=$build_cpu-cross-$build_os
 
-# check for automake >= 1.11.1
+# check for automake >= 1.13
 #
-# NOTE: Cyclic dependencies of doom this way come.  Not having at least
-#       automake 1.11 DEFINATELY is a problem... I think having >= 1.11.1
-#       is OK, but I'm not even sure of that.  :-/
-#
-# NOTE: This is fatal.  Unlink the other checks, which are deciding what
+# NOTE: This is fatal.  Unlike the other checks, which are deciding what
 #       to build in bootstrap-early, a recent version of automake is
 #       NEEDED in order to even bootstrap the source trees for the
 #       bootstrap-early packages.
 #
+# NOTE: We now use AM_EXTRA_RECURSIVE_TARGETS, which was added in v1.13.
+#       This is also what's driving our autoconf >= 2.65 requirement
+#       (autoconf 1.13 requires autoconf 2.65).
+#
 # NOTE: We set 'foreign' to allow for GNU Make extensions in our automake
 #       files
-AM_INIT_AUTOMAKE(1.11.1 foreign)
+AM_INIT_AUTOMAKE(1.13 foreign)
 
-# We don't direcetly need libtool here, but leaving this out may cause
+# We don't directly need libtool here, but leaving this out may cause
 # source trees inside the src dir to fail to bootstrap unless we add
 # AC_CONFIG_AUX_DIR calls to each of them.  By default, automake and
 # autoconf will walk up the directory tree looking for auxilary files
@@ -959,7 +959,7 @@ echo
 #        Could take a classic not-my-problem stance here... which is
 #        probably the most appropriate thing to do... but then I should
 #        probably also split bootstrap and bootstrap-install into seperate
-#        targets... chich breaks my current scripts.
+#        targets... which breaks my current scripts.
 #
 #        Really can't split boostrap into build/install targets because the
 #        install from package a is going to be required to build package
