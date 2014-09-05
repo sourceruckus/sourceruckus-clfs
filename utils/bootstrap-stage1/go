@@ -499,9 +499,9 @@ build()
 	    # this will handle config files for init, mdev, users/groups,
             # logfiles, login scripts, fstab, needed device nodes, etc
 	    
-	    # copy inittab and mdev.conf into etc
-	    mkdir -vp $CLFS/etc &&
-	    #cp -v config/inittab $CLFS/etc &&
+	    # copy rcS and mdev.conf into etc
+	    mkdir -vp $CLFS/etc/init.d &&
+	    cp -v config/rcS $CLFS/etc/init.d &&
 	    cp -v config/mdev.conf $CLFS/etc || exit 1
 
 	    # copy passwd and group files into etc
