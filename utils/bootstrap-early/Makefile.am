@@ -18,15 +18,6 @@ bootstrap-local:
 	[ ! -f .build/ALL_DONE ] && ( env -i ./go || exit 1 ) || echo nothing to build
 
 
-# NOTE: We remove the .build directory for the other bootstrap stages
-#       during clean.  We don't want to do that here, though, because
-#       we want to be able to configure 64bit, build through stage1
-#       xen, make clean, configure 32bit, and make bootstrap w/out
-#       rebuilding bootstrap-early.
-#
-# NOTE: Distclean is probably not the most correct place to remove
-#       .build, but if we don't do it there and we don't do it in
-#       clean, it'll never get done.
 clean-local:
-distclean-local:
 	rm -rf .build
+	rm -rf .build-detour

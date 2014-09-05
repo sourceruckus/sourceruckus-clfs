@@ -11,6 +11,7 @@ bootstrap-local-xen:
 	./configure --with-arch=x86_64 --disable-multilib --prefix=$(prefix) \
 	    --with-stage1-xen-only --disable-install && \
 	make bootstrap && \
+	mv .build{,-detour} && \
 	mv utils/bootstrap-cross/.build{,-detour} && \
 	mv utils/bootstrap-stage1/.build{,-detour} && \
 	./configure `cat .previous_flags` && \
@@ -27,4 +28,5 @@ endif
 	env -i ./go
 
 clean-local:
-	rm -rf .build*
+	rm -rf .build
+	rm -rf .build-detour

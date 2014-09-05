@@ -12,3 +12,7 @@ EXTRA_DIST+=init_submodules
 download:
 	./init_submodules @INIT_SUBMOD_ARGS@
 	./get_sources @GET_SOURCES_ARGS@
+
+clean-local:
+	rm -rf .build
+	rm -rf .build-detour
