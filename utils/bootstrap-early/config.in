@@ -13,8 +13,6 @@ PREFIX_EARLY=@PREFIX_EARLY@
 PREFIX_CROSS=@PREFIX_CROSS@
 PREFIX_FINAL=@PREFIX_FINAL@
 
-BOOTSTRAP_FSTYPE=@BOOTSTRAP_FSTYPE@
-
 
 # --- CLFS Variables ------------------------------------------------------
 

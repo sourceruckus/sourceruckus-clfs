@@ -116,19 +116,155 @@ AS_IF([test "$build_arch" = "i686"],
   ])
 
 
+# NOTE: no need to check if this is mounted... it has to be
+AC_ARG_WITH(ruckus-dev,
+  AS_HELP_STRING([--with-ruckus-dev=DEV], [/ruckus is a seperate partition, as apposed to it being on the installation partition.]),
+  [ruckus_dev=$withval])
+AC_SUBST(RUCKUS_DEV, $ruckus_dev)
+
+AC_ARG_WITH(ruckus-path,
+  AS_HELP_STRING([--with-ruckus-path=PATH], [Path to ruckus src tree on specified device [default: /]]),
+  [ruckus_path=$withval])
+AC_SUBST(RUCKUS_PATH, $ruckus_path)
+
+AC_ARG_WITH(install-dev,
+  AS_HELP_STRING([--with-install-dev=DEV], [Install on specified DEV, which must be mounted and writeable by build user.]),
+  [install_dev=$withval
+   # check that it's mounted
+   mtab=`grep "^$install_dev" /proc/mounts`
+   AS_IF([test -z "$mtab"],
+     [AC_MSG_ERROR([
+		*************************************************************
+		The installation device must already exist and be mounted.
+		Note that if you're using LVM, you may need to specify as
+		/dev/mapper/VG-LV (i.e., if /dev/VG/LV doesn't work).
+
+                You specified: --with-install-dev=$install_dev
+		*************************************************************])
+     ])
+   # if CLFS wasn't specified, set it to mountpoint of install_dev
+   mp=`echo $mtab | awk '{print $2}'`
+   AS_IF([test -z "$CLFS"], [CLFS=$mp])
+  ],
+  install_part=no)
+
+
+
 # FIXME: isn't there a better way to do this? some m4 or ac macro?
+# FIXME: need to pass this variable along so we can pass device to domU
 abs_srcdir=$(cd $srcdir && pwd)
-BUILDROOT=$abs_srcdir/.build
-#PREFIX_EARLY=$BUILDROOT/bootstrap-early
-PREFIX_EARLY=$prefix
-PREFIX_CROSS=/cross-tools
-PREFIX_FINAL=/tools
-CLFS=$BUILDROOT/baby
-AC_ARG_VAR(BUILDROOT, The build dir)
-AC_ARG_VAR(PREFIX_EARLY, [Prefix for bootstrap-early (i.e., --prefix)])
-AC_ARG_VAR(PREFIX_CROSS, Prefix for bootstrap-cross)
-AC_ARG_VAR(PREFIX_FINAL, Prefix for bootstrap-final)
-AC_ARG_VAR(CLFS, Location of baby filesystem during build)
+
+AS_IF([test -z "$BUILDROOT"],
+  [BUILDROOT=$abs_srcdir/.build])
+
+AS_IF([test -z "$PREFIX_EARLY"],
+  [PREFIX_EARLY=$prefix])
+
+AS_IF([test "$PREFIX_EARLY" = "NONE" ],
+  [PREFIX_EARLY=$BUILDROOT/bootstrap-early])
+
+AS_IF([test -z "$PREFIX_CROSS"],
+  [PREFIX_CROSS=/cross-tools])
+
+AS_IF([test -z "$PREFIX_FINAL"],
+  [PREFIX_FINAL=/tools])
+
+AS_IF([test -z "$CLFS"],
+  [CLFS=$BUILDROOT/baby])
+
+AC_ARG_VAR(BUILDROOT,
+  [The build dir (default: $abs_srcdir/.build)])
+
+AC_ARG_VAR(PREFIX_EARLY,
+  [Prefix for bootstrap-early (default: $BUILDROOT/bootstrap-early)])
+
+AC_ARG_VAR(PREFIX_CROSS,
+  [Prefix for bootstrap-cross (default: /cross-tools)])
+
+AC_ARG_VAR(PREFIX_FINAL,
+  [Prefix for bootstrap-final (default: /tools)])
+
+AC_ARG_VAR(CLFS,
+  [Location of baby filesystem during build (default: mountpoint of $install_dev)])
+
+
+# check that $CLFS is writeable
+mkdir -p $CLFS 2>/dev/null
+AS_IF([touch $CLFS/.foo 2>/dev/null],
+  [rm $CLFS/.foo],
+  [AC_MSG_ERROR([
+		*************************************************************
+		The installation partition must be writeable by the build
+		user.
+
+                You specified: $CLFS
+		*************************************************************])
+  ])
+
+
+# xen detour
+#
+AC_ARG_WITH(stage1-xen-only,
+  AS_HELP_STRING([--with-stage1-xen-only], [Just build the Xen hypervisor in bootstrap-stage1.  This is usefull when you just need to cross-compile the Xen hypervisor for x86_64.]),
+  stage1_xen_only=$withval,
+  stage1_xen_only=no)
+
+# FIXME: make sure xen is enabled?  error if disabled.
+AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
+
+
+# sanity checks
+#
+# NOTE: install_dev is required unless --with-stage1-xen-only, CLFS
+#       cannot be unset at this point, and we need to check the validity
+#       of ruckus_dev if provided.
+
+AS_IF([test -z "$install_dev" -a "$stage1_xen_only" != "yes"],
+  [AC_MSG_ERROR([
+		*************************************************************
+		You must specify an Install Device via --with-install-dev.
+		*************************************************************])
+  ])
+
+# check that $CLFS/ruckus exists if ruckus_dev wasn't specified
+AS_IF([test "$CLFS/ruckus" != "$abs_srcdir" -a -z "$ruckus_dev"],
+  [AC_MSG_ERROR([
+		*************************************************************
+		The srcdir must be at /ruckus of the installation
+		partition (e.g., /path/to/partition/ruckus) unless a
+		seperate partition is being used (via --with-ruckus-dev
+		and --with-ruckus-path).
+
+                You specified: --with-install-dev=$install_dev
+		Mountpoint: $CLFS
+		Srcdir: $abs_srcdir
+		*************************************************************])
+  ])
+
+# if user specified ruckus_dev, it could be wrong...
+AS_IF([test -n "$ruckus_dev"],
+  [mtab=`grep "^$ruckus_dev" /proc/mounts`
+   mp=`echo $mtab | awk '{print $2}'`$ruckus_path
+   mp=$(cd $mp && pwd)
+   AS_IF([test "$mp" != "$abs_srcdir"],
+     [AC_MSG_ERROR([
+		*************************************************************
+		Ruckus Device was specified, but doesn't match reality.
+
+                You specified: --with-ruckus-dev=$ruckus_dev
+                Mountpoint: $mp
+                Srcdir: $abs_srcdir
+		*************************************************************])
+     ])
+  ])
+
+
+
+# FIXME: make --enable-stage2-xen the default
+
+# FIXME: autodetect install_dev and ruckus_dev based on location of src
+#        tree...?
+
 
 
 # xen checks
@@ -171,14 +307,23 @@ AC_ARG_VAR(CLFS, Location of baby filesystem during build)
 # --with-arch=i686 ... again, then build more.
 #
 # FIXME: did i get this right?
+#
+# FIXME: what if host system already has a perfectly usable 64bit Xen >=
+#        4.4 installation?  then this is a waste of time and effort...
+#
+# FIXME: i think i ALWAYS want to build xen.gz if xen is
+#        enabled... otherwise we have no way of guaranteing that the
+#        pre-built hypervisor installed in stage2 is the correct version
+#        (i.e., it could be from the host system or be an old build).  I
+#        was originally skipping the detour if PREFIX_EARLY/boot/xen.gz
+#        already existed...
+#
 AC_ARG_ENABLE(xen,
   AS_HELP_STRING([--disable-xen], [Disable building Xen in bootstrap and final system.]),
-  xen_enabled=$enableval,
-  [AS_IF([test "$build_arch" != x86_64],
-     [# need to check for prebuilt x86_64 hypervisor
-      AS_IF([test -f $PREFIX_EARLY/boot/xen.gz],
-        xen_enabled=yes,
-        [AC_MSG_WARN([
+  [xen_enabled=$enableval],
+  [xen_enabled=yes
+   AS_IF([test "$build_arch" != x86_64],
+     [AC_MSG_WARN([
 		*************************************************************
 		Xen requires a 64bit hypervisor.  The build will go on a
 		detour to cross-compile the hypervisor automatically.  This
@@ -187,16 +332,13 @@ AC_ARG_ENABLE(xen,
 		cross-compilation toolchain, reconfiguring back to the
 		original config, and carrying on with the build.  Log files
 		may look confusing, and it may take longer than expected,
-		but it does work.  ;-)
+		but it does work.
 
                 If you don't really care about Xen, you can disable it in
                 both the bootstrap and final systems w/ the --disable-xen
                 flag.
                 *************************************************************])
-	 xen_enabled=yes
-        ])
-     ],
-     xen_enabled=yes)
+     ])
   ])
 
 # FIXME: we probably want an automake conditional for building the final
@@ -205,17 +347,9 @@ AC_ARG_ENABLE(xen,
 #        the xen hypervisor... making it pretty useless.
 AM_CONDITIONAL([XEN_ENABLED], [test x$xen_enabled = xyes])
 
-AC_ARG_WITH(stage1-xen-only,
-  AS_HELP_STRING([--with-stage1-xen-only], [Just build the Xen hypervisor in bootstrap-stage1.  This is usefull when you just need to cross-compile the Xen hypervisor for x86_64.]),
-  stage1_xen_only=$withval,
-  stage1_xen_only=no)
-
-# FIXME: make sure xen is enabled?  error if disabled.
-AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
-
 # flags for installation and kickoff of stage2
 #
-# --enable-install-part=/dev/sdXN
+# --with-install-part=/dev/sdXN
 #
 #     Install bootstrap system into the specified partition.  This is
 #     going to assume that the partition and filesystem are already
@@ -224,35 +358,11 @@ AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 #     machine or dual boot it on the build system.
 #
 #     NOTE: This will require that our source tree already resides at
-#           /ruckus of the specified partition's filesystem.
+#           /ruckus of the specified partition's filesystem.  (Unless
+#           we've also supplied --enable-ruckus-part=/dev/sdXN, in which
+#           case that will be mounted at /ruckus of the install
+#           partition).
 #
-# --enable-install-dev=/dev/sdX
-#
-#     Install bootstrap system onto the specified block device.  ALL DATA
-#     ON DEVICE WILL BE LOST, because the sandbox stage will re-partition
-#     and create filesystems as needed.  The bootstrap_install stage will
-#     install and configure the bootloader.
-#
-#     FIXME: that really only makes sense for removable media...
-#
-# --enable-install-raid0=/dev/md99:/dev/sda,/dev/sdb,/dev/sdc,...
-#
-#     Just like --enable-install-dev, except that multiple block devices
-#     are used in a RAID0 array to get better disk performance.
-#
-#     FIXME: If we want to use RAID0 for stage2 build, we'll need a
-#            separate RAID1 /boot partition.  Should we make the user
-#            specify two md devs via configure?  Autodetect next available
-#            minor md number?
-#
-# FIXME: I'm pretty sure I'm going to remove the -raid0 and -dev
-#        installation flags and put that code into a standalone build
-#        wrapper script.  The driver behind this is: boot off of LiveCD,
-#        clone wrapper script, execute it.  The script can then set up the
-#        HDDs appropriately and clone the whole ruckus tree into them
-#        AFTERWARDS.  Otherwise, we have to be able to clone the whole
-#        ruckus tree on the LiveCD, which may not work (i.e., not enough
-#        drive space?)
 #
 # --enable-stage2-xen
 #
@@ -271,6 +381,7 @@ AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 #            export toplevel=/path/to/ruckus
 #            . $toplevel/utils/bootstrap-early/functions
 #
+#
 # --enable-stage2-auto
 #
 #    Bootstrap system will automatically kick off the stage2 builder.
@@ -287,145 +398,16 @@ AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 #          process to a single command to kick-off and come back when it's
 #          all done.
 #
-# --with-fstype=ext2
-#
-#    Specify fstype for bootable bootstrap system (created in sandbox
-#    stage).  Valid options are ext2, ext3, ext4.  You almost certainly
-#    want ext2 to avoid journaling overhead and improve disk performance,
-#    but I'd like to benchmark this before hardcoding it.
-#
-# FIXME: fstype might get swallowed up into build script along with -raid0
-#        and -dev sandbox targets.
-#
-# NOTE: Only a single --enable-install* option can be supplied.  Default
-#       is --disable-install.
-#
-# FIXME: default SHOULD be to require either a valid --enable-install-part
-#        or --disable-install.
-#
-# NOTE: If configured w/out an --enable-install* option, the sandbox and
-#       install targets will be disabled.
-#
-# FIXME: still true?
-
-install_type=none
-AC_ARG_ENABLE(install,
-  AS_HELP_STRING([--disable-install], [Disable sandbox and install targets (enable via specific --enable-install-* options) [default=enabled]]),
-  build_install=$enableval,
-  build_install=yes)
-
-AC_ARG_ENABLE(install-part,
-  AS_HELP_STRING([--enable-install-part=PARTITION], [Install into specified PARTITION.]),
-  [install_part=$enableval
-   install_type=part
-   build_install=yes
-   # check that partition is mounted
-   mtab=`grep "^$install_part" /proc/mounts`
-   AS_IF([test -z "$mtab"],
-     [AC_MSG_ERROR([
-		*************************************************************
-		The installation partition must already exist and be
-		mounted.  Note that if you're using LVM, you need to
-		specify as /dev/mapper/VG-LV (i.e., /dev/VG/LV won't
-		work).
-
-                You specified: --enable-install-part=$install_part
-		*************************************************************])
-     ])
-   # check that $top_srcdir is at /ruckus of partition
-   mp=`echo $mtab | awk '{print $2}'`
-   AS_IF([test "$mp/ruckus" != "$abs_srcdir"],
-     [AC_MSG_ERROR([
-		*************************************************************
-		The srcdir must be at /ruckus of the installation
-		partition (e.g., /path/to/partition/ruckus).
-
-                You specified: --enable-install-part=$install_part
-		Mountpoint: $mp
-		Srcdir: $abs_srcdir
-		*************************************************************])
-     ])
-   # check that $toplevel/.. is writeable
-   #
-   # FIXME: i might not need this if we're going to leave CLFS pointing at
-   #        .build/baby until boot-prep.
-   AS_IF([touch $mp/.foo],
-     [rm $mp/.foo],
-     [AC_MSG_ERROR([
-		*************************************************************
-		The installation partition must be writeable by the build
-		user.
-
-                You specified: --enable-install-part=$install_part
-		*************************************************************])
-     ])
-  ],
-  install_part=no)
-
-AC_ARG_ENABLE(install-dev,
-  AS_HELP_STRING([--enable-install-dev=BLOCKDEV], [Install into specified BLOCKDEV.  ALL DATA ON BLOCKDEV WILL BE DESTROYED!]),
-  [install_dev=$enableval
-   install_type=dev
-   build_install=yes
-  ],
-  install_dev=no)
-
-AC_ARG_ENABLE(install-raid0,
-  AS_HELP_STRING([--enable-install-raid0=DISK_LIST], [Install into RAID0 device created from comma-delimited DISK_LIST.  ALL DATA ON DISKS WILL BE DESTROYED!]),
-  [install_raid0=$enableval
-   install_type=raid0
-   build_install=yes
-  ],
-  install_raid0=no)
-
-AS_IF([test "$build_install" = "yes" -a "$install_type" = "none"],
-  [AC_MSG_ERROR([
-		*************************************************************
-		You must either specify a valid installation partition via
-		the --enable-install-part option or disable installation
-		entirely via the --disable-install option.
-		*************************************************************])
-  ])
-
-# FIXME: handle multiple --enable-install flags
-
-# FIXME: handle --enable-install-* w/out arg (install_dev == yes)
-
-# FIXME: add ext4-no-jounal?
-AC_DEFUN([valid_fstypes], [ext2 ext3 ext4])
-m4_define(default_fstype, ext2)
-AC_ARG_WITH(fstype,
-  AS_HELP_STRING([--with-fstype=FSTYPE], [Filesystem type for bootstrap system (valid: m4_unquote(m4_split(valid_fstypes))) [default=default_fstype]]),
-  build_fstype=$withval,
-  build_fstype=default_fstype)
-
-# check for propper fstype usage
-build_fstype_is_valid=no
-for x in valid_fstypes; do
-  AS_IF([test "$build_fstype" = "$x"],
-    [build_fstype_is_valid=yes
-     break
-    ])
-done
-
-AS_IF([test "$build_fstype_is_valid" != "yes"],
-  [AC_MSG_ERROR([Invalid fstype '$build_fstype' specified (valid: m4_unquote(m4_split(valid_fstypes)))])])
-
-AC_SUBST(BOOTSTRAP_FSTYPE, $build_fstype)
 
 
 
 
+# FIXME: if stage2 xen is disabled, stage2 is going to require bare-metal
+#        booting, probably facilited by lots of manual work (as root).
 AC_ARG_ENABLE(stage2-xen,
   AS_HELP_STRING([--enable-stage2-xen], [Generate a xen domU config file for booting the stage2 builder]),
   [stage2_xen=$enableval
-   AS_IF([test "$install_type" != "part" -a "$install_type" != "none"],
-     AC_MSG_ERROR([
-		*************************************************************
-		The stage2 Xen option is incompatible with any install type
-		other than 'part' or 'none'.  You chose '$install_type'.
-		*************************************************************]))
-   # check for xen_enabled
+   # FIXME: check for xen_enabled
   ],
   [stage2_xen=no])
 
@@ -436,80 +418,14 @@ AC_ARG_ENABLE(stage2-auto,
   [stage2_auto=no])
 
 
-
-# FIXME: let's get this all sorted out in my head... build order!
-#
-# FIXME: instead of creating our final device at the end and then copying
-#        the source tree in, why don't we create it at the beginning and
-#        just build in it from the get go?
-#
-#        Because, we'd have to do all the RAID magic prior to running
-#        init_submodules and get_sources... which I was planning on
-#        eventually sticking in autogen.sh.  So it would have to happen
-#        before configure.
-#
-#
-# --> ./autogen.sh --enable-install-md=/dev/sda,...
-#
-#     Will run autoreconf, configure, etc.  Nothing special here.
-#
-# --> sudo make sandbox
-#
-#     Only needed if an --enable-install option was supplied.  Will create
-#     raid device(s), filesystem(s), mount them, move our whole tree over
-#     into the sanbox.  (should we mv or cp?)
-#
-# --> cd sandbox (if you made one)
-# --> make download
-#
-#     Run init_submodules, get_sources.  (This could be done before
-#     sandbox, but will be much faster to do it afterwords.)
-#
-# --> make bootstrap
-#
-#     Build bootstrap-early, bootstrap-cross, bootstrap-stage1.
-#
-#     NOTE: bootstrap-early, bootstrap-cross, bootstrap-stage1, clean,
-#           reconfig, bootstrap-cross, bootstrap-stage1 if we're building
-#           on or for 32bit
-#
-# --> sudo make bootstrap_install
-#
-#     Do the prep work for booting the bootstrap system (requires root).
-#     This includes chmoding, bootloader installation, etc.
-#
-# ... boot it ..
-#
-# --> cd /ruckus
-# --> make all
-#
-#     Iterate through all the packages, building and installing each one.
-#     There will be some special work to be done (e.g., compile toolchain
-#     tweaking, dumping installation images), but should result in a
-#     bootable IS09660 installer image containing install scripts and
-#     rootfs images.  All opensource source code should be included in an
-#     additional IS09660 image for easy GPL compliance.
-#
-#     FIXME: The dist target should get plumbed up so that it creates
-#            a tarball of all the required sources to build a
-#            system... So we need to make sure that the build system
-#            is robust enough to not fail if certain packages get left
-#            out.
-#
-#     FIXME: This stage has really only been half-baked so far... ;-)
-
-
 AC_ARG_VAR(INIT_SUBMOD_ARGS, Arguments to be passed to init_submodules)
 AC_ARG_VAR(GET_SOURCES_ARGS, Arguments to be passed to get_sources)
 
 AM_EXTRA_RECURSIVE_TARGETS([bootstrap])
 
 
-# FIXME: check for git version w/ submodule --init --recursive?  if
-#        running autoconf happens after submodule work, it's too
-#        late... perhaps we should add this check to autogen prior to
-#        autoconf?
-
+# FIXME: check for git version w/ submodule --init --recursive?
+#        init_submodules may not work right if these flags are missing...
 
 
 # check for needed utils on the host system
@@ -664,16 +580,10 @@ AS_IF([test "$GPERF" != ""], [], [p_early+=" gperf"])
 #       is missing on the host system, but it adds needless compile time
 #       (and might not build propperly on some host systems).
 #
-# FIXME: why not just use pkg-config for this check?  glib-2.0
+# NOTE: It looks strange to use pkg-config to check for a build dependency
+#       of pkg-config... but it works.  And I was having a hard time doing
+#       non-pkg-config lib and header checks for libglib and glib.h.
 #
-#AC_CHECK_LIB([glib-2.0], [g_malloc],
-#  # lib found, check for header
-#  [AC_CHECK_HEADER(glib.h, [has_glib=yes], [has_glib=no], [-Iglib-2.0])],
-#  [has_glib=no])
-#
-# FIXME: was having a hard time getting glib.h to work... shying away from
-#        using the pkg-config macros because of the autotools cyclic deps
-#        probem...
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES(GLIB, [glib-2.0], [has_glib=yes], [has_glib=no])
 AC_SUBST(HOST_HAS_GLIB, $has_glib)
@@ -828,7 +738,7 @@ AS_IF([test "$prefix_cross_link" = "$CLFS$PREFIX_CROSS"],
 		Please create the CLFS $PREFIX_CROSS symlink by executing
 		the following command as root, then rerun configure:
 
-		ln -s $CLFS$PREFIX_CROSS $PREFIX_CROSS
+		ln -fs $CLFS$PREFIX_CROSS $PREFIX_CROSS
 		*************************************************************])
   ])
 
@@ -842,7 +752,7 @@ AS_IF([test "$prefix_final_link" = "$CLFS$PREFIX_FINAL"],
 		Please create the CLFS $PREFIX_FINAL symlink by executing
 		the following command as root, then rerun configure:
 
-		ln -s $CLFS$PREFIX_FINAL $PREFIX_FINAL
+		ln -fs $CLFS$PREFIX_FINAL $PREFIX_FINAL
 		*************************************************************])
   ])
 
@@ -897,26 +807,10 @@ echo "  Xen Enabled..........: $xen_enabled"
 echo "  Stage1 Xen...........: $stage1_xen"
 echo "  Stage1 Xen Detour....: $stage1_xen_detour"
 echo "  Stage1 Xen Only......: $stage1_xen_only"
-echo "  Install Type.........: $install_type"
-case "$install_type" in
-  part)
-    echo "  Install Partition....: $install_part"
-    ;;
-  dev)
-    echo "  Install Device.......: $install_dev"
-    ;;
-  raid0)
-    echo "  Install Device.......: $install_raid0"
-    ;;
-esac
-case "$install_type" in
-  part|none)
-    ;;
-  *)
-    echo "  Bootstrap fstype.....: $build_fstype"
-esac
 echo "  Xen stage2...........: $stage2_xen"
 echo "  Auto stage2..........: $stage2_auto"
+echo "  Install Device.......: $install_dev"
+echo "  Ruckus Device........: $ruckus_dev"
 echo
 echo "CLFS Variables:"
 echo "  CLFS_HOST............: $CLFS_HOST"
@@ -939,13 +833,6 @@ echo
 #        boot via xen.  otherwise, when we umount $CLFS prior to xl
 #        create, we'll also lose our xen userland...
 #
-#        --with-prefix-early=
-#
-#        or maybe we just go ahead and use the standard --prefix for it?
-#
-#        Either way, putting it outside our source tree means we should
-#        probably plumb up an uninstall target...
-#
 # FIXME: We probably also need to make sure that all the src/ sourcetrees
 #        have been bootstrapped prior to booting into the stage2 builder
 #        w/out the bootstrap-early content...  And we probably need to
@@ -956,25 +843,5 @@ echo
 #        have to worry about root perms for bootstrap-early's install
 #        commands...  /usr/local is the default, after all...
 #
-#        Could take a classic not-my-problem stance here... which is
-#        probably the most appropriate thing to do... but then I should
-#        probably also split bootstrap and bootstrap-install into seperate
-#        targets... which breaks my current scripts.
-#
-#        Really can't split boostrap into build/install targets because the
-#        install from package a is going to be required to build package
-#        b...
-#
-#        1) Gonna have to use sudo for install targets, which means we
-#           should probably check for it.  Maybe add a --with-sudo-install
-#           flag?
-#
-#        or
-#
-#        2) Check for user writability in PREFIX_EARLY and use the scripts
-#           as-is?  Feels pretty odd to require writability in /usr/local...
-#
-#        or both and let the user decide?
-
-
-# FIXME: PREFIX_EARLY gets set to NONE if --prefix isn't specified...
+#        Default value is $BUILD_ROOT/bootstrap-early... if you override
+#        it, it's up to you to ensure write permissions.

@@ -4,14 +4,15 @@ EXTRA_DIST+=go
 EXTRA_DIST+=patches
 
 .PHONY: bootstrap-local-xen
+# FIXME: does mv .build to .build-detour hide the hypervisor from us...?
 bootstrap-local-xen:
 	pushd $(top_srcdir) && \
 	grep -m1 "./configure" config.log | sed 's|.*configure ||' \
 	    > .previous_flags && \
-	./configure --with-arch=x86_64 --disable-multilib --prefix=$(prefix) \
-	    --with-stage1-xen-only --disable-install && \
+	./configure `cat .previous_flags` \
+	    --with-arch=x86_64 --disable-multilib --with-stage1-xen-only && \
 	make bootstrap && \
-	mv .build{,-detour} && \
+	rm -rf $(CLFS)/{tools,cross-tools} && \
 	mv utils/bootstrap-cross/.build{,-detour} && \
 	mv utils/bootstrap-stage1/.build{,-detour} && \
 	./configure `cat .previous_flags` && \

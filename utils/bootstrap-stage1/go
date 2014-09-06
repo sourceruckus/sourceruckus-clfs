@@ -780,11 +780,19 @@ done
 
 # make a backup of our progress.
 #
-# FIXME: perhaps i should ditch the compression on these backups?
+# FIXME: perhaps i should ditch the compression on these backups?  it's adding
+#        about 10 minutes to the build time and compressed 890M down to about
+#        180M on a 64bit-multilib build.  using bzip only took 2.5 minutes and
+#        resulted in a 290M archive.  piping tar into xz -0 took 1.5 minutes
+#        and resulted in a 240M file.
+#
 if [ "$STAGE1_XEN_ONLY" != "yes" ]; then
     echo -n "creating bootstrap-stage1 backup... "
-    tar -Jcf $BUILDROOT/baby-bootstrap-stage1.tar.xz \
-        -C $CLFS . || exit 1
+    mkdir -p $BUILDROOT &&
+    tar -c \
+        --exclude ./ruckus --exclude ./lost+found \
+        -C $CLFS . \
+        | xz -0 > $BUILDROOT/baby-bootstrap-stage1.tar.xz || exit 1
     echo "done."
 fi
 

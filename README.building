@@ -1,0 +1,71 @@
+-*- outline -*-
+
+* Prep
+Partition, create filesystem(s), etc
+
+
+* Configuring
+
+./autogen.sh \
+    --enable-stage2-xen --with-arch=i686 \
+    --prefix=/mnt/root-true/bootstrap-early \
+    --with-install-dev=/dev/sdf1 \
+    --with-ruckus-dev=/dev/sda3 \
+    --with-ruckus-path=/ruckus
+
+
+INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
+    --enable-stage2-xen --with-arch=i686 \
+    --prefix=/mnt/root-true/bootstrap-early \
+    --with-install-dev=/dev/md0
+
+INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
+    --enable-stage2-xen --with-arch=i686 \
+    --prefix=/mnt/root-true/bootstrap-early \
+    --with-install-dev=/dev/mapper/vg00-baby \
+    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+
+
+
+
+* Building
+
+** Stage 1
+*** split bootstrap-early into separate target?
+
+make download
+make bootstrap-early
+
+*** bootstrap-early stuff will not be built again?
+*** this way we can run multiple out-of-tree builds?
+
+make bootstrap
+
+
+
+** Stage 2
+Configure system to boot off the freshly compiled Xen hypervisor, reboot into Xen.
+
+PREFIX_EARLY=/mnt/root-true/bootstrap-early
+export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
+export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH
+export PKG_CONFIG_PATH=$PREFIX_EARLY/lib/pkg-config:$PKG_CONFIG_PATH
+if [ -z "$LD_LIBRARY_PATH" ]; then
+    export LD_LIBRARY_PATH=$PREFIX_EARLY/lib
+else
+    export LD_LIBRARY_PATH=$PREFIX_EARLY/lib:$LD_LIBRARY_PATH
+fi
+
+/mnt/root-true/bootstrap-early/etc/rc.d/init.d/xencommons start
+xl list
+
+xl create -c ./guest/cfg
+
+Stage 2 bootstrap should commence when system finishes booting.
+
+
+** Final?
+
+Should the final build (i.e., building/installing packages, dumping
+filesystems, etc) happen automatically as soon as the stage2 bootstrap is
+finished building...?
