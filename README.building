@@ -25,22 +25,28 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --with-install-dev=/dev/mapper/vg00-baby \
     --with-ruckus-dev=/dev/mapper/vg00-ruckus
 
+INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
+    --prefix=/mnt/root-true/ruckus-hostprep \
+    --with-install-dev=/dev/mapper/vg00-baby \
+    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+
 
 
 
 * Building
 
 ** Stage 1
-*** split bootstrap-early into separate target?
 
 make download
-make bootstrap-early
+make hostprep
 
 *** bootstrap-early stuff will not be built again?
 *** this way we can run multiple out-of-tree builds?
 
 make bootstrap
+sudo make bootstrap-install
 
+sudo make bootstrap-boot
 
 
 ** Stage 2

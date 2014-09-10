@@ -43,7 +43,10 @@ ln -fs /proc/mounts /etc/mtab
 # setup hotplug
 echo /sbin/mdev > /proc/sys/kernel/hotplug
 
-# FIXME: this is segfaulting? looks like mdev is working when invoked for
-#        hotplug upon kernel module load, though.
+# FIXME: this is segfaulting on 32bit systems? looks like it works fine on
+#        x86_64...
 #
-#mdev -s
+mdev -s
+
+# mount everything else in fstab
+mount -a

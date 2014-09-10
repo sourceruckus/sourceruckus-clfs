@@ -54,7 +54,6 @@
 # Boot-time system configuration/initialization script.
 # This is run first except when booting in single-user mode.
 #
-# FIXME: bootscripts are missing...
 ::sysinit:/etc/init.d/rcS
 
 # /bin/sh invocations on selected ttys
@@ -65,23 +64,24 @@
 # this yourself...
 #
 # Start an "askfirst" shell on the console (whatever that may be)
-::askfirst:-/bin/sh
+#::askfirst:-/bin/sh
 # Start an "askfirst" shell on /dev/tty2-4
-tty2::askfirst:-/bin/sh
-tty3::askfirst:-/bin/sh
-tty4::askfirst:-/bin/sh
+#tty2::askfirst:-/bin/sh
+#tty3::askfirst:-/bin/sh
+#tty4::askfirst:-/bin/sh
 
 # NOTE: tty1 is special.  this is set up so that ruckus_bootstrap_stage2 is
 #       run, followed by getty.  the stage2 script exits immediately if
 #       /.ruckus_bootstrap_stage2 isn't present.
 #tty1::respawn:-/ruckus/utils/bootstrap-stage2/init
+::respawn:/ruckus/utils/bootstrap-stage2/init
 
 # /sbin/getty invocations for selected ttys
-#tty2::respawn:/sbin/getty 38400 tty2
-#tty3::respawn:/sbin/getty 38400 tty3
-#tty4::respawn:/sbin/getty 38400 tty4
+tty2::respawn:/sbin/getty 38400 tty2
+tty3::respawn:/sbin/getty 38400 tty3
+tty4::respawn:/sbin/getty 38400 tty4
 tty5::respawn:/sbin/getty 38400 tty5
-tty6::respawn:/sbin/getty tty6
+tty6::respawn:/sbin/getty 38400 tty6
 
 # FIXME: what should the tty speed be?
 

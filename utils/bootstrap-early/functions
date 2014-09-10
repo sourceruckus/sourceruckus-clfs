@@ -116,7 +116,12 @@ shopt -s dotglob > /dev/null 2>&1
 #
 # FIXME: bash only?  look into ash and/or whatever shell we'll be using later
 #        on in stage2 bootstrap and final build.
-set +h
+#
+#        ash is NOT hashing, and set +h is invalid
+#
+if [ -n "$BASH" ]; then
+    set +h
+fi
 
 # make sure we have a sane umask
 umask 022

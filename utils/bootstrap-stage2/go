@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # should set toplevel via autoconf?
-toplevel=/ruckus
+toplevel=$PWD/../..
 
 # source our common variables and functions
 . $toplevel/utils/bootstrap-early/functions
@@ -43,13 +43,18 @@ build()
 	    echo builddir:  $builddir
 	    echo configure: $configure
 
+            # increase memory size for regular expressions
+            pushd $builddir &&
+            sed -i s/500/5000/ generic/regc_nfa.c &&
+            popd || exit 1
+
 	    configure_generic $1 $OPTS && 
 	    compile_generic $1 || exit 1
 
 	    # and do a bit of extra work
 	    pushd $builddir &&
 	    sudo make install-private-headers &&
-	    sudo ln -s tclsh8.5 $PREFIX_FINAL/bin/tclsh
+	    sudo ln -s tclsh8.6 $PREFIX_FINAL/bin/tclsh
 	    popd || exit 1
 
 	    ;;
@@ -74,6 +79,18 @@ build()
 	    popd || exit 1
 	    ;;
 
+        perl)
+            # FIXME: fill me in
+            ;;
+
+        python)
+            # FIXME: fill me in
+            ;;
+
+        srp)
+            # FIXME: fill me in
+            ;;
+
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
@@ -85,32 +102,34 @@ packages=""
 packages="$packages tcl"
 packages="$packages expect"
 packages="$packages dejagnu"
+packages="$packages check"
 
 # CLFS Chapter 10, section 4 temporary perl
 packages="$packages perl"
-
-# sshd (openssl/openssh, or dropbear (the embedded alernative))
-packages="$packages openssl"
-packages="$packages openssh"
-
-# dhcp/dns
-packages="$packages dnsmasq"
 
 # srp
 packages="$packages python"
 packages="$packages srp"
 
-# ruckusrd?
-# FIXME: does bb cpio work well enough?
-packages="$packages cpio"
-packages="$packages ruckusrd"
 
+
+# FIXME: might want the following if we're building bare-metal instead of as a
+#        xen domU.
+#
+# sshd (openssl/openssh, or dropbear (the embedded alernative))
+#packages="$packages openssl"
+#packages="$packages openssh"
+#
+# dhcp/dns
+#packages="$packages dnsmasq"
+#
 # dev tools
-packages="$packages rsync"
-packages="$packages git"
-packages="$packages readline"
-packages="$packages emacs"
-packages="$packages zsh"
+#packages="$packages rsync"
+#packages="$packages git"
+#packages="$packages readline"
+#packages="$packages emacs"
+#packages="$packages zsh"
+
 
 
 cd $toplevel/utils/bootstrap-stage2
@@ -123,20 +142,8 @@ done
 
 exit 0
 
-# make a backup of our progress.
-#
-# NOTE: this has to be done using tar because dump can only do incrementals
-#       of an entire filesystem
-#
-# NOTE: using sudo for this to make sure our build user has appropriate
-#       permissions to read all the files we're backing up
-#
-# FIXME: do i really need this?
-cp $BUILDROOT/baby-bootstrap-stage1.snar \
-    $BUILDROOT/baby-bootstrap-stage2.snar &&
-sudo tar -Jcf $BUILDROOT/baby-bootstrap-stage2.tar.xz \
-    -g $BUILDROOT/baby-bootstrap-stage2.snar \
-    -C $CLFS . || exit 1
+
+
 
 
 # NOTE: if the bootstrap system is feature-complete for my embedded

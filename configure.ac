@@ -142,12 +142,13 @@ AC_ARG_WITH(install-dev,
                 You specified: --with-install-dev=$install_dev
 		*************************************************************])
      ])
+   install_fstype=`echo $mtab | awk '{print $5}'`
    # if CLFS wasn't specified, set it to mountpoint of install_dev
    mp=`echo $mtab | awk '{print $2}'`
    AS_IF([test -z "$CLFS"], [CLFS=$mp])
-  ],
-  install_part=no)
-
+  ])
+AC_SUBST(CLFS_DEV, $install_dev)
+AC_SUBST(CLFS_FSTYPE, $install_fstype)
 
 
 # FIXME: isn't there a better way to do this? some m4 or ac macro?
@@ -202,17 +203,6 @@ AS_IF([touch $CLFS/.foo 2>/dev/null],
   ])
 
 
-# xen detour
-#
-AC_ARG_WITH(stage1-xen-only,
-  AS_HELP_STRING([--with-stage1-xen-only], [Just build the Xen hypervisor in bootstrap-stage1.  This is usefull when you just need to cross-compile the Xen hypervisor for x86_64.]),
-  stage1_xen_only=$withval,
-  stage1_xen_only=no)
-
-# FIXME: make sure xen is enabled?  error if disabled.
-AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
-
-
 # sanity checks
 #
 # NOTE: install_dev is required unless --with-stage1-xen-only, CLFS
@@ -256,7 +246,9 @@ AS_IF([test -n "$ruckus_dev"],
                 Srcdir: $abs_srcdir
 		*************************************************************])
      ])
+   ruckus_fstype=`echo $mtab | awk '{print $5}'`
   ])
+AC_SUBST(RUCKUS_FSTYPE, $ruckus_fstype)
 
 
 
@@ -318,9 +310,19 @@ AS_IF([test -n "$ruckus_dev"],
 #        was originally skipping the detour if PREFIX_EARLY/boot/xen.gz
 #        already existed...
 #
+#
+# NOTE: if stage2 xen is disabled, stage2 is going to require bare-metal
+#       booting, probably facilited by lots of manual work (as root).
+AC_ARG_ENABLE(stage2-xen,
+  AS_HELP_STRING([--disable-stage2-xen], [Generate a xen domU config file for booting the stage2 builder]),
+  [stage2_xen=$enableval],
+  [stage2_xen=yes])
+
 AC_ARG_ENABLE(xen,
-  AS_HELP_STRING([--disable-xen], [Disable building Xen in bootstrap and final system.]),
-  [xen_enabled=$enableval],
+  AS_HELP_STRING([--disable-xen], [Disable building Xen in hostprep and final system.]),
+  [xen_enabled=$enableval
+   AS_IF([test "$xen_enabled" != "yes"], [stage2_xen=no])
+  ],
   [xen_enabled=yes
    AS_IF([test "$build_arch" != x86_64],
      [AC_MSG_WARN([
@@ -341,11 +343,39 @@ AC_ARG_ENABLE(xen,
      ])
   ])
 
+AC_SUBST(XEN_ENABLED, $xen_enabled)
+AC_SUBST(STAGE2_XEN, $stage2_xen)
+
 # FIXME: we probably want an automake conditional for building the final
 #        stage xen package.  for example, if we disable xen and build32
 #        bit, the final build stage xen package will silently not build
 #        the xen hypervisor... making it pretty useless.
 AM_CONDITIONAL([XEN_ENABLED], [test x$xen_enabled = xyes])
+
+# xen detour
+#
+AC_ARG_WITH(stage1-xen-only,
+  AS_HELP_STRING([--with-stage1-xen-only], [Just build the Xen hypervisor in bootstrap-stage1.  This is usefull when you just need to cross-compile the Xen hypervisor for x86_64.]),
+  stage1_xen_only=$withval,
+  stage1_xen_only=no)
+
+# only makes sense for x86_64, xen_enabled
+AS_IF([test "$stage1_xen_only" = "yes"],
+  [AS_IF([test "$xen_enabled" != "yes" -o "$build_arch" != "x86_64"],
+    [AC_MSG_ERROR([
+		*************************************************************
+                Setting --stage1-xen-only only makes sense if Xen is
+                enabled and build_arch is x86_64.
+
+		Xen Enabled: $xen_enabled
+		Arch: $build_arch
+		*************************************************************])
+    ])
+  ])
+
+AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
+AM_CONDITIONAL([STAGE1_XEN_ONLY], [test x$stage1_xen_only = xyes])
+
 
 # flags for installation and kickoff of stage2
 #
@@ -402,26 +432,18 @@ AM_CONDITIONAL([XEN_ENABLED], [test x$xen_enabled = xyes])
 
 
 
-# FIXME: if stage2 xen is disabled, stage2 is going to require bare-metal
-#        booting, probably facilited by lots of manual work (as root).
-AC_ARG_ENABLE(stage2-xen,
-  AS_HELP_STRING([--enable-stage2-xen], [Generate a xen domU config file for booting the stage2 builder]),
-  [stage2_xen=$enableval
-   # FIXME: check for xen_enabled
-  ],
-  [stage2_xen=no])
-
-
 AC_ARG_ENABLE(stage2-auto,
   AS_HELP_STRING([--enable-stage2-auto], [Bootstrap system will automatically kick off the stage2 builder]),
   [stage2_auto=$enableval],
   [stage2_auto=no])
+AC_SUBST(STAGE2_AUTO, $stage2_auto)
 
 
 AC_ARG_VAR(INIT_SUBMOD_ARGS, Arguments to be passed to init_submodules)
 AC_ARG_VAR(GET_SOURCES_ARGS, Arguments to be passed to get_sources)
 
-AM_EXTRA_RECURSIVE_TARGETS([bootstrap])
+
+AM_EXTRA_RECURSIVE_TARGETS([hostprep bootstrap bootstrap-install bootstrap-boot])
 
 
 # FIXME: check for git version w/ submodule --init --recursive?
@@ -681,8 +703,7 @@ AC_CACHE_CHECK([for extlinux >= 4.0], [ac_cv_path_EXTLINUX],
 #        just xen itself (i.e., don't check for other xen deps? and just
 #        print a warning regarding kernel and being booted into xen?)
 #
-stage1_xen=no
-stage1_xen_detour=no
+xen_detour=no
 AS_IF([test "$xen_enabled" != "no"],
   [# We've got a few extra deps for Xen to check for
    #
@@ -705,23 +726,18 @@ AS_IF([test "$xen_enabled" != "no"],
    p_early+=" xen"
 
    AS_IF([test "$build_cpu" != "x86_64"],
-     [AS_IF([test ! -f $PREFIX_EARLY/boot/xen.gz],
-        [stage1_xen=yes
-         case "$build_arch" in
-           *64)
-	     ;;
-	   *)
-	     stage1_xen_detour=yes
-	     ;;
-	 esac
-        ])
+     [case "$build_arch" in
+        *64)
+          ;;
+        *)
+          xen_detour=yes
+          ;;
+      esac
      ])
   ]
 )
-AC_SUBST(STAGE1_XEN, $stage1_xen)
-AC_SUBST(STAGE1_XEN_DETOUR, $stage1_xen_detour)
-AM_CONDITIONAL([STAGE1_XEN], [test x$stage1_xen = xyes])
-AM_CONDITIONAL([STAGE1_XEN_DETOUR], [test x$stage1_xen_detour = xyes])
+AC_SUBST(XEN_DETOUR, $xen_detour)
+AM_CONDITIONAL([XEN_DETOUR], [test x$xen_detour = xyes])
 
 
 # check for CLFS symlinks...
@@ -804,13 +820,13 @@ echo "Options:"
 echo "  Final Target Arch....: $build_arch"
 echo "  Multilib.............: $build_multilib"
 echo "  Xen Enabled..........: $xen_enabled"
-echo "  Stage1 Xen...........: $stage1_xen"
-echo "  Stage1 Xen Detour....: $stage1_xen_detour"
+echo "  Xen Detour...........: $xen_detour"
 echo "  Stage1 Xen Only......: $stage1_xen_only"
-echo "  Xen stage2...........: $stage2_xen"
-echo "  Auto stage2..........: $stage2_auto"
+echo "  Stage2 Xen...........: $stage2_xen"
+echo "  Stage2 Auto..........: $stage2_auto"
 echo "  Install Device.......: $install_dev"
 echo "  Ruckus Device........: $ruckus_dev"
+echo "  Ruckus Path..........: $ruckus_path"
 echo
 echo "CLFS Variables:"
 echo "  CLFS_HOST............: $CLFS_HOST"
@@ -838,6 +854,12 @@ echo
 #        w/out the bootstrap-early content...  And we probably need to
 #        build bootstrap-early prior to even attempting to bootstrap all
 #        the src submodules.
+#
+#        This can be accomplished by iterating through all the packages/*
+#        subidrs and calling autoreconf_generic in sourcecode_dir if
+#        SOURCE_URL, Makefile, nor configure exists in them (with a few
+#        exceptions, I'm sure).  This should be the 1st thing the
+#        bootstrap target does (now that hostprep is seperate).
 #
 # FIXME: Using --prefix for PREFIX_EARLY.  However, this means that we now
 #        have to worry about root perms for bootstrap-early's install

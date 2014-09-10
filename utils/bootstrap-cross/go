@@ -446,3 +446,5 @@ for p in $packages; do
     echo -e "\n+++++ building bootstrap-cross package: $p"
     build $p || exit 1
 done
+
+touch .build/ALL_DONE

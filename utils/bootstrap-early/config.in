@@ -95,5 +95,16 @@ export HOST_HAS_GLIB=@HOST_HAS_GLIB@
 
 
 # --- Bootstrap Stage1 Variables ------------------------------------------
-export STAGE1_XEN=@STAGE1_XEN@
+export XEN_ENABLED=@XEN_ENABLED@
 export STAGE1_XEN_ONLY=@STAGE1_XEN_ONLY@
+export STAGE2_XEN=@STAGE2_XEN@
+export STAGE2_AUTO=@STAGE2_AUTO@
+
+# The underlying device and filesystem type for the CLFS root filesystem
+CLFS_DEV=@CLFS_DEV@
+CLFS_FSTYPE=@CLFS_FSTYPE@
+
+# The underlying device and filesystem type for the /ruckus filesystem (if
+# specified)
+RUCKUS_DEV=@RUCKUS_DEV@
+RUCKUS_FSTYPE=@RUCKUS_FSTYPE@

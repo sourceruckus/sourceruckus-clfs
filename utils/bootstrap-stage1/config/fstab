@@ -1,10 +1,3 @@
-# -*- mode: sh -*-
-/dev/xvda1 / auto defaults 0 0
-
-# FIXME: shall we start building w/ /ruckus as a 2nd block device?  might
-#        simplify the filesystem structure during build...
-#
-#/dev/xvdb1 /ruckus auto defaults 1 1
 
 proc		/proc		proc		defaults		0 0
 sysfs		/sys		sysfs		defaults		0 0

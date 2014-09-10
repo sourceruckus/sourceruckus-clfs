@@ -527,15 +527,28 @@ build()
 	    #        is still needed when we go to build 32bit libs.
 	    echo export CLFS_TARGET32=\"$CLFS_TARGET32\" >> $CLFS/root/.profile
 	    
-	    # copy fstab into etc
-	    #
-	    # FIXME: this needs to have appropriate device name and
-	    #        filesystem types inserted in it.
-	    cp -v config/fstab $CLFS/etc || exit 1
+            # generate fstab
+            echo "# -*- mode: sh -*- " > $CLFS/etc/fstab
+            if [ "$STAGE2_XEN" = "yes" ]; then
+                echo "/dev/xvda1 / $CLFS_FSTYPE defaults 0 0" >> $CLFS/etc/fstab
+            else
+                echo "$CLFS_DEV / $CLFS_FSTYPE defaults 0 0" >> $CLFS/etc/fstab
+            fi
+            if [ -n "$RUCKUS_DEV" ]; then
+                mkdir -p $CLFS/ruckus
+                if [ "$STAGE2_XEN" = "yes"]; then
+                    echo "/dev/xvdb1 /ruckus $RUCKUS_FSTYPE defaults,ro 1 1" >> $CLFS/etc/fstab
+                else
+                    echo "$RUCKUS_DEV /ruckus $RUCKUS_FSTYPE defaults,ro 1 1" >> $CLFS/etc/fstab
+                fi
+            fi
+            cat config/fstab >> $CLFS/etc/fstab || exit 1
 
 	    # NOTE: now touch /.ruckus_bootstrap_stage2, which causes init
 	    #       to run the stage2 script on tty1 at boot
-	    #touch $CLFS$RUCKUS_BOOTSTRAP_STAGE2_FILE || exit 1
+            if [ "$STAGE2_AUTO" = "yes" ]; then
+	        touch $CLFS$RUCKUS_BOOTSTRAP_STAGE2_FILE || exit 1
+            fi
 
 	    ;;
 
@@ -592,6 +605,12 @@ build()
             #        LOCALVERSION into it.  Then, after we've booted (and
             #        automagically loaded needed modules), remove
             #        lib/{modules,firmware}
+
+            # FIXME: chowning everything to root is following the build and
+            #        source symlinks into my source tree... obviously don't
+            #        want that... but where should these symlinks really point
+            #        to on the booted system?
+            rm -f $CLFS/lib/modules/*/{build,source} || exit 1
 
 	    # now actually install the resulting kernel files
 	    pushd $builddir &&
@@ -764,7 +783,7 @@ packages+=" kernel"
 # addition to the other packages.
 if [ "$STAGE1_XEN_ONLY" = "yes" ]; then
     packages=xen
-elif [ "$STAGE1_XEN" = "yes" ]; then
+elif [ "$XEN_ENABLED" = "yes" ]; then
     packages+=" xen"
 fi
 

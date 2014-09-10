@@ -15,7 +15,6 @@ download:
 
 clean-local:
 	rm -rf .build
-	rm -rf .build-detour
 	rm -f .previous_flags
 
 # FIXME: should we also clean these up?

@@ -14,9 +14,9 @@ EXTRA_DIST+=go
 # NOTE: To avoid further breakage, to save time, and to make sure we
 #       don't mess up a perfectly fine build, I've rigged this up to
 #       only build to completion a single time.
-bootstrap-local:
-	[ ! -f .build/ALL_DONE ] && ( env -i ./go || exit 1 ) || echo nothing to build
-
+#
+hostprep-local:
+	[ -f .build/ALL_DONE ] && echo nothing to build || env -i ./go || exit 1
 
 clean-local:
 	rm -rf .build
