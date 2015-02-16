@@ -441,6 +441,7 @@ AC_ARG_VAR(INIT_SUBMOD_ARGS, Arguments to be passed to init_submodules)
 AC_ARG_VAR(GET_SOURCES_ARGS, Arguments to be passed to get_sources)
 
 
+# FIXME: what exactly was I planning on having bootstrap-boot do...?
 AM_EXTRA_RECURSIVE_TARGETS([hostprep bootstrap bootstrap-install bootstrap-boot])
 
 
@@ -798,6 +799,7 @@ AC_CONFIG_FILES([
   utils/bootstrap-cross/Makefile
   utils/bootstrap-stage1/Makefile
   utils/bootstrap-stage2/Makefile
+  utils/ruckus-builder.cfg
 ])
 
 AC_OUTPUT
