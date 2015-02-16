@@ -128,7 +128,7 @@ AC_ARG_WITH(ruckus-path,
 AC_SUBST(RUCKUS_PATH, $ruckus_path)
 
 AC_ARG_WITH(install-dev,
-  AS_HELP_STRING([--with-install-dev=DEV], [Install on specified DEV, which must be mounted and writeable by build user.]),
+  AS_HELP_STRING([--with-install-dev=DEV], [Install on specified DEV, which must be mounted and writable by build user.]),
   [install_dev=$withval
    # check that it's mounted
    mtab=`grep "^$install_dev" /proc/mounts`
@@ -189,13 +189,13 @@ AC_ARG_VAR(CLFS,
   [Location of baby filesystem during build (default: mountpoint of $install_dev)])
 
 
-# check that $CLFS is writeable
+# check that $CLFS is writable
 mkdir -p $CLFS 2>/dev/null
 AS_IF([touch $CLFS/.foo 2>/dev/null],
   [rm $CLFS/.foo],
   [AC_MSG_ERROR([
 		*************************************************************
-		The installation partition must be writeable by the build
+		The installation partition must be writable by the build
 		user.
 
                 You specified: $CLFS
@@ -251,8 +251,6 @@ AS_IF([test -n "$ruckus_dev"],
 AC_SUBST(RUCKUS_FSTYPE, $ruckus_fstype)
 
 
-
-# FIXME: make --enable-stage2-xen the default
 
 # FIXME: autodetect install_dev and ruckus_dev based on location of src
 #        tree...?

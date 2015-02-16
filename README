@@ -1,4 +1,4 @@
--*- mode: outline; mode: flyspell -*-
+-*- mode: org; mode: flyspell -*-
 
 * Intro
 
@@ -88,6 +88,8 @@ virtual machines.  We'll see.
 This will probably have to be added as a secondary kernel option (i.e.,
 kernel-rt package in addition to the standard kernel package).
 
+NOTE: This is getting pretty unlikely.
+
 
 ** Nicely integrated Xen4 virtualization
 
@@ -112,13 +114,13 @@ Package-by-package changes can be handled by modifying the build system and
 rolling your own distro!  Fork me!
 
 *** tiny
-This is for embedded systems.  No X server or libs, EGLIBC, busybox, only
+Tiny, be small above all else.  No X server or libs, EGLIBC, busybox, only
 what's absolutely necessary.  I thought about using uclibc, but that would
 break binary compatibility with the rest of the images (ie, we couldn't use
 the tiny image as a base to build the base and extra images off of).
 
 *** base
-Server, non-embedded but small (only basic X, libs, tools, daemons, etc).
+Still really small, but now add in basic X, libs, tools, daemons, etc, need.
 
 *** server
 Adds all kinds of extra server functionality to the base system (apache,
@@ -128,6 +130,8 @@ mysql, bugzilla, bind, dhcpd, samba, etc).
 This should add everything needed for a tidy workstation installation (e.g.,
 LXDE, fluxbox, firefox, thunderbird, libreoffice, latex, maybe some small
 multimedia tools).
+
+NOTE: Leaning towards sticking EFL, and Enlightenment in here.
 
 *** extra
 Workstation, development and/or play environment (gnome, multimedia, debug

@@ -1,7 +1,30 @@
--*- outline -*-
+-*- mode: org; mode: flyspell -*-
 
 * Prep
-Partition, create filesystem(s), etc
+Partition, create filesystem(s), etc.  You'll probably want to set up a USB
+thumb drive or 2nd HDD to use as the install dev.  This is the dev that will
+end up getting the bootstrap system installed on it.  It need not contain the
+ruckus source tree (use --with-ruckus-dev and --with-ruckus-path to specify
+that).
+
+*NOTE*: Installation device must exist and be mounted prior to configure.
+
+*NOTE*: Installation partition must be writable by the build user.
+
+*NOTE*: x86 tree built up through bootstrap-stage1 is about 13G plus about 100M
+        for the installed hostprep stuff (although that will depend on what
+        gets built).  About 5.5G of that can be deleted by cleaning out the
+        build files in utils.
+
+*NOTE*: x86_64 multilib through bootstrap-stage1 is about 15G plus about 100M
+        for the installed hostprep stuff.  About 7G can be deleted by cleaning
+        out the build files in utils.
+
+*NOTE*: pre-bootstrap-install, install dev has about 900M used (x86_64
+        multilib).  After bootstrap-install, it's dropped to 580M.
+
+*NOTE*: If using a flash drive, EXT4 w/out journal might be a good idea.
+        mkfs.ext4 -O ^has_journal /dev/sdXN
 
 
 * Configuring
@@ -9,6 +32,12 @@ Partition, create filesystem(s), etc
 ./autogen.sh \
     --enable-stage2-xen --with-arch=i686 \
     --prefix=/mnt/root-true/bootstrap-early \
+    --with-install-dev=/dev/sdf1 \
+    --with-ruckus-dev=/dev/sda3 \
+    --with-ruckus-path=/ruckus
+
+./autogen.sh \
+    --prefix=/mnt/root-true/ruckus-hostprep \
     --with-install-dev=/dev/sdf1 \
     --with-ruckus-dev=/dev/sda3 \
     --with-ruckus-path=/ruckus
@@ -40,10 +69,24 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
 make download
 make hostprep
 
-*** bootstrap-early stuff will not be built again?
-*** this way we can run multiple out-of-tree builds?
+*NOTE*: bootstrap-early stuff will not be built again?
+
+*NOTE*: this way we can run multiple out-of-tree builds?
+
+*NOTE*: hostprep took about 35 minutes on my AMD A10-6700 APU box (x86_64
+        multilib, prebootstrapped).
 
 make bootstrap
+
+*NOTE*: bootstrap actually installs to the install dev as the build user,
+        permissions are fixed and some things are tidied up as root in the
+        bootstrap-install target.
+
+*NOTE*: bootstrap took another 40 minutes.
+
+
+*FIXME*: didn't generate xen cfg for guest...
+
 sudo make bootstrap-install
 
 sudo make bootstrap-boot

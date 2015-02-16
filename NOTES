@@ -1,11 +1,13 @@
--*- mode: outline; mode: flyspell -*-
+-*- mode: org; mode: flyspell -*-
 
 * source tree layout
 
 -- RUCKUS/src/pkgname --
 
 These directories will either contain controlled source tar.bz2s, or a
-source tree with a make target to create a tar.bz2 archive.
+source tree.  While the source tree may have a dist target for creating a
+tar.bz2 archive, it is not required except for special cases (e.g., package's
+build system is just too wonky).
 
 Each of these directories is UNDER ITS OWN LICENSE!
 
@@ -32,7 +34,7 @@ scripts.
 
 * build process
 
-** bootstrap-early
+** bootstrap-early (part of hostprep)
 This step builds an environment suitable to start compiling the
 cross-compilation suite.
 
@@ -44,7 +46,7 @@ cross-compilation suite.
 prefix: ~/RUCKUS/bootstrap-early
 
 
-** bootstrap-cross
+** bootstrap-cross (part of hostprep)
 This step creates the cross-compilation suite of tools
 
 prefix: ~/RUCKUS/bootstrap-cross

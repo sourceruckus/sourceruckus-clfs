@@ -60,17 +60,6 @@ fix_perms()
 
 
 
-# FIXME: I want CLFS to be the mountpoint of the device speficied via the
-#        with-install-part= flag from the get go.  no more
-#        moving/copying/untarring into a different location.  i've already
-#        fixed the fix_perms script to use find and exclude /ruckus.
-#
-# FIXME: For now, I'm hacking this (i already built with
-#        CLFS=/scrap/ruckus/.build/baby), i've moved files by hand, and
-#        re-created the /tools* symlinks
-#
-#CLFS=/scrap
-
 
 # remove the cross-compiler and it's utilities
 #
@@ -90,6 +79,10 @@ fix_perms || exit 1
 #
 # FIXME: do i really want to do this?
 #rm -f $PREFIX_CROSS $PREFIX_FINAL || exit 1
+
+
+# FIXME: clean out utils/*/.build at this point?  should free up over 7G
+#        depending on what was built.
 
 
 exit 0
