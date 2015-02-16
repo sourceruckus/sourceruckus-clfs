@@ -142,7 +142,7 @@ AC_ARG_WITH(install-dev,
                 You specified: --with-install-dev=$install_dev
 		*************************************************************])
      ])
-   install_fstype=`echo $mtab | awk '{print $5}'`
+   install_fstype=`echo $mtab | awk '{print $3}'`
    # if CLFS wasn't specified, set it to mountpoint of install_dev
    mp=`echo $mtab | awk '{print $2}'`
    AS_IF([test -z "$CLFS"], [CLFS=$mp])
@@ -246,7 +246,7 @@ AS_IF([test -n "$ruckus_dev"],
                 Srcdir: $abs_srcdir
 		*************************************************************])
      ])
-   ruckus_fstype=`echo $mtab | awk '{print $5}'`
+   ruckus_fstype=`echo $mtab | awk '{print $3}'`
   ])
 AC_SUBST(RUCKUS_FSTYPE, $ruckus_fstype)
 

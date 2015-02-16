@@ -536,7 +536,7 @@ build()
             fi
             if [ -n "$RUCKUS_DEV" ]; then
                 mkdir -p $CLFS/ruckus
-                if [ "$STAGE2_XEN" = "yes"]; then
+                if [ "$STAGE2_XEN" = "yes" ]; then
                     echo "/dev/xvdb1 /ruckus $RUCKUS_FSTYPE defaults,ro 1 1" >> $CLFS/etc/fstab
                 else
                     echo "$RUCKUS_DEV /ruckus $RUCKUS_FSTYPE defaults,ro 1 1" >> $CLFS/etc/fstab
