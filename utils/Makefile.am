@@ -7,3 +7,10 @@ SUBDIRS+=bootstrap-stage2
 
 # FIXME: We should remove the build dir and move it's NOTES into some
 #        other file...
+
+
+# install domU config and kernel in PREFIX_EARLY so we can get at them w/
+# CLFS_DEV and RUCKUS_DEV unmounted.
+bootstrap-install-local:
+	$(INSTALL_DATA) ruckus-builder.cfg $(PREFIX_EARLY)/etc/xen
+	$(INSTALL_DATA) $(CLFS)/boot/* $(PREFIX_EARLY)/boot

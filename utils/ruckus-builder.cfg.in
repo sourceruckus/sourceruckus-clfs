@@ -1,20 +1,13 @@
 # -*- mode: python -*-
+kernel = "@PREFIX_EARLY@/boot/vmlinuz-ruckus-bootstrap"
 
-# FIXME: where to install the xen cfg and kernel...?
-# FIXME: subst
-kernel = "/mnt/root-true/builder/vmlinuz-ruckus-bootstrap"
-
-# FIXME: substitute the right things in here, same way we gen fstab
 # FIXME: what if no RUCKUS_DEV?
-#
-#disk = ["/dev/vg00/baby,,xvda1,w", "/dev/vg00/ruckus,,xvdb1,r"]
-#disk = ["/dev/vg00/baby,,xvda1,w", "/dev/vg00/ruckus,,xvdb1,r"]
-disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,r"]
+disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,w"]
 
 # FIXME: detect mem, vcpus for domU in configure?
 memory = 1024
 vcpus = 4
-name = "ruckus"
+name = "ruckus-builder"
 
 # FIXME: i need to put a bridge on my avlinux host!
 #
@@ -24,6 +17,4 @@ vif = []
 
 # FIXME: rootdelay=5 perhaps?
 # FIXME: rootfstype=@CLFS_FSTYPE@?
-#
-#extra = "root=/dev/xvda1 rootfstype=ext4 console=hvc0 rw quiet"
 extra = "root=/dev/xvda1 console=hvc0 rw quiet"

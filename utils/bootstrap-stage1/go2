@@ -80,9 +80,10 @@ fix_perms || exit 1
 # FIXME: do i really want to do this?
 #rm -f $PREFIX_CROSS $PREFIX_FINAL || exit 1
 
-
 # FIXME: clean out utils/*/.build at this point?  should free up over 7G
 #        depending on what was built.
+
+# FIXME: umount CLFS_DEV and RUCKUS_DEV so we can boot the domU
 
 
 exit 0
