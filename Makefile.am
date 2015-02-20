@@ -16,12 +16,3 @@ download:
 clean-local:
 	rm -rf .build
 	rm -f .previous_flags
-
-# FIXME: should we also clean these up?
-#
-#	rm -rf $(CLFS)/tools
-#	rm -rf $(CLFS)/cross-tools
-#
-#        I'm thinking not, because we could accidentally toast already
-#        installed stuff... although, once we're done, it'll be owned by
-#        root so I won't be able to do it...

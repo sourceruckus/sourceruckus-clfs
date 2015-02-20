@@ -555,6 +555,9 @@ build()
             fi
             cat config/fstab >> $CLFS/etc/fstab || exit 1
 
+            # install our inittab, which optionally starts the stage2 builder
+            cp -v config/intitab $CLFS/etc/ || exit 1
+
 	    # NOTE: now touch /.ruckus_bootstrap_stage2, which causes init
 	    #       to run the stage2 script on tty1 at boot
             if [ "$STAGE2_AUTO" = "yes" ]; then

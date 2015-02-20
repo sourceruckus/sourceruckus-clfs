@@ -38,6 +38,7 @@ that).
 
 ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
+    --enable-stage2-auto \
     --with-install-dev=/dev/sdf1 \
     --with-ruckus-dev=/dev/sda3 \
     --with-ruckus-path=/ruckus

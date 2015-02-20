@@ -16,14 +16,6 @@ fi
 echo "running source ruckus bootstrap-stage2..."
 cd $toplevel/utils/bootstrap-stage2
 
-# FIXME: don't really do any of this yet
-rm -f $RUCKUS_BOOTSTRAP_STAGE2_FILE
-#exec /sbin/getty 38400 tty1
-cd /root
-exec /bin/env -i HOME=/root TERM=$TERM /bin/bash --login +m
-exit 0
-
-
 build_user=ruckus
 build_group=ruckus
 

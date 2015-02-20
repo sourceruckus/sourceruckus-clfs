@@ -102,9 +102,17 @@ packages=""
 packages="$packages tcl"
 packages="$packages expect"
 packages="$packages dejagnu"
+
+# FIXME: This is now in CLFS Chapter 6, Constructing a Temporary System.  Not
+#        sure why or when it got moved there.  Did it fail to cross-compile for
+#        me at some point?
 packages="$packages check"
 
-# CLFS Chapter 10, section 4 temporary perl
+# NOTE: This is in CLFS Chapter 10, Installing Basic System Software, but
+#       installs in /tools so I've moved it up here.  CLFS even has a note
+#       saying that it really should be in Chapter 6, but it's a pain to
+#       cross-compile and not needed for 1st boot of the temporary system, so
+#       building here is easier to maintain.
 packages="$packages perl"
 
 # srp

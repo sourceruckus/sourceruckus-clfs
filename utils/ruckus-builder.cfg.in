@@ -9,8 +9,10 @@ kernel = "@PREFIX_EARLY@/boot/vmlinuz-ruckus-bootstrap"
 #
 disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,w"]
 
-# FIXME: detect mem, vcpus for domU in configure?
-memory = 1024
+# FIXME: detect mem, vcpus for domU in configure?  Not sure how I would
+#        detect it... maybe just default to 1 and 1024 but add
+#        --with-domu-cpus and --with-domu-ram?
+memory = 2048
 vcpus = 4
 name = "ruckus-builder"
 

@@ -441,8 +441,7 @@ AC_ARG_VAR(INIT_SUBMOD_ARGS, Arguments to be passed to init_submodules)
 AC_ARG_VAR(GET_SOURCES_ARGS, Arguments to be passed to get_sources)
 
 
-# FIXME: what exactly was I planning on having bootstrap-boot do...?
-AM_EXTRA_RECURSIVE_TARGETS([hostprep bootstrap bootstrap-install bootstrap-boot])
+AM_EXTRA_RECURSIVE_TARGETS([hostprep bootstrap bootstrap-install])
 
 
 # FIXME: check for git version w/ submodule --init --recursive?

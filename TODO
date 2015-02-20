@@ -1,0 +1,39 @@
+-*- mode: org; mode: flyspell; -*-
+
+* TODO
+
+- stage2/init: Make sure that if UID or GID already exists, creation doesn't
+  fail, and we actually still use them (i.e., don't use the name, use the ID) ?
+  maybe just allow GID failure?
+
+- stage2/init: Something's wonky with the bash login via xen console... tab
+  corrupts the terminal?  Only happens once we use our inittab that tries to
+  start the builder...
+
+- stage1/fstab-generation: Make sure /ruckus gets mounted OK if RUCKUS_DEV but
+  RUCKUS_PATH == /
+
+- Forward-port scripts, submodules, and tarballs to CLFS 3.0.0-SYSTEMD.
+
+- Forward-port my make repo to 3.x
+
+- Update srp module to something that actually works
+
+- Add Check-0.9.13 (tarball), Tcl-8.6.1 (tarball), Expect-5.45 (tarball),
+  DejaGNU-1.5.1 (git://git.sv.gnu.org/dejagnu.git), Perl-5.20
+  (git://perl5.git.perl.org/perl.git), Python-3.4.x (tarball) for extra /tools
+  at beginning of stage2.
+
+- Fix the FIXMEs at the bottom of configure.ac regarding submodule
+  bootstrapping...
+
+- Start work on the actual builder process (i.e., CLFS  Chapter 10 wrapped up
+  in srp goodness)!
+
+- Upgrade Syslinux to at least 6.03 (tarball)
+
+
+* Local issues on my box
+
+- need to umount /scrap in order to start the domu, but that's where
+  guest's homedir is... not very convenient...
