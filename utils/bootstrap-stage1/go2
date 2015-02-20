@@ -15,8 +15,9 @@ toplevel=$PWD/../..
 
 fix_perms()
 {
-    # FIXME: We do this w/ find instead of chown -R so that we can skip
-    #        /ruckus.  It doesn't track failure, though...
+    # NOTE: We do this w/ find instead of chown -R so that we can skip /ruckus.
+    #
+    # FIXME: It doesn't track failure, though...
     echo -n "chowning all files to 0:0... "
     find $CLFS -wholename $CLFS/ruckus -prune -o \
         -exec chown 0:0 {} \;
@@ -82,8 +83,6 @@ fix_perms || exit 1
 
 # FIXME: clean out utils/*/.build at this point?  should free up over 7G
 #        depending on what was built.
-
-# FIXME: umount CLFS_DEV and RUCKUS_DEV so we can boot the domU
 
 
 exit 0

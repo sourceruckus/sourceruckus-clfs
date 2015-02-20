@@ -2,6 +2,11 @@
 kernel = "@PREFIX_EARLY@/boot/vmlinuz-ruckus-bootstrap"
 
 # FIXME: what if no RUCKUS_DEV?
+#
+# NOTE: If configured, RUCKUS_DEV is passed in as the 2nd disk and mounted
+#       in /tmp/ruckus_dev.  /tmp/ruckus_dev/RUCKUS_PATH is then bind
+#       mounted to /ruckus.
+#
 disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,w"]
 
 # FIXME: detect mem, vcpus for domU in configure?
@@ -15,6 +20,10 @@ name = "ruckus-builder"
 #vif = [ "mac=00:16:3e:73:b9:69,bridge=none" ]
 vif = []
 
-# FIXME: rootdelay=5 perhaps?
-# FIXME: rootfstype=@CLFS_FSTYPE@?
+# FIXME: rootdelay=5 perhaps?  (i don't actually remember why i was
+#        thinking this...)
+#
+# FIXME: rootfstype=@CLFS_FSTYPE@?  (same as above... don't recall why i
+#        was considering this.  doesn't seem to be needed at all)
+#
 extra = "root=/dev/xvda1 console=hvc0 rw quiet"

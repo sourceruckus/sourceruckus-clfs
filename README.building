@@ -84,36 +84,21 @@ make bootstrap
 
 *NOTE*: bootstrap took another 40 minutes.
 
-
-*FIXME*: didn't generate xen cfg for guest...
-
-*FIXME*: have to unmount both CLFS_DEV and RUCKUS_DEV before starting the xen
-         domU.  Also need to install the xen cfg and kernel to somewhere else
-         (like hostprep).
-
 sudo make bootstrap-install
-
-sudo make bootstrap-boot
 
 
 ** Stage 2
 Configure system to boot off the freshly compiled Xen hypervisor, reboot into
 Xen.
 
-PREFIX_EARLY=/mnt/root-true/ruckus-hostprep
-export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
-export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH
-export PKG_CONFIG_PATH=$PREFIX_EARLY/lib/pkg-config:$PKG_CONFIG_PATH
-if [ -z "$LD_LIBRARY_PATH" ]; then
-    export LD_LIBRARY_PATH=$PREFIX_EARLY/lib
-else
-    export LD_LIBRARY_PATH=$PREFIX_EARLY/lib:$LD_LIBRARY_PATH
-fi
+*NOTE*: have to unmount both CLFS_DEV and RUCKUS_DEV before starting the xen
+        domU.
 
-/mnt/root-true/ruckus-hostprep/etc/rc.d/init.d/xencommons start
-xl list
+As root:
 
-xl create -c ./guest/cfg
+. /path/to/ruckus-hostprep/ruckus-builder.env
+
+Follow the instructions printed to the screen.
 
 Stage 2 bootstrap should commence when system finishes booting.
 

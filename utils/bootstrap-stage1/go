@@ -534,13 +534,24 @@ build()
             else
                 echo "$CLFS_DEV / $CLFS_FSTYPE defaults 0 0" >> $CLFS/etc/fstab
             fi
+            # FIXME: For right now, this needs to be rw, but we could possibly
+            #        play with the idea of making it ro and passing it into
+            #        multiple build domUs in parallel.
+            #
+            # NOTE: If configured, RUCKUS_DEV is passed in as the 2nd disk and
+            #       mounted in /tmp/ruckus_dev.  /tmp/ruckus_dev/RUCKUS_PATH is
+            #       then bind mounted to /ruckus.
+            #
+            # FIXME: Is there a performace penalty that could be avoided by
+            #        mounting directly on /ruckus if RUCKUS_PATH == / ?
             if [ -n "$RUCKUS_DEV" ]; then
-                mkdir -p $CLFS/ruckus
+                mkdir -p $CLFS/ruckus $CLFS/tmp/ruckus_dev
                 if [ "$STAGE2_XEN" = "yes" ]; then
-                    echo "/dev/xvdb1 /ruckus $RUCKUS_FSTYPE defaults,ro 1 1" >> $CLFS/etc/fstab
+                    echo "/dev/xvdb1 /tmp/ruckus_dev $RUCKUS_FSTYPE defaults 1 1" >> $CLFS/etc/fstab
                 else
-                    echo "$RUCKUS_DEV /ruckus $RUCKUS_FSTYPE defaults,ro 1 1" >> $CLFS/etc/fstab
+                    echo "$RUCKUS_DEV /tmp/ruckus_dev $RUCKUS_FSTYPE defaults 1 1" >> $CLFS/etc/fstab
                 fi
+                echo "/tmp/ruckus_dev /ruckus none bind 1 1" >> $CLFS/etc/fstab
             fi
             cat config/fstab >> $CLFS/etc/fstab || exit 1
 

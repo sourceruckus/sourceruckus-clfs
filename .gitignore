@@ -6,6 +6,7 @@
 /get_sources.tar
 /utils/bootstrap-early/config
 /utils/ruckus-builder.cfg
+/utils/ruckus-builder.env
 
 Makefile
 Makefile.in

@@ -800,6 +800,7 @@ AC_CONFIG_FILES([
   utils/bootstrap-stage1/Makefile
   utils/bootstrap-stage2/Makefile
   utils/ruckus-builder.cfg
+  utils/ruckus-builder.env
 ])
 
 AC_OUTPUT

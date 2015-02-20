@@ -13,4 +13,5 @@ SUBDIRS+=bootstrap-stage2
 # CLFS_DEV and RUCKUS_DEV unmounted.
 bootstrap-install-local:
 	$(INSTALL_DATA) ruckus-builder.cfg $(PREFIX_EARLY)/etc/xen
+	$(INSTALL_DATA) ruckus-builder.env $(PREFIX_EARLY)/
 	$(INSTALL_DATA) $(CLFS)/boot/* $(PREFIX_EARLY)/boot
