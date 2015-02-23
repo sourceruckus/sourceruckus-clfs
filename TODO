@@ -37,3 +37,12 @@
 
 - need to umount /scrap in order to start the domu, but that's where
   guest's homedir is... not very convenient...
+
+- missing brctrl on avlinux host... no networking for ruckus-builder domU.
+
+
+* ISSUES (that i might not fix)
+
+- parallel build problem in gettext? died once during stage1...  died again, i
+  swear it was a different place...  might actually be because i didn't do a
+  distclean first...?  looks like that might have been it...
