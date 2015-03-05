@@ -19,21 +19,25 @@ hostprep-local-64bit-detour:
 	popd
 
 
-# NOTE: If Xen is enabled, we build x86_64 cross-compilation toolchain in
-#       hostprep (so we can cross-compile the 64bit hypervisor).  If we're
-#       building for 32bit, though, we have to go on a reconfiguration
-#       detour.
-if XEN_ENABLED
+# NOTE: XEN_DETOUR means we need to reconfigure to 64bit, make hostprep,
+#       and reconfigure to 32bit.
 if XEN_DETOUR
 hostprep-local: hostprep-local-64bit-detour
-else
+endif
+
+# NOTE: STAGE1_XEN_ONLY means we're IN THE MIDDLE of the Xen Detour
+#       mentioned above, which means we're going to build bootstrap-cross
+#       during hostprep.
+if STAGE1_XEN_ONLY
 hostprep-local:
 	env -i ./go
 endif
-endif
+
 
 # NOTE: If we've already built/installed the cross-compilation toolchain,
-#       great, don't do it over again.
+#       great, don't do it over again.  This is important because we don't
+#       want to force a rebuild of the cross toolchain if we're kicking
+#       bootstrap back off after fixing a problem in bootstrap-stage1.
 bootstrap-local:
 	[ -f .build/ALL_DONE ] && echo nothing to build || env -i ./go || exit 1
 

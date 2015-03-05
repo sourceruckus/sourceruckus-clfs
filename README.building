@@ -70,12 +70,12 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
 make download
 make hostprep
 
-*NOTE*: bootstrap-early stuff will not be built again?
+*NOTE*: hostprep took about __ minutes on my AMD A10-6700 APU box (x86_64
+        multilib, prebootstrapped).  (5 minutes on my AMD FX-8350)
 
-*NOTE*: this way we can run multiple out-of-tree builds?
+*NOTE*: hostprep took about __ minutes on my AMD A10-6700 APU box (i686 w/ Xen
+        Detour, prebootstrapped).  (17 minutes on my AMD FX-8350)
 
-*NOTE*: hostprep took about 35 minutes on my AMD A10-6700 APU box (x86_64
-        multilib, prebootstrapped).
 
 make bootstrap
 
@@ -83,7 +83,9 @@ make bootstrap
         permissions are fixed and some things are tidied up as root in the
         bootstrap-install target.
 
-*NOTE*: bootstrap took another 40 minutes.
+*NOTE*: bootstrap took another __ minutes on my A10-6700 (x86_64 multilib), 35
+        on the FX-8350.
+
 
 sudo make bootstrap-install
 

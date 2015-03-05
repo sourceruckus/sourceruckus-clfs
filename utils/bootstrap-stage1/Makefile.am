@@ -6,6 +6,9 @@ EXTRA_DIST+=config
 EXTRA_DIST+=patches
 
 
+# NOTE: This means we're IN THE MIDDLE of a Xen Detour (i.e., we've
+#       already reconfigured to 64bit and built up the cross-compilation
+#       toolchain).  In this case, we build during hostprep.
 if STAGE1_XEN_ONLY
 hostprep-local:
 	env -i ./go
