@@ -30,13 +30,6 @@ that).
 * Configuring
 
 ./autogen.sh \
-    --enable-stage2-xen --with-arch=i686 \
-    --prefix=/mnt/root-true/bootstrap-early \
-    --with-install-dev=/dev/sdf1 \
-    --with-ruckus-dev=/dev/sda3 \
-    --with-ruckus-path=/ruckus
-
-./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --enable-stage2-auto \
     --with-install-dev=/dev/sdf1 \
@@ -45,18 +38,15 @@ that).
 
 
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
-    --enable-stage2-xen --with-arch=i686 \
-    --prefix=/mnt/root-true/bootstrap-early \
-    --with-install-dev=/dev/md0
-
-INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
-    --enable-stage2-xen --with-arch=i686 \
-    --prefix=/mnt/root-true/bootstrap-early \
+    --prefix=/mnt/root-true/ruckus-hostprep \
+    --enable-stage2-auto \
+    --with-arch=i686 \
     --with-install-dev=/dev/mapper/vg00-baby \
     --with-ruckus-dev=/dev/mapper/vg00-ruckus
 
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
+    --enable-stage2-auto \
     --with-install-dev=/dev/mapper/vg00-baby \
     --with-ruckus-dev=/dev/mapper/vg00-ruckus
 
@@ -65,7 +55,7 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
 
 * Building
 
-** Stage 1
+** Prep
 
 make download
 make hostprep
@@ -76,6 +66,8 @@ make hostprep
 *NOTE*: hostprep took about __ minutes on my AMD A10-6700 APU box (i686 w/ Xen
         Detour, prebootstrapped).  (17 minutes on my AMD FX-8350)
 
+
+** Stage 1
 
 make bootstrap
 

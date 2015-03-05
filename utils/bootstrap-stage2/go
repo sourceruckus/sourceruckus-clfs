@@ -119,6 +119,14 @@ packages="$packages perl"
 packages="$packages python"
 packages="$packages srp"
 
+# NOTE: Probably not strictly a requirement... but otherwise we won't be able
+#       to do any git tweakage (submodule, checkout, etc) in the build
+#       environment.
+#
+# FIXME: If we can get away with building this here w/out having to add a bunch
+#        of extra stuff, we should.
+#
+#packages="$packages git"
 
 
 # FIXME: might want the following if we're building bare-metal instead of as a
@@ -138,6 +146,11 @@ packages="$packages srp"
 #packages="$packages emacs"
 #packages="$packages zsh"
 
+
+# FIXME: should this bootstrap environment actually BE my tiniest embedded
+#        image?  this would allow us to build a console-only version of emacs
+#        for use on embedded systems, but replace it (via the srp build system)
+#        with a fully X-capable version later on...
 
 
 cd $toplevel/utils/bootstrap-stage2
