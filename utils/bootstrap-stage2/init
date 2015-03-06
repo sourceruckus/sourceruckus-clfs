@@ -16,19 +16,27 @@ fi
 echo "running source ruckus bootstrap-stage2..."
 cd $toplevel/utils/bootstrap-stage2
 
-build_user=ruckus
-build_group=ruckus
-
+# lookup ownership of /ruckus to determin build user/group
 build_uid=`stat -c %u $toplevel`
 build_gid=`stat -c %g $toplevel`
 
-if ! $(grep $build_group /etc/group >/dev/null); then
-    echo "adding group '$build_group'"
+# add group if needed
+build_group=$(awk -F: "/:$build_gid:/ {print \$1}" /etc/group)
+if [ -z "$build_group" ]; then
+    build_group=ruckus
+    echo "adding group '$build_group' with gid $build_gid"
     addgroup -g $build_gid $build_group
 fi
 
-if ! $(grep $build_user /etc/passwd >/dev/null); then
-    echo "adding user '$build_user'"
+# add user if needed
+#
+# FIXME: should really use ^ to search from beggining of line, but it doesn't
+#        look like busybox's awk supports this.
+#
+build_user=$(awk -F: "/$build_uid:/ {print \$1}" /etc/passwd)
+if [ -z "$build_user" ]; then
+    build_user=ruckus
+    echo "adding user '$build_user' with uid $build_uid"
     adduser -h $toplevel -G $build_group -D -H -u $build_uid $build_user
     passwd -d $build_user
     cp /root/.profile $toplevel/
