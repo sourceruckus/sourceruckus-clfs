@@ -664,6 +664,19 @@ build()
 	    $MAKE -j$JOBCOUNT dist &&
             $MAKE DESTDIR=$PREFIX_EARLY install &&
 	    popd || exit 1
+
+            # also install in PREFIX_FINAL if needed
+            #
+            # NOTE: If we're building a 32bit system, we won't be able to
+            #       compile the hypervisor during the final build phase.
+            #       Instead of building a new cross-compilation toolchain
+            #       later, we just pre-install the hypervisor on the final
+            #       system here.
+            if [ -z "$BUILD64" ]; then
+                pushd $builddir &&
+                $MAKE DESTDIR=$PREFIX_FINAL install &&
+	        popd || exit 1
+            fi
 	    ;;
 
 	*)
