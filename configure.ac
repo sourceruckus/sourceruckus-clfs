@@ -843,27 +843,3 @@ echo "  PREFIX_CROSS.........: $PREFIX_CROSS"
 echo "  PREFIX_FINAL.........: $PREFIX_FINAL"
 echo "  CLFS.................: $CLFS"
 echo
-
-
-# FIXME: we need bootstrap-early to be OUTSIDE of CLFS if we're going to
-#        boot via xen.  otherwise, when we umount $CLFS prior to xl
-#        create, we'll also lose our xen userland...
-#
-# FIXME: We probably also need to make sure that all the src/ sourcetrees
-#        have been bootstrapped prior to booting into the stage2 builder
-#        w/out the bootstrap-early content...  And we probably need to
-#        build bootstrap-early prior to even attempting to bootstrap all
-#        the src submodules.
-#
-#        This can be accomplished by iterating through all the packages/*
-#        subidrs and calling autoreconf_generic in sourcecode_dir if
-#        SOURCE_URL, Makefile, nor configure exists in them (with a few
-#        exceptions, I'm sure).  This should be the 1st thing the
-#        bootstrap target does (now that hostprep is seperate).
-#
-# FIXME: Using --prefix for PREFIX_EARLY.  However, this means that we now
-#        have to worry about root perms for bootstrap-early's install
-#        commands...  /usr/local is the default, after all...
-#
-#        Default value is $BUILD_ROOT/bootstrap-early... if you override
-#        it, it's up to you to ensure write permissions.
