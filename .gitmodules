@@ -115,3 +115,6 @@
 [submodule "src/kernel-firmware"]
 	path = src/kernel-firmware
 	url = git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware
+[submodule "src/perl"]
+	path = src/perl
+	url = git://perl5.git.perl.org/perl.git

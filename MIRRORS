@@ -29,6 +29,7 @@
      "git://github.com/acpica",
      "git://git.fedorahosted.org/git",
      "git://git.kernel.org/pub/scm/linux/kernel/git/firmware",
+     "git://perl5.git.perl.org",
     ],
  "/mnt/root-true/mirror/xen":
     [
