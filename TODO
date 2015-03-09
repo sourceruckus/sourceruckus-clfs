@@ -2,14 +2,6 @@
 
 * TODO
 
-- stage2/init: Something's wonky with the bash login via xen console... tab
-  corrupts the terminal?  Only happens once we use our inittab that tries to
-  start the builder...
-
-  maybe try getty on hvc0 with different speeds (38400, 9600, 115200)... i was
-  trying to avoid doing that, because we would have to detect VGA (tty0) vs
-  Xen console (hvc0)...
-
 - Forward-port scripts, submodules, and tarballs to CLFS 3.0.0-SYSTEMD.
 
 - Forward-port my make repo to 3.x
