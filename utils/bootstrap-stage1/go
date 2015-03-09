@@ -659,7 +659,14 @@ build()
 	    #
 	    # NOTE: We set DESTDIR to install into $PREFIX_EARLY/boot.
 	    MAKE="make"
-	    MAKE+=" XEN_TARGET_ARCH=$CLFS_ARCH CROSS_COMPILE=$CLFS_TARGET-"
+            case "$CLFS_ARCH" in
+                i386)
+                    MAKE+=" XEN_TARGET_ARCH=x86_32"
+                    ;;
+                *)
+                    MAKE+=" XEN_TARGET_ARCH=$CLFS_ARCH"
+            esac
+	    MAKE+=" CROSS_COMPILE=$CLFS_TARGET-"
 	    pushd $builddir &&
 	    $MAKE -j$JOBCOUNT dist &&
             $MAKE DESTDIR=$PREFIX_EARLY install &&
