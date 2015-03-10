@@ -58,10 +58,25 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
 ** Prep
 
 make download
+
+*NOTE*: The download target takes a long time, and could fail if any of the
+        git submodules or download URL's happen to be down (or have changed).
+        I haven't timed it.
+
+
 make hostprep
 
+*NOTE*: The first time through a build, the git submodules are bootstrapped on
+        demand (i.e., by running autoreconf, autogen.sh, or bootstrap.sh).
+        This tends to add quite a bit to the 1st build in a clean checkout,
+        particularly with the low-level GNU toolchain trees that use gnulib
+        (e.g., gettext, bison).  Most (all?) compile-time benchmarks in here
+        are with prebootstrapped submodules (i.e., after building once and
+        then cleaning).
+
 *NOTE*: hostprep took about __ minutes on my AMD A10-6700 APU box (x86_64
-        multilib, prebootstrapped).  (5 minutes on my AMD FX-8350)
+        multilib, prebootstrapped).  (8 minutes on a AMD A10-7850K, 5 minutes
+        on my AMD FX-8350)
 
 *NOTE*: hostprep took about __ minutes on my AMD A10-6700 APU box (i686 w/ Xen
         Detour, prebootstrapped).  (17 minutes on my AMD FX-8350)
@@ -75,8 +90,8 @@ make bootstrap
         permissions are fixed and some things are tidied up as root in the
         bootstrap-install target.
 
-*NOTE*: bootstrap took another __ minutes on my A10-6700 (x86_64 multilib), 35
-        on the FX-8350.
+*NOTE*: bootstrap took another __ minutes on my A10-6700 (x86_64 multilib), 53
+        on the A10-7850K, 35 on the FX-8350.
 
 
 sudo make bootstrap-install
