@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # should set toplevel via autoconf?
-toplevel=$PWD/../..
+toplevel=/ruckus
 
 # source our common variables and functions
 . $toplevel/utils/bootstrap-early/functions
@@ -13,7 +13,8 @@ toplevel=$PWD/../..
 #       No += support, so OPTS+=' --foo' has to be OPTS="$OPTS --foo".
 #
 # FIXME: I don't know if nullglob or dotglob options exist in ash...
-
+#
+#        nullglob is definately a problem...
 
 build()
 {
@@ -33,17 +34,26 @@ build()
 	    # NOTE: we can't use setup_generic here because it assumes we're
 	    #       gonna try to build in the toplevel direcory of the
 	    #       source tree...  which isn't the case for tcl.
-	    p=tcl
-	    builddir=$PWD/.build/$p
-	    source=$sourcedir/$p/unix
+	    #p=tcl
+	    #builddir=$PWD/.build/$p
+	    #source=$sourcedir/$p/unix
+	    #configure=$source/configure
+	    #mkdir -p $builddir
+            #
+            # FIXME: wait, we should be able to use setup_generic to do tarball
+            #        extraction and setup, but then override some generated
+            #        variables... right?
+	    setup_generic $1 || exit 1
+	    source=$source/unix
 	    configure=$source/configure
-	    mkdir -p $builddir
 
 	    echo source: $source
 	    echo builddir:  $builddir
 	    echo configure: $configure
 
             # increase memory size for regular expressions
+            #
+            # FIXME: in tree?  out of tree?  should this be sourcedir?
             pushd $builddir &&
             sed -i s/500/5000/ generic/regc_nfa.c &&
             popd || exit 1
@@ -151,7 +161,20 @@ packages="$packages srp"
 #        image?  this would allow us to build a console-only version of emacs
 #        for use on embedded systems, but replace it (via the srp build system)
 #        with a fully X-capable version later on...
-
+#
+#        even if we don't treat it as the tiny.img, we'll want to consider
+#        leaving it on the system until we've built through the everything
+#        image...  for example, we could build a text-mode emacs in /tools and
+#        leave it on the system until after we've built a fully featured (x,
+#        pdf, images, etc) emacs later on.  Same goes for Python, which we'll
+#        want on small headless systems w/out X, but we'll want Python to
+#        magically have the tk module by the time we're done building
+#        development workstations.
+#
+#        the slippery slope here is that we're talking about fielding systems
+#        that have cross-compiled gcc/glibc instead of natively-compiled
+#        gcc/glibc...
+#
 
 cd $toplevel/utils/bootstrap-stage2
 mkdir -p $PWD/.build

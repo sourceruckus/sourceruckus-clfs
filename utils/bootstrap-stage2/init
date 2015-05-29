@@ -13,9 +13,13 @@ fi
 echo "running source ruckus bootstrap-stage2..."
 cd $toplevel/utils/bootstrap-stage2
 
-# lookup ownership of /ruckus to determin build user/group
+# lookup ownership of /ruckus to determine build user/group
 build_uid=`stat -c %u $toplevel`
 build_gid=`stat -c %g $toplevel`
+
+# FIXME: adding group and user on the build system will result in those being
+#        captured by dumped images... we'll want to remove these either prior
+#        to dumping or after resoring in the installer.
 
 # add group if needed
 build_group=$(awk -F: "/:$build_gid:/ {print \$1}" /etc/group)

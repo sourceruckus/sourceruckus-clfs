@@ -9,9 +9,17 @@ kernel = "@PREFIX_EARLY@/boot/vmlinuz-ruckus-bootstrap"
 #
 disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,w"]
 
-# FIXME: detect mem, vcpus for domU in configure?  Not sure how I would
-#        detect it... maybe just default to 1 and 1024 but add
-#        --with-domu-cpus and --with-domu-ram?
+# FIXME: detect mem, vcpus for domU in configure?  maybe just default to 1
+#        cpu and 1024M but add --with-domu-cpus and --with-domu-ram?
+#
+#        mem will depend on how much mem is availalbe in reality, but also
+#        on how much has been reserved for dom0 in the bootloader
+#        config...  could look at /proc/meminfo and do some calculations,
+#        but they'll be thrown off if we're configuring from in Xen...
+#
+#        makes more sense to defult vcpus to match system like this:
+#        grep "^processor[[:space:]]*:" /proc/cpuinfo | wc -l
+#
 memory = 2048
 vcpus = 4
 name = "ruckus-builder"
@@ -22,10 +30,27 @@ name = "ruckus-builder"
 #vif = [ "mac=00:16:3e:73:b9:69,bridge=none" ]
 vif = []
 
+root = "/dev/xvda1"
+
 # FIXME: rootdelay=5 perhaps?  (i don't actually remember why i was
 #        thinking this...)
 #
-# FIXME: rootfstype=@CLFS_FSTYPE@?  (same as above... don't recall why i
-#        was considering this.  doesn't seem to be needed at all)
+# NOTE: We specify rw for root filesystem because there is no initramfs
+#       script to remount it rw for us later.
 #
-extra = "root=/dev/xvda1 console=hvc0 rw quiet"
+# NOTE: We specify rootfstype simply to silence scary looking EXT3/EXT2
+#       mount failure messages from the kernel.
+#
+extra = "console=hvc0 iommu=soft rw rootfstype=@CLFS_FSTYPE@ quiet"
+
+# NOTE: This tells Xen to expose the host memory map to the guest,
+#       allowing for PCI passthrough on pvops Linux kernels.  It's autoset
+#       to 1 if pci cards are passed through via this cfg file, but needs
+#       to be explicitly set to 1 to allow for PCI passthrough post-bootup
+#       (via xl from dom0).
+#
+#       That's all probably completely irrelevant for our bootstrap
+#       builder.  We set it explictly to 1 here just to keep the kernel
+#       from spitting out scarry sounding PCI failure messages during boot.
+#
+e820_host = 1

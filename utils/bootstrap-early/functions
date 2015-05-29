@@ -102,6 +102,15 @@ export JOBCOUNT_KBUILD=$((CPUCOUNT*4))
 #        know if ash's default behavior is what we want... better look into
 #        it.
 #
+#        EEK!  indeed, ash doesn't do nullglob... which means we either can't
+#        use the following functions during stage2, or we have to rewrite the
+#        shellglob bits of them:
+#
+#          - configure_generic (2 places)
+#
+#        Might be able to iterate over results of find or use find -exec.
+#        Maybe xargs?
+#
 shopt -s nullglob >/dev/null 2>&1
 
 # turn on dotglob.  this makes globs include 'hidden' files, like .foo.  i'm
@@ -194,6 +203,8 @@ setup_generic()
 	echo "checking for previously extracted source tree..."
 	# FIXME: I think the following check is what prompted me to globally
 	#        turn on bash's nullglob option...
+        #
+        #        can i use find instead?
 	if [ "." == "`ls -d ./*`" ]; then
 	    echo "extracting..."
 	    tar xf $source/*.tar.* || exit 1
