@@ -118,3 +118,6 @@ Stage 2 bootstrap should commence when system finishes booting.
 Should the final build (i.e., building/installing packages, dumping
 filesystems, etc) happen automatically as soon as the stage2 bootstrap is
 finished building...?
+
+I think yes, as long as RUCKUS_BOOTSTRAP_STAGE2_FILE existed and we
+automatically kicked off the stage2 builder...

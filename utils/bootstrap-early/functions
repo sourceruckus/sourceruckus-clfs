@@ -1,27 +1,36 @@
 # -*- mode: sh -*-
 
+# !!!!!!!!!!!!!!! super important compatability warning of doom !!!!!!!!!!!!!!!
+#
+# The bootstrap-stage2 scripts run using busybox's ash shell (at least until
+# bash is installed).  That means there are a few bash-isms that we MUST avoid
+# using.  It also runs using the busybox versions of the GNU userspace (e.g.,
+# sed, awk, grep), which may not have identical usage.
+#
+# Things to avoid:
+#
+# - No += support, so OPTS+=' --foo' has to be OPTS="$OPTS --foo".
+#
+# - Don't use shopt for special options (e.g., nullglob, dotglob), unless it's
+#   to DISABLE a default bash-ism (e.g., command hashing), in which case you
+#   must check the $BASH variable.
+#
+# Things that are still OK:
+#
+# - $() subshell expansion
+# - wc -l usage
+# - sed -i usage
+# - pushd/popd are made available here
+# - sudo is made available (sort-of) here
+
+
+# paths to the package scripts and source directories for each package
 packagedir=$toplevel/packages
 sourcedir=$toplevel/src
 
 # written out by configure
 . $toplevel/utils/bootstrap-early/config
 
-
-# this variable tells bootstrap scripts where to find gnulib, to avoid them
-# all trying to create their own local clone
-#
-# NOTE: This variable shouldn't be needed anymore.  We were originally
-#       setting this to force bootstrap scripts to shared a common gnulib
-#       clone, but they pretty much all had to get hacked up to work right.
-#       Now we have our init_submodules script at the toplevel that will
-#       recursively reconfigure and clone submodules using shared clones
-#       wherever available, so setting this variable would break things.
-#
-# NOTE: Poo.  Tar doesn't use .gitmodules for gnulib, so it wants to clone
-#       still... Either we leave this variable set, which means some trees may
-#       setup a submodule, but then not use it, or we write a custom rule for
-#       tar that sets GNULIB_SRCDIR just for tar.
-#export GNULIB_SRCDIR=$toplevel/src/gnulib
 
 # this variable tells bootstrap scripts (probably just cpio and tar) to use
 # our paxutils submodule instead of cloning their own.
@@ -53,7 +62,7 @@ RUCKUS_BOOTSTRAP_STAGE2_FILE=/.ruckus_bootstrap_stage2
 #           the host system's pkg-config search path too, but illustrates the
 #           point).
 #
-if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
+if [ -z "$RUCKUS_BOOTSTRAP_STAGE2" ]; then
     # setup environment to use our bootstrap-early stuff
     export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
     export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH
@@ -83,50 +92,19 @@ fi
 #        JOBCOUNT_KBUILD?
 #
 # FIXME: not really sure why you'd want to override this via configure
-#        script...
+#        script... maybe just to disable parallel building entirely?
 export CPUCOUNT=$(grep "^processor" /proc/cpuinfo | wc -l)
 export JOBCOUNT=$((CPUCOUNT+1))
 export JOBCOUNT_KBUILD=$((CPUCOUNT*4))
 
-# make sure nullglob is turned on.  this makes a glob that doesn't match any
-# files expand to '' rather than the glob pattern itself.  we want this
-# behavior so we can do the following (all over the place):
-#
-# for p in might_be_patches_in_here/*.patch; patch -Np1 < $x
-#
-# without nullglob turned on, that issues an error if there aren't any
-# patches.
-#
-# FIXME: shopt is bash specific...  ash (busybox's shell used in
-#        bootstrap-stage2) doesn't like the shopt command.  i don't even
-#        know if ash's default behavior is what we want... better look into
-#        it.
-#
-#        EEK!  indeed, ash doesn't do nullglob... which means we either can't
-#        use the following functions during stage2, or we have to rewrite the
-#        shellglob bits of them:
-#
-#          - configure_generic (2 places)
-#
-#        Might be able to iterate over results of find or use find -exec.
-#        Maybe xargs?
-#
-shopt -s nullglob >/dev/null 2>&1
-
-# turn on dotglob.  this makes globs include 'hidden' files, like .foo.  i'm
-# used to this behavior by default, so having this turned off keeps
-# introducing bugs in my scripts.
-#
-# FIXME: shopt is bash specific.  look into ash's behavior.
-shopt -s dotglob > /dev/null 2>&1
-
 # turn off bash's hash function.  we don't want bash caching PATH lookups
 # while we're installing things all over the place...
 #
-# FIXME: bash only?  look into ash and/or whatever shell we'll be using later
-#        on in stage2 bootstrap and final build.
-#
-#        ash is NOT hashing, and set +h is invalid
+# NOTE: This is a bash-only issue documented in the CLFS books.  The stage2
+#       builder at least starts out using ash, which doesn't support hashing at
+#       all (from what I can tell).  Later during the build, bash may start
+#       getting used (after it gets installed), so we still need this
+#       conditionally set.
 #
 if [ -n "$BASH" ]; then
     set +h
@@ -138,7 +116,7 @@ umask 022
 # make sure we don't run into localization issues on old host systems
 export LC_ALL=POSIX
 
-# NOTE: make sure we have pushd/popd, since we use it all over the place
+# make sure we have pushd/popd, since we use it all over the place
 #
 # NOTE: these two aliases are only set if a check for pushd fails.
 need_pushd=0
@@ -153,13 +131,14 @@ else
     alias popd='popd >/dev/null'
 fi
 
-# NOTE: and this is so we can have the illusion of sudo in stage2, via
-#       busybox's su.  note that this only works because root doesn't have a
-#       password in the bootstrap system.  the only real benefit of this
-#       really is that we can maintain consistency with the rest of the
-#       scripts, and we don't have to wory about quoting the argument to su.
+# provide sudo for stage2
 #
-# NOTE: this alias is only set if a check for sudo fails.
+# NOTE: This is so we can have the illusion of sudo in stage2, via busybox's
+#       su.  Note that this only works because root doesn't have a password in
+#       the bootstrap system.  The only real benefit of this really is that we
+#       can maintain consistency with the rest of the scripts, and we don't
+#       have to wory about quoting the argument to su.
+#
 need_sudo=0
 which sudo >/dev/null || need_sudo=1
 if [ $need_sudo -eq 1 ]; then
@@ -168,6 +147,7 @@ if [ $need_sudo -eq 1 ]; then
 	su -c "cd $PWD; $*"
     }
 fi
+
 
 # define generic builder method.  this does some magic to set up a build
 # tree based on what's stored in sourcedir (ie, a source tree or a source
@@ -187,7 +167,6 @@ setup_generic()
     builddir=$PWD/.build/$p
     source=$sourcedir/$p
     configure=$source/configure
-    #autoreconf="no"
     mkdir -p $builddir
 
     # figure out if we're using a source tarball or an already unpacked
@@ -197,15 +176,10 @@ setup_generic()
 	echo "using source tarball"
 	# using tarball.  need to modify some variables and extract the
 	# source tree
-	#autoreconf="no"
 	mkdir -p $builddir/source || exit 1
 	pushd $builddir/source
 	echo "checking for previously extracted source tree..."
-	# FIXME: I think the following check is what prompted me to globally
-	#        turn on bash's nullglob option...
-        #
-        #        can i use find instead?
-	if [ "." == "`ls -d ./*`" ]; then
+        if [ `find . -maxdepth 1 | wc -l` -eq 1 ]; then
 	    echo "extracting..."
 	    tar xf $source/*.tar.* || exit 1
 	fi
@@ -220,9 +194,7 @@ setup_generic()
 	pushd $source
 	# only do this if we haven't previously configured
 	if [ ! -f $builddir/Makefile ]; then
-	    # FIXME: this following line also requires nullglob...
-	    for p in $sourcedir/$p/*.patch; do
-		#autoreconf="yes"
+            for p in `find $sourcedir/$p -maxdepth 1 -name \*.patch`; do
 		echo "applying patch: $p"
 		patch -Np1 < $p || exit 1
 	    done
@@ -304,9 +276,6 @@ configure_generic()
 {
     p=$1
     shift
-    #builddir=.build/$p
-    #configure=$sourcedir/$p/configure
-    #mkdir -p $builddir
     echo autoreconf: $autoreconf
 
     # go guild it!
@@ -368,12 +337,9 @@ compile_generic()
 {
     p=$1
     shift
-    #builddir=.build/$p
-    #configure=$sourcedir/$p/configure
-    #mkdir -p $builddir
 
     # if we're in the stage2 bootstrap, we need to install as root user.
-    if [ -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
+    if [ -n "$RUCKUS_BOOTSTRAP_STAGE2" ]; then
 	SUDO=sudo
     else
 	SUDO=

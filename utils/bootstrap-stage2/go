@@ -1,20 +1,23 @@
 #!/bin/bash
 
+# !!!!!!!!!!!!!!! super important compatability warning of doom !!!!!!!!!!!!!!!
+#
+# The bootstrap-stage2 scripts run using busybox's ash shell (at least until
+# bash is installed).  That means there are a few bash-isms that we MUST avoid
+# using.  It also runs using the busybox versions of the GNU userspace (e.g.,
+# sed, awk, grep), which may not have identical usage.  See similar comment
+# block in bootstrap-early/functions for details.
+
+
 # should set toplevel via autoconf?
 toplevel=/ruckus
+
+# set this so we can detect that we're in the stage2 bootstrap environment
+RUCKUS_BOOTSTRAP_STAGE2=1
 
 # source our common variables and functions
 . $toplevel/utils/bootstrap-early/functions
 
-# NOTE: The bootstrap-stage2 scripts run using busybox's ash shell.  That
-#       meens there are a few bash-isms that we MUST avoid using.  Here's a
-#       list of the ones that come to mind:
-#
-#       No += support, so OPTS+=' --foo' has to be OPTS="$OPTS --foo".
-#
-# FIXME: I don't know if nullglob or dotglob options exist in ash...
-#
-#        nullglob is definately a problem...
 
 build()
 {
@@ -31,30 +34,21 @@ build()
 
     case "$1" in
 	tcl)
-	    # NOTE: we can't use setup_generic here because it assumes we're
-	    #       gonna try to build in the toplevel direcory of the
-	    #       source tree...  which isn't the case for tcl.
-	    #p=tcl
-	    #builddir=$PWD/.build/$p
-	    #source=$sourcedir/$p/unix
-	    #configure=$source/configure
-	    #mkdir -p $builddir
-            #
-            # FIXME: wait, we should be able to use setup_generic to do tarball
-            #        extraction and setup, but then override some generated
-            #        variables... right?
 	    setup_generic $1 || exit 1
-	    source=$source/unix
-	    configure=$source/configure
 
-	    echo source: $source
-	    echo builddir:  $builddir
+            # override configure to move down a directory (we only need to
+            # build part of tcl here).
+	    configure=$source/unix/configure
 	    echo configure: $configure
 
             # increase memory size for regular expressions
             #
-            # FIXME: in tree?  out of tree?  should this be sourcedir?
-            pushd $builddir &&
+            # NOTE: This builds out-of-tree using a source tarball, so we don't
+            #       need to undo the modification when we're done.
+            #
+	    # FIXME: is this still needed...? looks like it's already 15000?
+	    #        DUPTRAVERSE_MAX_DEPTH, right?
+            pushd $source &&
             sed -i s/500/5000/ generic/regc_nfa.c &&
             popd || exit 1
 
@@ -175,6 +169,15 @@ packages="$packages srp"
 #        that have cross-compiled gcc/glibc instead of natively-compiled
 #        gcc/glibc...
 #
+#        could always just leave off python, srp, and all the other bootstrap
+#        niceeties for fielded systems w/out x...  then add that all in via
+#        whatever image adds it later.  In other words, our different tiny
+#        embedded variants wouldn't have srp package management available after
+#        installation.  This wouldn't be that big of a deal, except that I was
+#        planning on using one of those for the bootable installer... which
+#        would need srp.  I guess we could base the installer off of the
+#        smallest image to include X?
+
 
 cd $toplevel/utils/bootstrap-stage2
 mkdir -p $PWD/.build
