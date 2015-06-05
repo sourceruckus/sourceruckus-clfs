@@ -686,6 +686,12 @@ build()
             fi
 	    ;;
 
+	rsync)
+	    # seems to have a parallel build problem... (still true as of
+	    # v3.0.9)
+	    JOBCOUNT=1 build_generic $1 $OPTS || exit 1
+	    ;;
+
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
@@ -809,6 +815,17 @@ packages+=" create-conf"
 
 packages+=" kernel"
 
+# We add this so that we can build perl in stage2, in-tree, from a git
+# submodule (setup_generic uses rsync to copy the source tree in this case).
+# Unfortunately, rsync needs to have perl in order to compile.  CLFS explicitly
+# waits until booted to natively compile the temporary perl installation simply
+# because it's such a pain to cross-compile, so we follow suit.  In other
+# words, we're going to cross-compile rsync so that we don't have to
+# cross-compile perl.
+#
+# NOTE: This also ensures that the rsync submodule is bootstrapped prior to
+#       booting into the stage2 builder.
+packages+=" rsync"
 
 
 # If we have STAGE1_XEN_ONLY set, replace the entire pacakges list with just

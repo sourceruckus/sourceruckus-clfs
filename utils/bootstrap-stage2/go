@@ -84,20 +84,6 @@ build()
 	    popd || exit 1
 	    ;;
 
-        rsync)
-            # seems to have a parallel build problem... (still true as of
-            # v3.0.9)
-            #
-            # FIXME: need to ensure that rsync submodule in /src has been
-            #        bootstrapped prior to stage2... because we haven't built
-            #        autoconf yet.
-            #
-            # FIXME: blarg... building rsync needs perl... which needs
-            #        rsync... :-( guess we'll have to cross-compile rsync in
-            #        stage1 to avoid having to cross-compile perl.
-            JOBCOUNT=1 build_generic $1 $OPTS || exit 1
-            ;;
-
         perl)
             # override configure (perl is special...) and setup for in-tree
             # building.
@@ -171,9 +157,6 @@ packages="$packages dejagnu"
 #        available for development...
 #
 #packages="$packages check"
-
-# NOTE: we need rsync for out-of-tree setup in setup_generic
-packages="$packages rsync"
 
 # NOTE: This is in CLFS Chapter 10, Installing Basic System Software, but
 #       installs in /tools so I've moved it up here.  CLFS even has a note
