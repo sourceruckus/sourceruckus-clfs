@@ -56,15 +56,16 @@ build()
 	    compile_generic $1 || exit 1
 
 	    # and do a bit of extra work
+            #
+            # NOTE: CLFS uses ln -sv here, but busybox doesn't support -v so we
+            #       leave that off.
 	    pushd $builddir &&
 	    sudo make install-private-headers &&
 	    sudo ln -s tclsh8.6 $PREFIX_FINAL/bin/tclsh
 	    popd || exit 1
-
 	    ;;
 
 	expect)
-
 	    if [ -n "$BUILD64" ]; then
 		OPTS="$OPTS --with-tcl=$PREFIX_FINAL/lib64"
 	    else
@@ -83,8 +84,54 @@ build()
 	    popd || exit 1
 	    ;;
 
+        rsync)
+            # seems to have a parallel build problem... (still true as of
+            # v3.0.9)
+            #
+            # FIXME: need to ensure that rsync submodule in /src has been
+            #        bootstrapped prior to stage2... because we haven't built
+            #        autoconf yet.
+            #
+            # FIXME: blarg... building rsync needs perl... which needs
+            #        rsync... :-( guess we'll have to cross-compile rsync in
+            #        stage1 to avoid having to cross-compile perl.
+            JOBCOUNT=1 build_generic $1 $OPTS || exit 1
+            ;;
+
         perl)
-            # FIXME: fill me in
+            # override configure (perl is special...) and setup for in-tree
+            # building.
+	    use_configure=configure.gnu build_in_tree=yes \
+	        setup_generic $1 || exit 1
+
+            # fix hardcoded path
+            #
+            # NOTE: Since we're building in a copy of our source tree, we don't
+            #       have to worry about undoing this source modification.
+            pushd $source &&
+            sed -i.orig 's@/usr/include@/tools/include@g' \
+                ext/Errno/Errno_pm.PL &&
+            popd || exit 1
+
+            # set OPTS
+            #
+            # NOTE: I'm not sure why, but CLFS builds 32bit perl for x86 and
+            #       x86_64.  I'll follow suite, but we have to override our
+            #       OPTS to do it.
+            #
+            # NOTE: We don't need a conditional here, because $BUILD32 in unset
+            #       when building pure64.
+            OPTS="--prefix=$PREFIX_FINAL"
+            OPTS="$OPTS -Dcc=\"gcc ${BUILD32}\""
+
+	    configure_generic $1 $OPTS &&
+	    compile_generic $1 || exit 1
+
+            # and do a bit of extra work
+            #
+            # NOTE: CLFS uses ln -sv here, but busybox doesn't support -v so we
+            #       leave that off.
+	    sudo ln -sf $PREFIX_FINAL/bin/perl /usr/bin || exit 1
             ;;
 
         python)
@@ -110,7 +157,23 @@ packages="$packages dejagnu"
 # FIXME: This is now in CLFS Chapter 6, Constructing a Temporary System.  Not
 #        sure why or when it got moved there.  Did it fail to cross-compile for
 #        me at some point?
-packages="$packages check"
+#
+# FIXME: This looks to only be needed by the check targets of kbd and
+#        libpipeline, both of which are needed by systemd (I think).  If I
+#        don't do a make check on those, I can leave it out of bootstrap
+#        entirely.  Also, CLFS only installs this in /tools... it's left off
+#        the final system.  So we could get away with dropping it from
+#        bootstrap and from the final system unless something else we've added
+#        needs it.  Of course, if we never do a 'make check', we'll never need
+#        it...
+#
+# FIXME: I should probably add this to the final workstation.img so that it's
+#        available for development...
+#
+#packages="$packages check"
+
+# NOTE: we need rsync for out-of-tree setup in setup_generic
+packages="$packages rsync"
 
 # NOTE: This is in CLFS Chapter 10, Installing Basic System Software, but
 #       installs in /tools so I've moved it up here.  CLFS even has a note

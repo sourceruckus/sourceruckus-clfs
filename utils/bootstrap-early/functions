@@ -15,6 +15,10 @@
 #   to DISABLE a default bash-ism (e.g., command hashing), in which case you
 #   must check the $BASH variable.
 #
+# - cp, mv, rm, etc don't support -v for verbose output.
+#
+# - Can't use {} globbing (e.g., cp foo{,orig})
+#
 # Things that are still OK:
 #
 # - $() subshell expansion
@@ -166,7 +170,11 @@ setup_generic()
     shift
     builddir=$PWD/.build/$p
     source=$sourcedir/$p
-    configure=$source/configure
+    # allow user to override the name of the configure script
+    #
+    # NOTE: Added this specifically for perl, which uses configure.gnu
+    [ -n "$use_configure" ] || use_configure="configure"
+    configure="$source/$use_configure"
     mkdir -p $builddir
 
     # figure out if we're using a source tarball or an already unpacked
@@ -185,7 +193,7 @@ setup_generic()
 	fi
 	pushd ./* &&
 	source=$PWD &&
-	configure=$source/configure &&
+	configure=$source/$use_configure &&
 	popd &&
 	builddir=$builddir/build &&
 	mkdir -p $builddir || exit 1
@@ -248,7 +256,7 @@ setup_generic()
 	    rmdir $builddir || exit 1
 	fi
         ln -fs $source $builddir || exit 1
-	configure=$builddir/configure
+	configure=$builddir/$use_configure
     fi
 
     # apply additional patches, if specified
