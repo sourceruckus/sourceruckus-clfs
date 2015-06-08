@@ -24,7 +24,8 @@ build()
     # set some common variables for all targets
     OPTS="--prefix=$PREFIX_FINAL"
 
-    if [ -n "$BUILD64" ]; then
+    # put libs in lib64 if we're building x86_64 multilib
+    if [ -n "$BUILD32" ]; then
 	OPTS="$OPTS --libdir=$PREFIX_FINAL/lib64"
     fi
 
@@ -110,8 +111,19 @@ build()
             # NOTE: We also have to set ranlib because perl's Configure script
             #       doesn't get along well with busybox and gets all screwed up
             #       resuling in failure to create libperl.a.
+            #
+            # FIXME: did i just install 64bit libpearl in /lib?  shouldn't it
+            #        be --libdir=$PREFIX_FINAL/lib64?
+            #
+            #        yup, i did.  this is why CLFS compiled 32bit perl in
+            #        /tools... it's non-trivial to get it to install in lib64.
+            #        sigh...
+            #
+            # FIXME: i can't build 32bit perl... because... i can't build any
+            #        32bit programs?!? i need to double check my glibc and gcc
+            #        compilations in cross and stage1...
             OPTS="--prefix=$PREFIX_FINAL"
-            OPTS="$OPTS -Dcc=gcc -Dranlib=ranlib"
+            OPTS="$OPTS -Dcc='gcc ${BUILD32}' -Dranlib=ranlib"
 
             configure_generic $1 $OPTS || exit 1
 
