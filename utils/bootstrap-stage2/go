@@ -102,16 +102,37 @@ build()
             # set OPTS
             #
             # NOTE: I'm not sure why, but CLFS builds 32bit perl for x86 and
-            #       x86_64.  I'll follow suite, but we have to override our
-            #       OPTS to do it.
+            #       x86_64, but it builds 64bit for pure64.  We're building it
+            #       64bit because I ran into compilation errors when I tried to
+            #       build it 32bit.  Either way, we have to override our OPTS
+            #       here.
             #
-            # NOTE: We don't need a conditional here, because $BUILD32 in unset
-            #       when building pure64.
+            # NOTE: We also have to set ranlib because perl's Configure script
+            #       doesn't get along well with busybox and gets all screwed up
+            #       resuling in failure to create libperl.a.
             OPTS="--prefix=$PREFIX_FINAL"
-            OPTS="$OPTS -Dcc=\"gcc ${BUILD32}\""
+            OPTS="$OPTS -Dcc=gcc -Dranlib=ranlib"
 
-	    configure_generic $1 $OPTS &&
-	    compile_generic $1 || exit 1
+            configure_generic $1 $OPTS || exit 1
+
+            # fix more busybox heartburn
+            #
+            # NOTE: This is done to remove 'u' from ar usage in the toplevel
+            #       Makefile because busybox's ar command doesn't like it (and
+            #       it doesn't appear to be needed anyway).
+            pushd $builddir &&
+            sed -i 's|rcu|rc|' Makefile &&
+            popd || exit 1
+
+            compile_generic $1 || exit 1
+
+            # hold perl's hand even more
+            #
+            # NOTE: Perl's build system doesn't notice when it has failed and
+            #       happily returns an successful exit status.  So we have to
+            #       add a double check here for $PREFIX_FINAL/bin/perl to be
+            #       sure!
+            [ -f $PREFIX_FINAL/bin/perl ] || exit 42
 
             # and do a bit of extra work
             #
@@ -133,6 +154,13 @@ build()
 	    ;;
     esac
 }
+
+
+# FIXME: Might want to consider building native versions of the autotools so we
+#        don't have to worry about pre-bootstrapping source trees prior to
+#        booting.  Might not be worth the effort though... we'd have to draw a
+#        line in the sand somewhere (i.e., do we want git too?  what about
+#        bootstrap scripts that require networking?).
 
 
 packages=""

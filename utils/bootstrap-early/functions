@@ -230,7 +230,7 @@ setup_generic()
         #       only rebuilt if needed.
         opts="-a"
         if [ -z "$copy_git" ]; then
-            opts+=" --exclude .git"
+            opts="$opts --exclude .git"
         fi
 	echo "copying source tree from $source to $builddir/source..."
 	rsync $opts $source/ $builddir/source || exit 1
