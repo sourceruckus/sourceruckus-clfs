@@ -63,6 +63,42 @@ build()
 	    popd || exit 1
 	    ;;
 
+	pkg-config)
+            # CLFS builds pkg-config as a part of the cross-compilation
+            # toolchain so that it can have a pkg-config binary installed that
+            # only searches in /tools
+            #
+            # NOTE: The internal glib snapshot can be used to remove a host
+            #       system dependency, but if the host system has glib and a
+            #       really old kernel that doesn't define PR_SET_NAME
+            #       (<2.6.9?), it'll fail to compile.
+            #
+	    # NOTE: Some systems need march to be >= i486 to build the
+	    #       included glib bits here...
+            #
+            # NOTE: We detect whether the host system has a usable glib
+            #       available and only build the internal glib snapshot (with
+            #       fingers crossed) if it's needed.
+            if [ "$HOST_HAS_GLIB" = "yes" ]; then
+                _FLAGS=
+                _OPTS=
+            else
+                _FLAGS="-march=i486"
+                _OPTS="--with-internal-glib"
+            fi
+            if [ -n "$BUILD32" ]; then
+                # x86_64 multi
+	        PKG_PATH="$PREFIX_FINAL/lib64/pkgconfig"
+            else
+                # x86 or x86_64 pure
+	        PKG_PATH="$PREFIX_FINAL/lib/pkgconfig"
+            PKG_PATH+=":$PREFIX_FINAL/tools/share/pkgconfig"
+            CPPFLAGS=$_FLAGS \
+		build_generic $1 --prefix=$PREFIX_CROSS \
+		$_OPTS --with-pc-path=$PKG_PATH \
+                --host=$CLFS_TARGET || exit 1
+	    ;;
+
 	gmp)
             # If you are building with a host which has 32-bit user-space with
             # a 64-bit capable CPU, cross-tools GMP will attempt to link with
@@ -94,32 +130,25 @@ build()
 	isl)
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
 		build_generic $1 $OPTS \
-		--with-gmp=$PREFIX_CROSS || exit 1
+		--with-gmp-prefix=$PREFIX_CROSS || exit 1
 	    ;;
 
 	cloog)
-            # NOTE: cloog's automake files are reeeealy old.  In addition to
-            #       a bunch of deprecation warnings, bootstrapping also
-            #       chokes on $(srcdir) usage in TESTS (tests/Makefile.am).
-            #       They're all over the place, and we only need the TESTS
-            #       ones removed, so I added a patch to contrib/cloog.git
-            #       instead of using sed...
+            setup_generic $1 &&
 	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		build_generic $1 $OPTS \
+		configure_generic $1 $OPTS \
 		--with-gmp-prefix=$PREFIX_CROSS \
-		--with-isl-prefix=$PREFIX_CROSS
+		--with-isl-prefix=$PREFIX_CROSS || exit 1
+
+            pushd $builddir &&
+            cp -v Makefile{,.orig} &&
+            sed '/cmake/d' Makefile.orig > Makefile &&
+            popd || exit 1
+
+            compile_generic $1 || exit 1
 	    ;;
 
 	binutils)
-	    # FIXME: CLFS 20130924 has a sed statement to fix build problems
-	    #        on host systems w/ texinfo 5.x.  My boxes hav 4.x, so I
-	    #        don't need it for now, but we should add this check to
-	    #        configure.  Either add the sed statement here
-	    #        universally and conditionally build texinfo 5.x in
-	    #        bootstrap-early or have the configure script enable the
-	    #        sed statement only if host system has texinfo 5.x.
-	    #        Whichever is easier.
-
             # add 64bit support if desired
             if [ -n "$BUILD64" ]; then
                 OPTS+=" --enable-64-bit-bfd"
@@ -134,30 +163,16 @@ build()
 
 	    # NOTE: The CLFS book sets lib-path to /tools as apposed to
 	    #       /tools-cross (i.e., $PREFIX_FINAL instead of
-	    #       $PREFIX_CROSS).  This is not a typo.
-	    AR=ar AS=as setup_generic $1 &&
+	    #       $PREFIX_CROSS).  This is not a typo.  The lib-path is for
+	    #       run-time, at which point we'll be running the stage1
+	    #       builder and we'll want the cross-compiled binutils to be
+	    #       looking in PREFIX_FINAL.
 	    AR=ar AS=as \
-		configure_generic $1 $OPTS \
+		build_generic $1 $OPTS \
 		--host=${CLFS_HOST} \
 		--target=${CLFS_TARGET} \
 		--with-sysroot=${CLFS} \
-		--with-lib-path=$PREFIX_FINAL/lib || exit 1
-
-	    pushd $builddir &&
-	    make configure-host &&
-	    make -j$JOBCOUNT &&
-	    make install || exit 1
-
-	    # Copy libiberty.h to $PREFIX_FINAL/include directory.
-	    #
-	    # NOTE: This file is being installed in $PREFIX_FINAL now
-	    #       instead of in $PREFIX_CROSS because it's just a header
-	    #       file and has to eventually be in PREFIX_FINAL.  Putting
-	    #       it there now just makes the the final bootstrap binutils
-	    #       target simpler.
-	    mkdir -p $PREFIX_FINAL/include &&
-	    cp -v $source/include/libiberty.h $PREFIX_FINAL/include || exit 1
-	    popd
+                --disable-werror || exit 1
 	    ;;
 
 	gcc-static)
@@ -190,9 +205,9 @@ build()
 	    mkdir -p $PREFIX_FINAL/include &&
 	    touch $PREFIX_FINAL/include/limits.h || exit 1
 
-	    # NOTE: gcc-static, eglibc32, eglibc64, and gcc-final should NOT
-	    #       use our common OPTS.  these packages are VERY important and
-	    #       so we're going to follow the CLFS book exactly.
+	    # NOTE: gcc-static, glibc32, glibc64, and gcc-final should NOT use
+	    #       our common OPTS.  these packages are VERY important and so
+	    #       we're going to follow the CLFS book exactly.
 	    OPTS=""
 
             # disable multilib if we're building pure 32 or 64 bit
@@ -201,18 +216,17 @@ build()
             fi
 
             AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-                configure_generic gcc $OPTS --prefix=$PREFIX_CROSS \
+                configure_generic --prefix=$PREFIX_CROSS \
                 --build=${CLFS_HOST} --host=${CLFS_HOST} --target=${CLFS_TARGET} \
                 --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_FINAL \
                 --with-native-system-header-dir=$PREFIX_FINAL/include --disable-nls \
                 --disable-shared --with-mpfr=$PREFIX_CROSS --with-gmp=$PREFIX_CROSS \
                 --with-cloog=$PREFIX_CROSS --with-mpc=$PREFIX_CROSS --without-headers \
                 --with-newlib --disable-decimal-float --disable-libgomp --disable-libmudflap \
-                --disable-libssp --disable-threads --disable-libatomic --disable-libitm \
-                --disable-libsanitizer --disable-libquadmath --disable-target-libiberty \
-                --disable-target-zlib --with-system-zlib --enable-cloog-backend=isl \
-                --with-isl=$PREFIX_CROSS --disable-isl-version-check --enable-languages=c \
-                --enable-checking=release || exit 1
+                --disable-libssp --disable-libatomic --disable-libitm \
+                --disable-libsanitizer --disable-libquadmath --disable-threads \
+                --disable-target-zlib --with-system-zlib --with-isl=$PREFIX_CROSS \
+                --enable-languages=c --enable-checking=release || exit 1
 
 	    pushd $builddir &&
 	    make -j$JOBCOUNT all-gcc all-target-libgcc &&
@@ -220,42 +234,50 @@ build()
 	    popd || exit 1
 	    ;;
 
-	eglibc-stage1)
-	    setup_generic eglibc || exit 1
+	glibc-stage1)
+	    setup_generic glibc || exit 1
+
+            # Apply the following sed so the tzselect script works properly
+            #
+            # NOTE: In source dir!  This is OK because we build from a dist
+            #       tarball (i.e., we're not polluting ruckus/src/gcc) and we
+            #       actually want these changes to stick around until
+            #       glibc-stage2.
+            pushd $source &&
+            cp -v timezone/Makefile{,.orig} &&
+            sed 's/\\$$(pwd)/`pwd`/' timezone/Makefile.orig > timezone/Makefile &&
+            popd || exit 1
 
 	    # Add the following to config.cache to disable ssp when building
-	    # EGLIBC
+	    # Glibc
 	    #
 	    # NOTE: In $builddir!!!
 	    pushd $builddir
 	    echo "libc_cv_ssp=no" > config.cache
 	    popd
 
-	    # NOTE: eglibc builds and installs in PREFIX_FINAL on purpose.
+	    # NOTE: glibc builds and installs in PREFIX_FINAL on purpose.
 	    #       this package can safely be built now and installed in
 	    #       /tools so we don't have to build it again during the
 	    #       final bootstrap stage.  this is the way the CLFS book
 	    #       does it, so we're following suit.
             #
-	    # NOTE: gcc-static, eglibc32, eglibc64, and gcc-final should NOT
-	    #       use our common OPTS.  these packages are VERY important and
-	    #       so we're going to follow the CLFS book exactly.
+	    # NOTE: gcc-static, glibc32, glibc64, and gcc-final should NOT use
+	    #       our common OPTS.  these packages are VERY important and so
+	    #       we're going to follow the CLFS book exactly.
 	    OPTS=""
 
             if [ -n "$BUILD32" ]; then
                 # x86_64 multi
                 tmp_CC="${CLFS_TARGET}-gcc ${BUILD32}"
-                tmp_CFLAGS="-march=$(cut -d- -f1 <<< $CLFS_TARGET32) -O2"
                 tmp_host="--host=${CLFS_TARGET32}"
             elif [ -n "$BUILD64" ]; then
                 # x86_64 pure
                 tmp_CC="${CLFS_TARGET}-gcc ${BUILD64}"
-                tmp_CFLAGS=
                 tmp_host="--host=${CLFS_TARGET}"
             else
                 # x86
                 tmp_CC="${CLFS_TARGET}-gcc"
-                tmp_CFLAGS="-march=$(cut -d- -f1 <<< $CLFS_TARGET) -O2"
                 tmp_host="--host=${CLFS_TARGET}"
             fi
             echo tmp_CC: $tmp_CC
@@ -264,30 +286,19 @@ build()
 
             BUILD_CC="gcc" CC=$tmp_CC \
                 AR="${CLFS_TARGET}-ar" RANLIB="${CLFS_TARGET}-ranlib" \
-                CFLAGS=$tmp_CFLAGS \
-                configure_generic eglibc --prefix=$PREFIX_FINAL \
+                configure_generic glibc --prefix=$PREFIX_FINAL \
                 $tmp_host --build=${CLFS_HOST} \
-                --disable-profile --with-tls --enable-kernel=2.6.32 --with-__thread \
+                --disable-profile --enable-kernel=2.6.32 \
                 --with-binutils=$PREFIX_CROSS/bin --with-headers=$PREFIX_FINAL/include \
                 --enable-obsolete-rpc --cache-file=config.cache || exit 1
 
-	    pushd $builddir &&
-	    make -j$JOBCOUNT &&
-	    make install &&
-	    popd || exit 1
-
-            if [ -z "$BUILD32" ] && [ -n "$BUILD64" ]; then
-                # x86_64 pure
-		#
-		# The stubs.h header installed by eglibc looks for
-		# stubs-32.h and stubs-64.h. This configuration of eglibc
-		# only generates stubs-64.h. Fix this with the following:
-		mv -v $PREFIX_FINAL/include/gnu/stubs{-64,}.h
-	    fi
+            compile_generic glibc || exit 1
 	    ;;
 
-	eglibc-stage2)
-	    # assuming that eglibc-stage1 has already been run, we already have
+        # FIXME: left off here
+
+	glibc-stage2)
+	    # assuming that glibc-stage1 has already been run, we already have
 	    # a fully patched source tree, so setup_generic should just verify
 	    # that the source tree exists and setup all our build variables.
 	    #
@@ -296,18 +307,18 @@ build()
             #       seperate BUILD dir.  We can do this because we built the
             #       32bit stuff out-of-tree.
             #
-	    # NOTE: This means you CANNOT start a build at the eglibc-stage2
-	    #       step unless you have a leftover eglibc tree from a previous
+	    # NOTE: This means you CANNOT start a build at the glibc-stage2
+	    #       step unless you have a leftover glibc tree from a previous
 	    #       run or you set it up by hand!
-	    setup_generic eglibc || exit 1
+	    setup_generic glibc || exit 1
 
 	    # however, we do have to adjust some variables
-	    builddir=$PWD/.build/eglibc64
+	    builddir=$PWD/.build/glibc64
 	    mkdir -p $builddir
 	    echo "builddir: $builddir"
 
 	    # Add the following to config.cache to disable ssp when building
-	    # EGLIBC
+	    # GLIBC
 	    #
 	    # NOTE: In $builddir!!!
 	    pushd $builddir
@@ -319,20 +330,20 @@ build()
 	    echo "slibdir=$PREFIX_FINAL/lib64" >> configparms
 	    popd
 
-	    # NOTE: eglibc builds and installs in PREFIX_FINAL on purpose.
+	    # NOTE: glibc builds and installs in PREFIX_FINAL on purpose.
 	    #       this package can safely be built now and installed in
 	    #       /tools so we don't have to build it again during the
 	    #       final bootstrap stage.  this is the way the CLFS book
 	    #       does it, so we're following suit.
             #
-	    # NOTE: gcc-static, eglibc32, eglibc64, and gcc-final should NOT
+	    # NOTE: gcc-static, glibc32, glibc64, and gcc-final should NOT
 	    #       use our common OPTS.  these packages are VERY important and
 	    #       so we're going to follow the CLFS book exactly.
 	    OPTS=""
 
             BUILD_CC="gcc" CC="${CLFS_TARGET}-gcc ${BUILD64}" \
                 AR="${CLFS_TARGET}-ar" RANLIB="${CLFS_TARGET}-ranlib" \
-                configure_generic eglibc --prefix=$PREFIX_FINAL \
+                configure_generic glibc --prefix=$PREFIX_FINAL \
                 --host=${CLFS_TARGET} --build=${CLFS_HOST} --libdir=$PREFIX_FINAL/lib64 \
                 --disable-profile --with-tls --enable-kernel=2.6.32 --with-__thread \
                 --with-binutils=$PREFIX_CROSS/bin --with-headers=$PREFIX_FINAL/include \
@@ -350,7 +361,7 @@ build()
 	    # verify that the source tree exists and setup all our build
 	    # variables.
             #
-            # NOTE: What we're doing here (and for eglibc above) is we're
+            # NOTE: What we're doing here (and for glibc above) is we're
             #       REUSING the prepped source tree from the static build with
             #       a seperate BUILD dir.  We can do this because we built the
             #       static stuff out-of-tree.
@@ -365,7 +376,7 @@ build()
 	    mkdir -p $builddir
 	    echo "builddir: $builddir"
 
-	    # NOTE: gcc-static, eglibc32, eglibc64, and gcc-final should NOT
+	    # NOTE: gcc-static, glibc32, glibc64, and gcc-final should NOT
 	    #       use our common OPTS.  these packages are VERY important and
 	    #       so we're going to follow the CLFS book exactly.
             OPTS=""
@@ -416,10 +427,11 @@ packages=""
 #
 # FIXME: I'm handling this in bootstrap-early unless breakage is encountered.
 #packages+=" bc"
-packages+=" linux_headers"
 packages+=" file"
+packages+=" linux_headers"
 packages+=" m4"
 packages+=" ncurses"
+packages+=" pkg-config"
 packages+=" gmp"
 packages+=" mpfr"
 packages+=" mpc"
@@ -427,12 +439,12 @@ packages+=" isl"
 packages+=" cloog"
 packages+=" binutils"
 packages+=" gcc-static"
-packages+=" eglibc-stage1"
+packages+=" glibc-stage1"
 
 # NOTE: We only build stage2 if we're building x86_64 multilib, which is the
 #       only case that this variable gets set.
 if [ -n "$BUILD32" ]; then
-    packages+=" eglibc-stage2"
+    packages+=" glibc-stage2"
 fi
 
 packages+=" gcc"
