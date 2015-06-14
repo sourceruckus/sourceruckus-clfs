@@ -1,2 +1,2 @@
-ftp://gcc.gnu.org/pub/gcc/releases/gcc-4.8.1/gcc-4.8.1.tar.bz2
-http://patches.cross-lfs.org/2.1.0/gcc-4.8.1-branch_update-3.patch
+ftp://gcc.gnu.org/pub/gcc/releases/gcc-4.8.3/gcc-4.8.3.tar.bz2
+http://patches.cross-lfs.org/3.0.0/SYSTEMD/gcc-4.8.3-branch_update-1.patch
