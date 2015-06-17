@@ -30,9 +30,12 @@ fi
 build()
 {
     case "$1" in
-	rsync)
-	    # seems to have a parallel build problem... (still true as of
+	rsync|gettext)
+	    # rsync seems to have a parallel build problem... (still true as of
 	    # v3.0.9)
+            #
+            # so does gettext (as of 0.19.1).
+            #
 	    JOBCOUNT=1 build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
         e2fsprogs)

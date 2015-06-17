@@ -631,15 +631,13 @@ AC_SUBST(HOST_HAS_GLIB, $has_glib)
 p_early+=" m4" # automake >= 1.11.6, autoconf >= 2.62, help2man >= 1.29, makeinfo >= 4.13, xz
 p_early+=" autoconf" # m4 >= 1.4.16
 p_early+=" automake" # autoconf >= 2.69
+p_early+=" bison"
 p_early+=" gettext"
 p_early+=" libtool" # warned about libtool.m4 bootstrap failure
 p_early+=" pkg-config" # glib bits need libtool
 p_early+=" make" # automake >= 1.11.1, gettext >= 0.18.1, pkg-config
 
 # FIXME: flex?
-# FIXME: graphviz?
-# FIXME: valgrind?
-p_early+=" bison"
 
 
 # to ensure that we don't inadvertantly use a modified version with
