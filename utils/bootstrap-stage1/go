@@ -337,7 +337,7 @@ build()
 	    popd || exit 1
 
 	    # FIXME: We've got --enable-shared --disable-static in
-	    #        $OPTS... Does disabling shard now re-enable static?
+	    #        $OPTS... Does disabling shared now re-enable static?
 	    configure_generic $1 $OPTS \
 		--disable-shared \
 		--cache-file=config.cache || exit 1
@@ -710,44 +710,101 @@ packages+=" binutils"
 packages+=" gcc"
 packages+=" ncurses"
 
-# FIXME: what about the ncurses patch...?
+# busybox of doom!
+#
+# NOTE: We replace a ton of CLFS /tools packages by using busybox here.  The
+#       busybox applets are less featureful than the full GNU tools, but
+#       they're good enough to get our bootstrap system up and running quickly.
+#
+# NOTE: This means we'll be using busybox's init and mdev instead of sysvinit
+#       and udev.  And we'll be providing our own simple bootscripts instead of
+#       using the CLFS ones.
+#
+# NOTE: I'll keep the commented out list of CLFS packages up-to-date and in
+#       order just to make pulling in CLFS updates easier.
+#
+# FIXME: what about my old patch for detecting non-/usr ncurses...?
+#
+# NOTE: I'll document some of the applet limitations here:
+#
+#       - findutils: No locate equivelent, but that's fine.
+#
+#       - mdev: Obviously, udev scripts won't work.
+#
+#       - init: Single runlevel only, but that's fine for now.
+#
+#       - losetup: No crypto support.
+#
+#       - bash/ash: Might run into bash script incompatibilities, although it
+#         seems to be working fine for now.
+#
+#       - xz: Only supports decompressing... If we need to compress with xz
+#         from the bootstrap system, we'll need to install the real xz package.
+#         However, this does mean we're perfectly capable of untarring tar.xz
+#         files transparently using busybox.
+#
+#         FIXME: is that still true?
+#
+#       - vi: Just as painful to use as I remember the original vi
+#         being... shocking, and yet oddly refreshing, after years of being
+#         spoiled by vim.
+#
 packages+=" busybox"
 
-# NOTE: The following CLFS /tools packages are replaced by our busybox
-#       package's equivilent tools
+# bb
 #
 #packages+=" bash"
 #packages+=" bzip2"
+
+# NOTE: We skip check because it's unneeded at this point (do to our other
+#       deviations from the CLFS book?)
+#
+#packages+=" check"
+
+# bb
+#
 #packages+=" coreutils"
 #packages+=" diffutils"
-#packages+=" findutils" # still missing locate...? do i care?
-#packages+=" gawk"
-#packages+=" grep"
-#packages+=" gzip"
-#packages+=" patch"
-#packages+=" sed"
-#packages+=" tar"
-#packages+=" vim"
-#packages+=" xz-utils"
-#
-# NOTE: The busybox xz applet(s) only support decompressing... If we need to
-#       compress with xz from the bootstrap system, we'll need to install the
-#       real xz package.  However, this does mean we're perfectly capable of
-#       untarring tar.xz files transparently using busybox.
-#
-# FIXME: is that still true?
 
-packages+=" bison"
+# FIXME: no longer in equivelent CLFS chapter?
+#packages+=" bison"
 
 packages+=" file"
-packages+=" flex"
+
+# FIXME: no longer in equivelent CLFS chapter?
+#packages+=" flex"
+
+# bb
+#
+#packages+=" findutils"
+#packages+=" gawk"
 
 packages+=" gettext"
 
-packages+=" m4"
+# bb
+#
+#packages+=" grep"
+#packages+=" gzip"
+
+# FIXME: no longer in equivelent CLFS chapter?
+#packages+=" m4"
+
 packages+=" make"
 
+# bb
+#
+#packages+=" patch"
+#packages+=" sed"
+#packages+=" tar"
+
 packages+=" texinfo"
+
+# bb
+#
+#packages+=" util-linux"
+#packages+=" vim"
+#packages+=" xz-utils"
+
 
 # boot prep
 #
@@ -761,59 +818,44 @@ packages+=" texinfo"
 #        Additionally, it would be nice if we could guarantee that there are
 #        no bootstrap files left over.  Not sure how important that is,
 #        though.
+
+# NOTE: We skip check because it's unneeded at this point (do to our other
+#       deviations from the CLFS book?)
 #
-# NOTE: The following CLFS /tools packages (for booting) are currently
-#       replaced by our busybox package... but we might want to actually
-#       install the real versions.  util-linux-ng, for example, installs
-#       pkg-config files that are searched for when building udev and/or hal
-#       later on...  util-linux also provides us with crypto arguments for
-#       losetup and mount.
+#packages+=" bc"
+
+# bb
 #
+#packages+=" boot-scripts"
+#packages+=" e2fspogs"
+#packages+=" kmod"
+#packages+=" shadow"
 #packages+=" sysvinit"
-#packages+=" module-init-tools"  # kmod now?
-#packages+=" udev"
+#packages+=" eudev"
+
+packages+=" kernel"
+
+# NOTE: We leave out grub for two reasons.
+#
+#       1) We boot our bootstrap system up as a Xen virtual machine, so we
+#          don't need a bootloader.
+#
+#       2) I'd use SYSLINUX if we really need a bootloader at this point.
+#          Better bang for the buck (EXT, FAT, IS9660 support, etc).
+#
+#packages+=" grub"
 
 packages+=" create-dirs"
 
 # NOTE: create-symlinks requires .build/busybox/busybox.links...
 packages+=" create-symlinks"
 
-# more boot packages
-#
-# FIXME: am i building util-linux or using busybox applets?  i might want
-#        cryptoloop and i might want -o remount.  transparent -o loop might
-#        have diff behavior.
-#
-#packages+=" util-linux" # for transparent cryptoloop mounting?
-#packages+=" e2fsprogs" # for bulletproof ext2/3/4 support
-
-# NOTE: We want this to be a pretty usable tiny bootstrap system, so we're
-#       gonna include propper NTFS support here as well.  Now we'll have
-#       support for ext2/3/4, vfat, and ntfs filesystems along with
-#       losetup/mount support for the kernel's cryptoloop code.
-#
-# FIXME: actually, the cryptoloop stuff in the latest util-linux is broken.
-#        it's been deprecated for years in favor of dm-crypt, so i doubt it's
-#        going to be fixed...  if the transparent cryptoloop mount usage was
-#        the only reason i went with the real util-linux here, i should
-#        reconsider.
-#packages+=" ntfs-3g"
-
-# FIXME: mdev vs udev.  I suspect that if we base our desktop image on our
-#        embedded image, parts of the desktop (GNOME, KDE, etc) are going to
-#        require udev.  Modern versions of udev, however, don't appear to
-#        play well with busybox's (or e2fsprogs') versions of blkid and
-#        libuuid.  So, our final system might want to use util-linux-ng and
-#        udev instead of busybox's mdev setup.  Not really sure how best to
-#        handle this yet.  Anyway, it's probably simpler for our bootable
-#        bootstrap system to just use busybox's mdev for now.
-#packages+=" udev"
-
 # this will handle config files for init, mdev, users/groups, logfiles,
 # login scripts, fstab, needed device nodes, etc
 packages+=" create-conf"
 
-packages+=" kernel"
+# and so ends the list of CLFS packages
+
 
 # We add this so that we can build perl in stage2, in-tree, from a git
 # submodule (setup_generic uses rsync to copy the source tree in this case).
@@ -866,13 +908,4 @@ if [ "$STAGE1_XEN_ONLY" != "yes" ]; then
     echo "done."
 fi
 
-
-
-# FIXME: Everything below this needs to be done as root (except the backup).
-#        Move the backup up here and run it non-root, then split the reset of
-#        this (along with the silly fix-perms "package" into a seperate script
-#        for the user to run as root.  This final script should groom/install
-#        everyting onto some type of media so that the user can go boot it up
-#        to kick off stage2!  Woo!
 exit 0
-
