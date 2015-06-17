@@ -28,6 +28,11 @@ build()
 
     case "$1" in
 	linux_headers)
+            # FIXME: We should check out the specific version CLFS tests glibc
+            #        with here, install it's headers in the final system
+            #        ($CLFS/usr/include), and have the glibc package script
+            #        slurp up the headers.
+
             setup_generic kernel || exit 1
 
             # get ready

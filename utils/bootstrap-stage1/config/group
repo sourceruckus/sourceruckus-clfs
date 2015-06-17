@@ -14,11 +14,13 @@ video:x:12:
 utmp:x:13:
 usb:x:14:
 cdrom:x:15:
-adm:x:16:root,adm,daemon
+adm:x:16:
 console:x:17:
 cdrw:x:18:
-mail:x:30:mail
+messagebus:x:27:
+systemd-journal:x:28:
+mail:x:30:
 news:x:31:news
+wheel:x:39:
 users:x:1000:
 nogroup:x:65533:
-nobody:x:65534:

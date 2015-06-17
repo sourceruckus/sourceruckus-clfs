@@ -273,6 +273,10 @@ for p in $packages; do
     build $p || exit 1
 done
 
+echo ""
+echo "-------------------------------------------------------------------"
+echo "Work complete!  Time to kick off the final system builder!"
+echo ""
 exit 0
 
 
