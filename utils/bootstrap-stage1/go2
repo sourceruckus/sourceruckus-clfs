@@ -23,26 +23,18 @@ fix_perms()
         -exec chown 0:0 {} \;
     echo "done"
 
-    chgrp -v 13 $CLFS/var/{run/utmp,log/lastlog} || exit 1
+    # FIXME: where did this come from...? I can't find them in the CLFS
+    #        3.0.0-systemd book... are they no longer needed?
+    #
+    #chgrp -v 13 $CLFS/var/{run/utmp,log/lastlog} || exit 1
+
+    # create initial device nodes
     if [ ! -c $CLFS/dev/console ]; then
-	mknod -m 600 $CLFS/dev/console c 5 1 || exit 1
+        mknod -m 0600 ${CLFS}/dev/console c 5 1 || exit 1
     fi
     if [ ! -c $CLFS/dev/null ]; then
-	mknod -m 666 $CLFS/dev/null c 1 3 || exit 1
+        mknod -m 0666 ${CLFS}/dev/null c 1 3 || exit 1
     fi
-
-    # add this so we can use the compiled-in default busybox inittab on a xen
-    # domU w/out initrd w/out seeing tons of errors regarding missing tty
-    # device nodes.
-    #
-    #for x in {0,1,2,3,4,5,6}; do
-    #    mknod -m 600 $CLFS/dev/tty$x c 4 $x || exit 1
-    #done
-
-    # FIXME: we need to add /etc/init.d/rcS to mount virtual filesystems
-    #        (/proc, /sys, etc), start mdev(?), and kick off our
-    #        builder... perhaps it should also create the tty0 device nodes?
-
 
     # setuid for special needs binaries
     #
@@ -52,10 +44,10 @@ fix_perms()
     # NOTE: Since we're using busybox for pretty much everything now, this list
     #       is pretty short... ;-)
     setuid_list=""
-    setuid_list+=" /tools/bin/busybox"
+    setuid_list+=" $PREFIX_FINAL/bin/busybox"
 
     for x in $setuid_list; do
-	chmod -v u+s $CLFS$x || exit 1
+        chmod -v u+s $x || exit 1
     done
 }
 
@@ -75,6 +67,9 @@ echo "done"
 # permissions magic
 fix_perms || exit 1
 
+# FIXME: double-check ownership of linuxrc...  actually, it looks like all
+#        symlinks are still owned by build user...
+
 
 # remove the bootstrap and bootstrap-cross symlinks
 #
@@ -84,5 +79,5 @@ fix_perms || exit 1
 # FIXME: clean out utils/*/.build at this point?  should free up over 7G
 #        depending on what was built.
 
-
+echo all done.
 exit 0

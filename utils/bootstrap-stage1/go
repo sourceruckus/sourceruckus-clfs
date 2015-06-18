@@ -529,27 +529,42 @@ build()
 	    #       these files
             #
             # FIXME: dup! check go2
-	    touch ${CLFS}/var/run/utmp ${CLFS}/var/log/{btmp,lastlog,wtmp} &&
-	    chmod -v 664 ${CLFS}/var/run/utmp ${CLFS}/var/log/lastlog &&
-	    chmod -v 600 ${CLFS}/var/log/btmp || exit 1
-	    
+	    #touch ${CLFS}/var/run/utmp ${CLFS}/var/log/{btmp,lastlog,wtmp} &&
+	    #chmod -v 664 ${CLFS}/var/run/utmp ${CLFS}/var/log/lastlog &&
+	    #chmod -v 600 ${CLFS}/var/log/btmp || exit 1
+
 	    # copy profile into root's homedir
 	    cp -v config/profile $CLFS/root/.profile
 
 	    # make sure these build variables are set
+            #
+            # NOTE: The CLFS_HOST and CLFS_TARGET variables are no longer
+            #       needed at this point.  The CLFS book does not put them in
+            #       .profile and neither do we.
+            #
+            # NOTE: The BUILD32 and BUILD64 CLFS variables are used throughout
+            #       the final system build.
+            #
+            # NOTE: The CLFS_TARGET32 variable is still needed when we go to
+	    #       build some 32bit libs at the beginning of the final system
+	    #       build (looks like cloog is the last one that needs it).
+            #
+            # FIXME: Why does nothing after cloog need --host=$CLFS_TARGET32
+            #        when building 32bit libs...?
 	    echo export BUILD32=\"$BUILD32\" >> $CLFS/root/.profile
 	    echo export BUILD64=\"$BUILD64\" >> $CLFS/root/.profile
-	    # FIXME: what about CLFS_HOST and CLFS_TARGET?  CLFS_TARGET is no
-	    #        longer needed, probably the same for CLFS_HOST.  TARGET32
-	    #        is still needed when we go to build 32bit libs.
 	    echo export CLFS_TARGET32=\"$CLFS_TARGET32\" >> $CLFS/root/.profile
-	    
+
             # generate fstab
+            #
+            # FIXME: CLFS 3.0.0-systemd fstab is excluding some of the standard
+            #        virtual filesystems... /proc, /sys, /run, and /dev... not
+            #        sure why.
             echo "# -*- mode: sh -*- " > $CLFS/etc/fstab
             if [ "$STAGE2_XEN" = "yes" ]; then
-                echo "/dev/xvda1 / $CLFS_FSTYPE defaults 0 0" >> $CLFS/etc/fstab
+                echo "/dev/xvda1 / $CLFS_FSTYPE defaults 1 1" >> $CLFS/etc/fstab
             else
-                echo "$CLFS_DEV / $CLFS_FSTYPE defaults 0 0" >> $CLFS/etc/fstab
+                echo "$CLFS_DEV / $CLFS_FSTYPE defaults 1 1" >> $CLFS/etc/fstab
             fi
             # FIXME: For right now, this needs to be rw, but we could possibly
             #        play with the idea of making it ro and passing it into
@@ -564,19 +579,19 @@ build()
             if [ -n "$RUCKUS_DEV" ]; then
                 mkdir -p $CLFS/ruckus $CLFS/tmp/ruckus_dev
                 if [ "$STAGE2_XEN" = "yes" ]; then
-                    echo "/dev/xvdb1 /tmp/ruckus_dev $RUCKUS_FSTYPE defaults 1 1" >> $CLFS/etc/fstab
+                    echo "/dev/xvdb1 /tmp/ruckus_dev $RUCKUS_FSTYPE defaults 1 2" >> $CLFS/etc/fstab
                 else
-                    echo "$RUCKUS_DEV /tmp/ruckus_dev $RUCKUS_FSTYPE defaults 1 1" >> $CLFS/etc/fstab
+                    echo "$RUCKUS_DEV /tmp/ruckus_dev $RUCKUS_FSTYPE defaults 1 2" >> $CLFS/etc/fstab
                 fi
-                echo "/tmp/ruckus_dev /ruckus none bind 1 1" >> $CLFS/etc/fstab
+                echo "/tmp/ruckus_dev /ruckus none bind 0 0" >> $CLFS/etc/fstab
             fi
             cat config/fstab >> $CLFS/etc/fstab || exit 1
 
             # install our inittab, which optionally starts the stage2 builder
             cp -v config/inittab $CLFS/etc/ || exit 1
 
-	    # NOTE: now touch /.ruckus_bootstrap_stage2, which causes init
-	    #       to run the stage2 script on tty1 at boot
+	    # touch the stage2 file, which causes init to run the stage2 script
+	    # on tty1 at boot
             if [ "$STAGE2_AUTO" = "yes" ]; then
 	        touch $CLFS$RUCKUS_BOOTSTRAP_STAGE2_FILE || exit 1
             fi
@@ -711,6 +726,10 @@ build()
             #       Instead of building a new cross-compilation toolchain
             #       later, we just pre-install the hypervisor on the final
             #       system here.
+            #
+            # FIXME: Don't forget to make the xen final system build script
+            #        slurp up the pre-existing hypervisor into it's package
+            #        contents...
             if [ -z "$BUILD64" ]; then
                 pushd $builddir &&
                 $MAKE DESTDIR=$PREFIX_FINAL install &&
@@ -922,13 +941,23 @@ for p in $packages; do
     build $p || exit 1
 done
 
-# make a backup of our progress.
+
+# make a backup of our progress, because starting over sucks
 #
-# FIXME: perhaps i should ditch the compression on these backups?  it's adding
-#        about 10 minutes to the build time and compressed 890M down to about
-#        180M on a 64bit-multilib build.  using bzip only took 2.5 minutes and
-#        resulted in a 290M archive.  piping tar into xz -0 took 1.5 minutes
-#        and resulted in a 240M file.
+# NOTE: I considered removing the compression from our backup, because it
+#       seemed like it was taking forever.  Here's some timing info from a
+#       while ago.
+#
+#       Using tar's xz compression (-J), it's adding about 10 minutes to the
+#       build time and compressed 890M down to about 180M on a 64bit-multilib
+#       build.
+#
+#       Using bzip (-j) only took 2.5 minutes and resulted in a 290M archive.
+#
+#       Using gzip (-z) only took 1.5 minutes and resulted in a 350M file.
+#
+#       Piping tar into xz -0 took 1.5 minutes and resulted in a 240M file.
+#       Looks like we have a winner.
 #
 if [ "$STAGE1_XEN_ONLY" != "yes" ]; then
     echo -n "creating bootstrap-stage1 backup... "

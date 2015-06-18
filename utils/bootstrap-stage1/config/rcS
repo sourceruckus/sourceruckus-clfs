@@ -19,6 +19,9 @@ ln -fs fd/1 /dev/stdout
 ln -fs fd/2 /dev/stderr
 
 # too bad busybox's shell doesn't do this...
+#
+# FIXME: uh, how about 'for x in [0-6]'?
+#
 #for x in {0,1,2,3,4,5,6}; do
 #    mknod -m 600 /dev/tty$x c 4 $x
 #done
@@ -33,12 +36,15 @@ mknod -m 600 /dev/tty6 c 4 6
 # mount virtual filesystems
 #
 # FIXME: -n?
+#
+# FIXME: should we control mounting o these via fstab or not?  we're
+#        inconsistent right now...
 mount -t devpts devpts /dev/pts
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 
 # create /etc/mtab symlink
-ln -fs /proc/mounts /etc/mtab
+#ln -fs /proc/mounts /etc/mtab
 
 # setup hotplug
 echo /sbin/mdev > /proc/sys/kernel/hotplug
