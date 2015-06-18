@@ -2,11 +2,10 @@
 
 * TODO
 
+- Make 32bit Glibc work?  This looks painful... I must have a typo somewhere,
+  or a busybox replacement broke something...
+
 - Proof-of-concept building and installing a brp from within the build system.
-
-- Forward-port scripts, submodules, and tarballs to CLFS 3.0.0-SYSTEMD.
-
-- Forward-port my make repo to 3.x
 
 - Update srp module to something that actually works
 
