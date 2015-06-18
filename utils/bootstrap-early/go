@@ -30,14 +30,34 @@ fi
 build()
 {
     case "$1" in
-	rsync|gettext)
+	rsync)
 	    # rsync seems to have a parallel build problem... (still true as of
 	    # v3.0.9)
             #
-            # so does gettext (as of 0.19.1).
-            #
 	    JOBCOUNT=1 build_generic $1 --prefix=$PREFIX_EARLY || exit 1
 	    ;;
+        gettext)
+	    setup_generic $1 &&
+	    configure_generic $1 --prefix=$PREFIX_EARLY \
+		--disable-shared  || exit 1
+
+            # don't build man in gettext-runtime
+            pushd $builddir/gettext-runtime &&
+            sed -i 's|\(^SUBDIRS = [[:space:][:alnum:]$(-_]*\) man |\1 |' \
+                Makefile &&
+            popd || exit 1
+
+            # don't build man or info in gettext-tools
+            pushd $builddir/gettext-tools &&
+            sed -i 's|\(^SUBDIRS = [[:space:][:alnum:]$(-_]*\) man |\1 |' \
+                Makefile &&
+            sed -i 's|\(^SUBDIRS =\) doc |\1 |' Makefile &&
+            popd || exit 1
+
+            # NOTE: Can't build in parallel (as of 0.19.1)
+            #
+            JOBCOUNT=1 compile_generic $1 || exit 1
+            ;;
         e2fsprogs)
             # work around e4defrag problem mentioned above
             #
