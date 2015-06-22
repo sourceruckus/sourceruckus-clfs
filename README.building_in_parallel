@@ -1,0 +1,34 @@
+-*- org -*-
+
+I'm trying to set things up so that we can build from bootstrap on in parallel
+for multiple architectures using a common hostprep.
+
+This may or may not involve using out-of-tree autoconf... depending on how much
+work it takes (I'd probably have to gut the script-based bootstrap system...)
+
+
+* Problems:
+** /tools symlinks
+Maybe /tools-x86_64-64 style throughout?
+
+** /ruckus can't be passed RO if EXT4?
+Maybe use EXT4 w/out journal? seems sketchy... can we just disable the journal
+when we go to pass through to the domUs?
+
+[    1.336144] EXT4-fs (xvdb1): write access unavailable, cannot proceed
+
+
+** will need some rw space instead of /ruckus
+Perhaps just make sure / is big enough and have a /ruckus_out directory?  This
+would be used instead of /ruckus for bootstrap-stage2 and the final build
+phase.  Might need to be a seperate rw partition to keep it out of our fs
+dumps... (could use list of inodes and stat to figure them out from filenames,
+see description of -e in dump(8)).
+
+
+* Then we need a build-aux/build script:
+./build-aux/build --arch-list=i686,x86_64,x86_64-64
+
+If we're really gonna do this, should we ditch the "--disable-multilib"
+configure flag and just add x86_64-64 as a supported architecture?
+

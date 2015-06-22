@@ -40,14 +40,21 @@ that).
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --enable-stage2-auto \
-    --with-arch=i686 \
     --with-install-dev=/dev/mapper/vg00-baby \
     --with-ruckus-dev=/dev/mapper/vg00-ruckus
 
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --enable-stage2-auto \
-    --with-install-dev=/dev/mapper/vg00-baby \
+    --with-arch=i686 \
+    --with-install-dev=/dev/mapper/vg00-baby32 \
+    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+
+INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
+    --prefix=/mnt/root-true/ruckus-hostprep \
+    --enable-stage2-auto \
+    --with-arch=x86_64 --disable-multilib \
+    --with-install-dev=/dev/mapper/vg00-baby64 \
     --with-ruckus-dev=/dev/mapper/vg00-ruckus
 
 
