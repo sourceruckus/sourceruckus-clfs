@@ -65,8 +65,6 @@ AC_ARG_WITH(arch,
   build_arch=$withval,
   build_arch=default_arch)
 
-CLFS_TARGET=$build_arch-ruckus-linux-gnu
-
 
 # allow disabling multilib for pure64 builds
 AC_ARG_ENABLE(multilib,
@@ -95,20 +93,28 @@ AM_CONDITIONAL([MULTILIB],
 AS_IF([test "$build_arch" = "i686"],
   [ # x86
    CLFS_ARCH=i386
+   CLFS_ARCH_STRING=$CLFS_ARCH
    BUILD32=
    BUILD64=
+   CLFS_TARGET=$build_arch-rucus-linux-gnu # FIXME: does this NEED to be 'pc'?
    CLFS_TARGET32=
    build_multilib=no
   ],
   [ # x86_64
+    #
+    # FIXME: this is the else!  that means anything other than x86 is
+    #        assumed to be x86_64... which will surely bite us later.
    CLFS_ARCH=x86_64
+   CLFS_TARGET=$build_arch-ruckus-linux-gnu # FIXME: NEED to be 'unknown'?
    AS_IF([test "$build_multilib" = "yes"],
      [ # x86_64 multilib
+      CLFS_ARCH_STRING=$CLFS_ARCH
       BUILD32="-m32"
       BUILD64="-m64"
-      CLFS_TARGET32="i686-ruckus-linux-gnu"
+      CLFS_TARGET32="i686-ruckus-linux-gnu" # FIXME: NEED to be 'pc'?
      ],
      [ # pure64
+      CLFS_ARCH_STRING=$CLFS_ARCH-64
       BUILD32=
       BUILD64="-m64"
       CLFS_TARGET32=
@@ -343,6 +349,7 @@ AC_ARG_ENABLE(xen,
 
 AC_SUBST(XEN_ENABLED, $xen_enabled)
 AC_SUBST(STAGE2_XEN, $stage2_xen)
+AM_CONDITIONAL([STAGE2_XEN], [test x$stage2_xen = xyes])
 
 # FIXME: we probably want an automake conditional for building the final
 #        stage xen package.  for example, if we disable xen and build32
@@ -373,6 +380,21 @@ AS_IF([test "$stage1_xen_only" = "yes"],
 
 AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 AM_CONDITIONAL([STAGE1_XEN_ONLY], [test x$stage1_xen_only = xyes])
+
+# don't bother building xen if we already have it
+#
+# NOTE: This is to avoid rebuilding the xen hypervisor when bootstrapping
+#       multiple architectures sharing a common hostprep area.
+#
+# FIXME: This could also be used to detect wither we should go on the xen
+#        detour, instead of the nested if ugliness above...
+AS_IF([test "$xen_enabled" = "yes"],
+  [AS_IF([test -f $PREFIX_EARLY/boot/xen.gz],
+    [stage1_xen=no],
+    [stage1_xen=yes])],
+  [stage1_xen=no])
+AC_SUBST(STAGE1_XEN, $stage1_xen)
+AM_CONDITIONAL([STAGE1_XEN], [test x$stage1_xen = xyes])
 
 
 # flags for installation and kickoff of stage2
@@ -780,6 +802,11 @@ AC_SUBST(CLFS_TARGET32)
 AC_SUBST(BUILD32)
 AC_SUBST(BUILD64)
 AC_SUBST(CLFS_ARCH)
+# NOTE: This extra variable refers to the "architecture" of the CLFS book
+#       (e.g., i686, x86_64, x86_64-64).  It's different than the
+#       CLFS_ARCH variable which refers solely to the cpu architecture
+#       (i.e., implies nothing regarding multilib vs pure).
+AC_SUBST(CLFS_ARCH_STRING)
 
 
 # FIXME: can i include other files and append to AC_CONFIG_FILES
@@ -819,6 +846,7 @@ echo "  Final Target Arch....: $build_arch"
 echo "  Multilib.............: $build_multilib"
 echo "  Xen Enabled..........: $xen_enabled"
 echo "  Xen Detour...........: $xen_detour"
+echo "  Stage1 Xen...........: $stage1_xen"
 echo "  Stage1 Xen Only......: $stage1_xen_only"
 echo "  Stage2 Xen...........: $stage2_xen"
 echo "  Stage2 Auto..........: $stage2_auto"
@@ -831,6 +859,7 @@ echo "  CLFS_HOST............: $CLFS_HOST"
 echo "  CLFS_TARGET..........: $CLFS_TARGET"
 echo "  CLFS_TARGET32........: $CLFS_TARGET32"
 echo "  CLFS_ARCH............: $CLFS_ARCH"
+echo "  CLFS_ARCH_STRING.....: $CLFS_ARCH_STRING"
 echo "  BUILD32..............: $BUILD32"
 echo "  BUILD64..............: $BUILD64"
 echo

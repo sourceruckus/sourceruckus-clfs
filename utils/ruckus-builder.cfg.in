@@ -1,5 +1,5 @@
 # -*- mode: python -*-
-kernel = "@PREFIX_EARLY@/boot/vmlinuz-ruckus-bootstrap"
+kernel = "@PREFIX_EARLY@/boot/@CLFS_ARCH_STRING@/vmlinuz-ruckus-bootstrap"
 
 # FIXME: what if no RUCKUS_DEV?
 #
@@ -20,9 +20,9 @@ disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,w"]
 #        makes more sense to defult vcpus to match system like this:
 #        grep "^processor[[:space:]]*:" /proc/cpuinfo | wc -l
 #
-memory = 2048
-vcpus = 4
-name = "ruckus-builder"
+memory = 10240
+vcpus = 8
+name = "ruckus-builder-@CLFS_ARCH_STRING@"
 
 # FIXME: i need to put a bridge on my avlinux host!
 #

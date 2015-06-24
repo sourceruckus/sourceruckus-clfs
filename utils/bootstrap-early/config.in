@@ -84,6 +84,12 @@ export BUILD64=@BUILD64@
 #       bit files to be in the i386 dir).
 export CLFS_ARCH=@CLFS_ARCH@
 
+# NOTE: This extra variable refers to the "architecture" of the CLFS book
+#       (e.g., i686, x86_64, x86_64-64).  It's different than the
+#       CLFS_ARCH variable which refers solely to the cpu architecture
+#       (i.e., implies nothing regarding multilib vs pure).
+export CLFS_ARCH_STRING=@CLFS_ARCH_STRING@
+
 
 # --- Bootstrap Early Variables -------------------------------------------
 
@@ -96,6 +102,7 @@ export HOST_HAS_GLIB=@HOST_HAS_GLIB@
 
 # --- Bootstrap Stage1 Variables ------------------------------------------
 export XEN_ENABLED=@XEN_ENABLED@
+export STAGE1_XEN=@STAGE1_XEN@
 export STAGE1_XEN_ONLY=@STAGE1_XEN_ONLY@
 export STAGE2_XEN=@STAGE2_XEN@
 export STAGE2_AUTO=@STAGE2_AUTO@
