@@ -41,9 +41,9 @@ build()
 	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
             MAKE+=" ARCH=$CLFS_ARCH"
 
-            # NOTE: We use /tools as apposed to /cross-tools here (just like
-            #       the CLFS book).  There's nothing to cross-compile here, but
-            #       it's needed now.
+            # NOTE: We use $PREFIX_FINAL as apposed to $PREFIX_CROSS here (just
+            #       like the CLFS book).  There's nothing to cross-compile
+            #       here, but it's needed now.
             pushd $builddir &&
             $MAKE mrproper &&
             $MAKE headers_check &&
@@ -73,7 +73,7 @@ build()
 	pkg-config)
             # CLFS builds pkg-config as a part of the cross-compilation
             # toolchain so that it can have a pkg-config binary installed that
-            # only searches in /tools
+            # only searches in $PREFIX_FINAL
             #
             # NOTE: The internal glib snapshot can be used to remove a host
             #       system dependency, but if the host system has glib and a

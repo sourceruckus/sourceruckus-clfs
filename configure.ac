@@ -179,9 +179,11 @@ AS_IF([test -z "$PREFIX_EARLY"],
 AS_IF([test "$PREFIX_EARLY" = "NONE" ],
   [PREFIX_EARLY=$BUILDROOT/bootstrap-early])
 
+# FIXME: $CLFS_ARCH_STRING
 AS_IF([test -z "$PREFIX_CROSS"],
   [PREFIX_CROSS=/cross-tools])
 
+# FIXME: $CLFS_ARCH_STRING
 AS_IF([test -z "$PREFIX_FINAL"],
   [PREFIX_FINAL=/tools])
 
@@ -194,9 +196,11 @@ AC_ARG_VAR(BUILDROOT,
 AC_ARG_VAR(PREFIX_EARLY,
   [Prefix for bootstrap-early (default: $BUILDROOT/bootstrap-early)])
 
+# FIXME: $CLFS_ARCH_STRING
 AC_ARG_VAR(PREFIX_CROSS,
   [Prefix for bootstrap-cross (default: /cross-tools)])
 
+# FIXME: $CLFS_ARCH_STRING
 AC_ARG_VAR(PREFIX_FINAL,
   [Prefix for bootstrap-final (default: /tools)])
 

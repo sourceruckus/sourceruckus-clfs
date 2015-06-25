@@ -7,6 +7,8 @@ PS1='\u:\w\$ '
 LC_ALL=POSIX
 
 # NOTE: CLFS doesn't add /usr/local to PATH
+#
+# FIXME: tools-$CLFS_ARCH_STRING
 PATH=/bin:/usr/bin:/sbin:/usr/sbin:/tools/bin:/tools/sbin
 PATH=/usr/local/bin:/usr/local/sbin:$PATH
 

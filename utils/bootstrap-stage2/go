@@ -100,6 +100,9 @@ build()
             #
             # NOTE: Since we're building in a copy of our source tree, we don't
             #       have to worry about undoing this source modification.
+            #
+            # FIXME: CLFS_ARCH_STRING
+            #
             pushd $source &&
             sed -i.orig 's@/usr/include@/tools/include@g' \
                 ext/Errno/Errno_pm.PL &&
