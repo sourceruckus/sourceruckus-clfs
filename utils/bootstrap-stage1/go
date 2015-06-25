@@ -8,6 +8,9 @@
 # source our common variables and functions
 . $ruckus_srcdir/utils/bootstrap-early/functions
 
+# we've got bootstrap-stage1-specific config files in here
+ruckus_confdir=$ruckus_srcdir/utils/bootstrap-stage1/config
+
 
 build()
 {
@@ -227,7 +230,7 @@ build()
 	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL in order
 	    #       to use the ncurses installed via bootstrap-early (and
 	    #       our KBUILD patch needs to be applied)
-            cp -v config/bb-config $builddir/.config &&
+            cp -v $ruckus_confdir/bb-config $builddir/.config &&
 	    pushd $builddir &&
 	    $MAKE oldconfig &&
             popd || exit 1
@@ -520,11 +523,11 @@ build()
 	    
 	    # copy rcS and mdev.conf into etc
 	    mkdir -vp $CLFS/etc/init.d &&
-	    cp -v config/rcS $CLFS/etc/init.d &&
-	    cp -v config/mdev.conf $CLFS/etc || exit 1
+	    cp -v $ruckus_confdir/rcS $CLFS/etc/init.d &&
+	    cp -v $ruckus_confdir/mdev.conf $CLFS/etc || exit 1
 
 	    # copy passwd and group files into etc
-	    cp -v config/{passwd,group} $CLFS/etc || exit 1
+	    cp -v $ruckus_confdir/{passwd,group} $CLFS/etc || exit 1
 	    
 	    # initialize login related log files.
 	    #
@@ -538,7 +541,7 @@ build()
 	    #chmod -v 600 ${CLFS}/var/log/btmp || exit 1
 
 	    # copy profile into root's homedir
-	    cp -v config/profile $CLFS/root/.profile
+	    cp -v $ruckus_confdir/profile $CLFS/root/.profile
 
 	    # make sure these build variables are set
             #
@@ -589,10 +592,10 @@ build()
                 fi
                 echo "/tmp/ruckus_dev /ruckus none bind 0 0" >> $CLFS/etc/fstab
             fi
-            cat config/fstab >> $CLFS/etc/fstab || exit 1
+            cat $ruckus_confdir/fstab >> $CLFS/etc/fstab || exit 1
 
             # install our inittab, which optionally starts the stage2 builder
-            cp -v config/inittab $CLFS/etc/ || exit 1
+            cp -v $ruckus_confdir/inittab $CLFS/etc/ || exit 1
 
 	    # touch the stage2 file, which causes init to run the stage2 script
 	    # on tty1 at boot
@@ -633,7 +636,7 @@ build()
 	    popd || exit 1
 
 	    # get set
-	    cp -v config/$kernel_config $builddir/.config &&
+	    cp -v $ruckus_confdir/$kernel_config $builddir/.config &&
 	    pushd $builddir &&
 	    $MAKE oldconfig &&
 	    popd || exit 1

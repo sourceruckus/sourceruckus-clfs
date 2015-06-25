@@ -14,6 +14,9 @@
 #       runs ruckus_bootstrap_stage2's init script, followed by login.  The
 #       stage2 script just immediately launches login if the special file
 #       /.ruckus_bootstrap_stage2 isn't present.
+#
+# FIXME: might want /ruckus to be configurable somehow?
+#
 ::respawn:-/ruckus/utils/bootstrap-stage2/init
 
 # /sbin/getty invocations for selected ttys
