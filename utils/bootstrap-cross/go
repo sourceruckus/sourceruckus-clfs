@@ -100,7 +100,7 @@ build()
                 # x86 or x86_64 pure
 	        PKG_PATH="$PREFIX_FINAL/lib/pkgconfig"
             fi
-            PKG_PATH+=":$PREFIX_FINAL/tools/share/pkgconfig"
+            PKG_PATH+=":$PREFIX_FINAL/share/pkgconfig"
             CPPFLAGS=$_FLAGS \
 		build_generic $1 --prefix=$PREFIX_CROSS \
 		$_OPTS --with-pc-path=$PKG_PATH \
