@@ -33,6 +33,9 @@ packagedir=$toplevel/packages
 sourcedir=$toplevel/src
 
 # written out by configure
+#
+# FIXME: this is a build file... i need to gut this and use top_srcdir and
+#        top_builddir? or can i get away with assuming PWD is builddir?
 . $toplevel/utils/bootstrap-early/config
 
 

@@ -31,7 +31,7 @@ endif
 #       during hostprep.
 if STAGE1_XEN_ONLY
 hostprep-local:
-	env -i $(srcdir)/go
+	env -i toplevel=$(top_srcdir) $(srcdir)/go
 endif
 
 
@@ -40,7 +40,7 @@ endif
 #       want to force a rebuild of the cross toolchain if we're kicking
 #       bootstrap back off after fixing a problem in bootstrap-stage1.
 bootstrap-local:
-	[ -f $(builddir)/.build/ALL_DONE ] && echo nothing to build || env -i $(srcdir)/go || exit 1
+	[ -f $(builddir)/.build/ALL_DONE ] && echo nothing to build || env -i toplevel=$(top_srcdir) $(srcdir)/go || exit 1
 
 
 clean-local:

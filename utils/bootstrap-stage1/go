@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# should set toplevel via autoconf?
-toplevel=$PWD/../..
+# toplevel gets set by the Makefile, but try to autodetect assuming we're
+# building in-tree by hand if it's not set
+[ -n "$toplevel" ] || toplevel=$PWD/../..
 
 # source our common variables and functions
 . $toplevel/utils/bootstrap-early/functions
