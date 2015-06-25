@@ -9,14 +9,19 @@
 # block in bootstrap-early/functions for details.
 
 
-# should set toplevel via autoconf?
-toplevel=/ruckus
+# These variables get set by the init script, but try to autodetect them
+# assuming we're building out-of-tree if they're not set
+#
+# FIXME: make stage2 builddir configurable somehow?
+#
+[ -n "$ruckus_srcdir" ] || ruckus_srcdir=/ruckus
+[ -n "$ruckus_builddir" ] || ruckus_builddir=/ruckus-build
 
 # set this so we can detect that we're in the stage2 bootstrap environment
 RUCKUS_BOOTSTRAP_STAGE2=1
 
 # source our common variables and functions
-. $toplevel/utils/bootstrap-early/functions
+. $ruckus_srcdir/utils/bootstrap-early/functions
 
 
 build()
@@ -264,9 +269,6 @@ packages="$packages srp"
 #        would need srp.  I guess we could base the installer off of the
 #        smallest image to include X?
 
-
-cd $toplevel/utils/bootstrap-stage2
-mkdir -p $PWD/.build
 
 for p in $packages; do
     echo "building bootstrap-stage2 package: $p"

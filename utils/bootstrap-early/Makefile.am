@@ -16,7 +16,9 @@ EXTRA_DIST+=go
 #       only build to completion a single time.
 #
 hostprep-local:
-	[ -f $(builddir)/.build/ALL_DONE ] && echo nothing to build || env -i $(srcdir)/go || exit 1
+	[ -f $(builddir)/.build/ALL_DONE ] && echo nothing to build || \
+	    env -i ruckus_srcdir=$(top_srcdir) ruckus_builddir=$(top_builddir) \
+	    $(srcdir)/go || exit 1
 
 clean-local:
 	rm -rf $(builddir)/.build

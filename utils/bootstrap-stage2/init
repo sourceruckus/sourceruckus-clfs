@@ -1,9 +1,12 @@
 #!/bin/bash
 
-toplevel=/ruckus
+# FIXME: make stage2 builddir configurable somehow?
+#
+export ruckus_srcdir=/ruckus
+export ruckus_builddir=/ruckus-build
 
 # source our common variables and functions
-. $toplevel/utils/bootstrap-early/functions
+. $ruckus_srcdir/utils/bootstrap-early/functions
 
 # check for the control file
 if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
@@ -11,11 +14,10 @@ if [ ! -f $RUCKUS_BOOTSTRAP_STAGE2_FILE ]; then
 fi
 
 echo "running source ruckus bootstrap-stage2..."
-cd $toplevel/utils/bootstrap-stage2
 
 # lookup ownership of /ruckus to determine build user/group
-build_uid=`stat -c %u $toplevel`
-build_gid=`stat -c %g $toplevel`
+build_uid=`stat -c %u $ruckus_srcdir`
+build_gid=`stat -c %g $ruckus_srcdir`
 
 # FIXME: adding group and user on the build system will result in those being
 #        captured by dumped images... we'll want to remove these either prior
@@ -38,11 +40,11 @@ build_user=$(awk -F: "/$build_uid:/ {print \$1}" /etc/passwd)
 if [ -z "$build_user" ]; then
     build_user=ruckus
     echo "adding user '$build_user' with uid $build_uid"
-    adduser -h $toplevel -G $build_group -D -H -u $build_uid $build_user
+    adduser -h $ruckus_builddir -G $build_group -D -H -u $build_uid $build_user
     passwd -d $build_user
-    cp /root/.profile $toplevel/
-    chown $build_user:$build_group $toplevel/.profile
-    chmod 664 $toplevel/.profile
+    cp /root/.profile $ruckus_builddir/
+    chown $build_user:$build_group $ruckus_builddir/.profile
+    chmod 664 $ruckus_builddir/.profile
 fi
 
 # kick off the builder as build_user
@@ -52,7 +54,7 @@ fi
 # NOTE: The '-' is indeed quite intentional.  It forces parsing of
 #       build_user's .profile, which is where we've already set a whole
 #       bunch of important variables.
-su - $build_user -c "$toplevel/utils/bootstrap-stage2/go"
+su - $build_user -c "$ruckus_srcdir/utils/bootstrap-stage2/go"
 
 # NOTE: we intentionally don't check for failure here.  if we don't rm this
 #       file, init will start this script right back up again... looping

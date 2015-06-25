@@ -2,12 +2,13 @@
 
 # which packages need to be built is determined by configure script
 
-# FIXME: should set toplevel via autoconf? (no, it would end up in config,
-#        which we'd need to know toplevel for in order to find...)
-toplevel=$PWD/../..
+# These variables get set by the Makefile, but try to autodetect them assuming
+# we're building in-tree by hand if they're not set
+[ -n "$ruckus_srcdir" ] || ruckus_srcdir=$PWD/../..
+[ -n "$ruckus_builddir" ] || ruckus_builddir=$PWD/../..
 
 # source our common variables and functions
-. $toplevel/utils/bootstrap-early/functions
+. $ruckus_srcdir/utils/bootstrap-early/functions
 
 # make sure we can find libs/includes installed in PREFIX_EARLY
 #
@@ -65,10 +66,10 @@ build()
             #
             # FIXME: autoconf?
             sed -i.bak 's|.*E4DEFRAG_PROG=|#FOO|' \
-                $toplevel/src/e2fsprogs/misc/Makefile.in &&
+                $ruckus_srcdir/src/e2fsprogs/misc/Makefile.in &&
             build_generic $1 --prefix=$PREFIX_EARLY &&
-            cp $toplevel/src/e2fsprogs/misc/Makefile.in.bak \
-                $toplevel/src/e2fsprogs/misc/Makefile.in || exit 1
+            cp $ruckus_srcdir/src/e2fsprogs/misc/Makefile.in.bak \
+                $ruckus_srcdir/src/e2fsprogs/misc/Makefile.in || exit 1
             ;;
 	ncurses)
 	    build_generic $1 --prefix=$PREFIX_EARLY --with-shared || exit 1
@@ -154,7 +155,7 @@ build()
             popd || exit 1
             ;;
         tar)
-            GNULIB_SRCDIR=$toplevel/src/gnulib \
+            GNULIB_SRCDIR=$ruckus_srcdir/src/gnulib \
 	        build_generic $1 --prefix=$PREFIX_EARLY || exit 1
             ;;
 	dev86)

@@ -3,7 +3,14 @@ EXTRA_DIST+=README
 EXTRA_DIST+=go
 EXTRA_DIST+=patches
 
-# FIXME: this target won't build right out-of-tree...
+# FIXME: this target won't build right out-of-tree... do i have a
+#        $configure variable for the full path to configure?  if so, we
+#        can pushd $(top_builddir) && $configure...  if not, this is gonna
+#        get crazy messy.
+#
+# FIXME: also, if we do end up switching $CLFS/tools to $CLFS/tools-$ARCH,
+#        this target will need tweaking...
+#
 .PHONY: hostprep-local-64bit-detour
 hostprep-local-64bit-detour:
 	pushd $(top_srcdir) && \
@@ -31,7 +38,8 @@ endif
 #       during hostprep.
 if STAGE1_XEN_ONLY
 hostprep-local:
-	env -i toplevel=$(top_srcdir) $(srcdir)/go
+	env -i ruckus_srcdir=$(top_srcdir) ruckus_builddir=$(top_builddir) \
+	    $(srcdir)/go
 endif
 
 
@@ -40,7 +48,9 @@ endif
 #       want to force a rebuild of the cross toolchain if we're kicking
 #       bootstrap back off after fixing a problem in bootstrap-stage1.
 bootstrap-local:
-	[ -f $(builddir)/.build/ALL_DONE ] && echo nothing to build || env -i toplevel=$(top_srcdir) $(srcdir)/go || exit 1
+	[ -f $(builddir)/.build/ALL_DONE ] && echo nothing to build || \
+	    env -i ruckus_srcdir=$(top_srcdir) ruckus_builddir=$(top_builddir) \
+	    $(srcdir)/go || exit 1
 
 
 clean-local:

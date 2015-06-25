@@ -1,10 +1,12 @@
 #!/bin/bash
 
-# should set toplevel via autoconf?
-toplevel=$PWD/../..
+# These variables get set by the Makefile, but try to autodetect them assuming
+# we're building in-tree by hand if they're not set
+[ -n "$ruckus_srcdir" ] || ruckus_srcdir=$PWD/../..
+[ -n "$ruckus_builddir" ] || ruckus_builddir=$PWD/../..
 
 # source our common variables and functions
-. $toplevel/utils/bootstrap-early/functions
+. $ruckus_srcdir/utils/bootstrap-early/functions
 
 
 # NOTE: Everything that used to be done at the end of the stage1 go script is

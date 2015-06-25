@@ -29,14 +29,12 @@
 
 
 # paths to the package scripts and source directories for each package
-packagedir=$toplevel/packages
-sourcedir=$toplevel/src
+packagedir=$ruckus_srcdir/packages
+sourcedir=$ruckus_srcdir/src
 
 # written out by configure
 #
-# FIXME: this is a build file... i need to gut this and use top_srcdir and
-#        top_builddir? or can i get away with assuming PWD is builddir?
-. $toplevel/utils/bootstrap-early/config
+. $ruckus_builddir/utils/bootstrap-early/config
 
 
 # this variable tells bootstrap scripts (probably just cpio and tar) to use
@@ -45,7 +43,7 @@ sourcedir=$toplevel/src
 # NOTE: If tar used .gitmodules for paxutils, this wouldn't be needed.
 #       However, the tar boostrap script just does a git clone instead of
 #       using submodules.  At least, for now...
-export PAXUTILS_SRCDIR=$toplevel/src/paxutils
+export PAXUTILS_SRCDIR=$ruckus_srcdir/src/paxutils
 
 # this variable tells bootstrap scripts to not download new po files via
 # rsync
@@ -243,7 +241,7 @@ setup_generic()
 
         # fix relative paths in copied .git file(s)
         find $source -name .git -exec \
-            sed -i "s|^gitdir: [./]*|gitdir: $toplevel/.|" {} \;
+            sed -i "s|^gitdir: [./]*|gitdir: $ruckus_srcdir/.|" {} \;
     fi
 
     if [ -n "$build_in_tree" ]; then

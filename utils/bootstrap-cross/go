@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# toplevel gets set by the Makefile, but try to autodetect assuming we're
-# building in-tree by hand if it's not set
-[ -n "$toplevel" ] || toplevel=$PWD/../..
+# These variables get set by the Makefile, but try to autodetect them assuming
+# we're building in-tree by hand if they're not set
+[ -n "$ruckus_srcdir" ] || ruckus_srcdir=$PWD/../..
+[ -n "$ruckus_builddir" ] || ruckus_builddir=$PWD/../..
 
 # source our common variables and functions
-. $toplevel/utils/bootstrap-early/functions
+. $ruckus_srcdir/utils/bootstrap-early/functions
 
 
 
@@ -189,11 +190,13 @@ build()
 	    if [ ! -f $builddir/Makefile ]; then
                 # NOTE: gcc has a different patch for pure64 than for x86 or
                 #       x86_64 multilib.
+                p=$ruckus_srcdir/utils/bootstrap-cross/patches/gcc
                 if [ -n "$BUILD64" -a -z "$BUILD32" ]; then
-                    p=$toplevel/utils/bootstrap-cross/patches/gcc/*-pure64_specs-*.patch
+                    p+=/*-pure64_specs-*.patch
                 else
-                    p=$toplevel/utils/bootstrap-cross/patches/gcc/*-specs-*.patch
+                    p+=/*-specs-*.patch
                 fi
+                echo "applying $p..."
 		pushd $source &&
 		patch -Np1 < $p || exit 1
 		popd
@@ -450,7 +453,6 @@ fi
 packages+=" gcc"
 
 
-mkdir -p $PWD/.build
 mkdir -p $CLFS$PREFIX_CROSS $CLFS$PREFIX_FINAL
 
 echo packages: $packages

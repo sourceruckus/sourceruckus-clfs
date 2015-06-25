@@ -11,16 +11,19 @@ EXTRA_DIST+=patches
 #       toolchain).  In this case, we build during hostprep.
 if STAGE1_XEN_ONLY
 hostprep-local:
-	env -i toplevel=$(top_srcdir) $(srcdir)/go
+	env -i ruckus_srcdir=$(top_srcdir) ruckus_builddir=$(top_builddir) \
+	    $(srcdir)/go
 endif
 
 # NOTE: Each individual package being built just simply does a re-install
 #       if .build dir already exists.
 bootstrap-local:
-	env -i toplevel=$(top_srcdir) $(srcdir)/go
+	env -i ruckus_srcdir=$(top_srcdir) ruckus_builddir=$(top_builddir) \
+	    $(srcdir)/go
 
 bootstrap-install-local:
-	env -i toplevel=$(top_srcdir) $(srcdir)/go2
+	env -i ruckus_srcdir=$(top_srcdir) ruckus_builddir=$(top_builddir) \
+	    $(srcdir)/go2
 
 clean-local:
 	rm -rf $(builddir)/.build
