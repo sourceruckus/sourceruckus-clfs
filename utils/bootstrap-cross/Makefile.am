@@ -3,6 +3,7 @@ EXTRA_DIST+=README
 EXTRA_DIST+=go
 EXTRA_DIST+=patches
 
+# FIXME: this target won't build right out-of-tree...
 .PHONY: hostprep-local-64bit-detour
 hostprep-local-64bit-detour:
 	pushd $(top_srcdir) && \
@@ -30,7 +31,7 @@ endif
 #       during hostprep.
 if STAGE1_XEN_ONLY
 hostprep-local:
-	env -i ./go
+	env -i $(srcdir)/go
 endif
 
 
@@ -39,9 +40,9 @@ endif
 #       want to force a rebuild of the cross toolchain if we're kicking
 #       bootstrap back off after fixing a problem in bootstrap-stage1.
 bootstrap-local:
-	[ -f .build/ALL_DONE ] && echo nothing to build || env -i ./go || exit 1
+	[ -f $(builddir)/.build/ALL_DONE ] && echo nothing to build || env -i $(srcdir)/go || exit 1
 
 
 clean-local:
-	rm -rf .build
-	rm -rf .build-detour
+	rm -rf $(builddir)/.build
+	rm -rf $(builddir)/.build-detour

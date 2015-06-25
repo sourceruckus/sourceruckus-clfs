@@ -11,17 +11,17 @@ EXTRA_DIST+=patches
 #       toolchain).  In this case, we build during hostprep.
 if STAGE1_XEN_ONLY
 hostprep-local:
-	env -i ./go
+	env -i $(srcdir)/go
 endif
 
 # NOTE: Each individual package being built just simply does a re-install
 #       if .build dir already exists.
 bootstrap-local:
-	env -i ./go
+	env -i $(srcdir)/go
 
 bootstrap-install-local:
-	env -i ./go2
+	env -i $(srcdir)/go2
 
 clean-local:
-	rm -rf .build
-	rm -rf .build-detour
+	rm -rf $(builddir)/.build
+	rm -rf $(builddir)/.build-detour

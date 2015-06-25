@@ -16,8 +16,8 @@ EXTRA_DIST+=go
 #       only build to completion a single time.
 #
 hostprep-local:
-	[ -f .build/ALL_DONE ] && echo nothing to build || env -i ./go || exit 1
+	[ -f $(builddir)/.build/ALL_DONE ] && echo nothing to build || env -i $(srcdir)/go || exit 1
 
 clean-local:
-	rm -rf .build
-	rm -rf .build-detour
+	rm -rf $(builddir)/.build
+	rm -rf $(builddir)/.build-detour

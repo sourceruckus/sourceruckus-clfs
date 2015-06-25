@@ -14,5 +14,5 @@ download:
 	./get_sources @GET_SOURCES_ARGS@
 
 clean-local:
-	rm -rf .build
-	rm -f .previous_flags
+	rm -rf $(builddir)/.build
+	rm -f $(builddir)/.previous_flags
