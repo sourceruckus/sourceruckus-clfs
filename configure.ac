@@ -370,6 +370,33 @@ AM_CONDITIONAL([STAGE2_XEN], [test x$stage2_xen = xyes])
 #        the xen hypervisor... making it pretty useless.
 AM_CONDITIONAL([XEN_ENABLED], [test x$xen_enabled = xyes])
 
+
+# don't bother building xen if we already have it
+#
+# NOTE: This is to avoid rebuilding the xen hypervisor when bootstrapping
+#       multiple architectures sharing a common hostprep area.
+#
+# FIXME: This could also be used to detect wither we should go on the xen
+#        detour, instead of the nested if ugliness above...
+AS_IF([test "$xen_enabled" = "yes"],
+  [AS_IF([test -f $PREFIX_EARLY/boot/xen.gz],
+    [stage1_xen=no],
+    [stage1_xen=yes])],
+  [stage1_xen=no])
+
+# we might want to disable building the xen hypervisor in stage1, for
+# example if we've got two builds going in parallel (both would autodetect
+# to build the hypervisor).
+AC_ARG_WITH(stage1-xen,
+  AS_HELP_STRING([--with-stage1-xen], [Build the Xen hypervisor in bootstrap-stage1.]),
+  stage1_xen=$withval)
+#  stage1_xen=no)
+
+AC_SUBST(STAGE1_XEN, $stage1_xen)
+AM_CONDITIONAL([STAGE1_XEN], [test x$stage1_xen = xyes])
+
+
+
 # xen detour
 #
 AC_ARG_WITH(stage1-xen-only,
@@ -393,21 +420,6 @@ AS_IF([test "$stage1_xen_only" = "yes"],
 
 AC_SUBST(STAGE1_XEN_ONLY, $stage1_xen_only)
 AM_CONDITIONAL([STAGE1_XEN_ONLY], [test x$stage1_xen_only = xyes])
-
-# don't bother building xen if we already have it
-#
-# NOTE: This is to avoid rebuilding the xen hypervisor when bootstrapping
-#       multiple architectures sharing a common hostprep area.
-#
-# FIXME: This could also be used to detect wither we should go on the xen
-#        detour, instead of the nested if ugliness above...
-AS_IF([test "$xen_enabled" = "yes"],
-  [AS_IF([test -f $PREFIX_EARLY/boot/xen.gz],
-    [stage1_xen=no],
-    [stage1_xen=yes])],
-  [stage1_xen=no])
-AC_SUBST(STAGE1_XEN, $stage1_xen)
-AM_CONDITIONAL([STAGE1_XEN], [test x$stage1_xen = xyes])
 
 
 # flags for installation and kickoff of stage2

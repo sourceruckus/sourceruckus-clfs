@@ -1,6 +1,5 @@
 SUBDIRS=
 
-# FIXME: the env file needs some work for multi-build support
 hostprep-local:
 	$(INSTALL_DATA) ruckus-builder.env $(PREFIX_EARLY)/
 
@@ -25,8 +24,5 @@ bootstrap-install-local:
 	$(INSTALL_DATA) $(CLFS)/boot/* $(PREFIX_EARLY)/boot/$(CLFS_ARCH_STRING)
 
 endif
-
-# FIXME: Should put an else here with a bootstrap-local target that
-#        explicitly bombs out with an error message.
 
 endif

@@ -7,7 +7,7 @@ kernel = "@PREFIX_EARLY@/boot/@CLFS_ARCH_STRING@/vmlinuz-ruckus-bootstrap"
 #       in /tmp/ruckus_dev.  /tmp/ruckus_dev/RUCKUS_PATH is then bind
 #       mounted to /ruckus.
 #
-disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,w"]
+disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,r"]
 
 # FIXME: detect mem, vcpus for domU in configure?  maybe just default to 1
 #        cpu and 1024M but add --with-domu-cpus and --with-domu-ram?
@@ -20,8 +20,8 @@ disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,w"]
 #        makes more sense to defult vcpus to match system like this:
 #        grep "^processor[[:space:]]*:" /proc/cpuinfo | wc -l
 #
-memory = 10240
-vcpus = 8
+memory = 2048
+vcpus = 4
 name = "ruckus-builder-@CLFS_ARCH_STRING@"
 
 # FIXME: i need to put a bridge on my avlinux host!

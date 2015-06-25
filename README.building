@@ -37,6 +37,11 @@ that).
     --with-ruckus-path=/ruckus
 
 
+
+INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
+    --prefix=/mnt/root-true/ruckus-hostprep \
+    --with-hostprep-only
+
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --enable-stage2-auto \
@@ -54,6 +59,7 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --enable-stage2-auto \
     --with-arch=x86_64 --disable-multilib \
+    --without-stage1-xen \
     --with-install-dev=/dev/mapper/vg00-baby64 \
     --with-ruckus-dev=/dev/mapper/vg00-ruckus
 
