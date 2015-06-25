@@ -122,6 +122,15 @@ AS_IF([test "$build_arch" = "i686"],
   ])
 
 
+# make it easier to configure and build just the hostprep stuff
+#
+AC_ARG_WITH(hostprep-only,
+  AS_HELP_STRING([--with-hostprep-only], [Just configure for building hostprep.  Sanity checks for all further build stages will be skipped.]),
+  hostprep_only=$withval,
+  hostprep_only=no)
+AM_CONDITIONAL([HOSTPREP_ONLY], [test x$HOSTPREP_ONLY = xyes])
+
+
 # NOTE: no need to check if this is mounted... it has to be
 AC_ARG_WITH(ruckus-dev,
   AS_HELP_STRING([--with-ruckus-dev=DEV], [/ruckus is a seperate partition, as apposed to it being on the installation partition.]),
@@ -214,6 +223,7 @@ AS_IF([touch $CLFS/.foo 2>/dev/null],
 # NOTE: install_dev is required unless --with-stage1-xen-only, CLFS
 #       cannot be unset at this point, and we need to check the validity
 #       of ruckus_dev if provided.
+AS_IF([test "$hostprep_only" != "yes"], [
 
 AS_IF([test -z "$install_dev" -a "$stage1_xen_only" != "yes"],
   [AC_MSG_ERROR([
@@ -254,6 +264,9 @@ AS_IF([test -n "$ruckus_dev"],
      ])
    ruckus_fstype=`echo $mtab | awk '{print $3}'`
   ])
+
+]) # AS_IF(hostprep_only)
+
 AC_SUBST(RUCKUS_FSTYPE, $ruckus_fstype)
 
 
@@ -762,6 +775,8 @@ AM_CONDITIONAL([XEN_DETOUR], [test x$xen_detour = xyes])
 #
 # FIXME: Put a decent description of the CLFS /tools and /cross-tools
 #        symlinks in here...
+AS_IF([test "$hostprep_only" != "yes"], [
+
 AC_MSG_CHECKING([for the CLFS $PREFIX_CROSS symlink])
 prefix_cross_link=`readlink $PREFIX_CROSS 2>/dev/null`
 AS_IF([test "$prefix_cross_link" = "$CLFS$PREFIX_CROSS"],
@@ -790,7 +805,7 @@ AS_IF([test "$prefix_final_link" = "$CLFS$PREFIX_FINAL"],
 		*************************************************************])
   ])
 
-
+]) # AS_IF(hostprep_only)
 
 
 
@@ -842,9 +857,19 @@ echo "Bootstrap Early Packages:"
 echo " $p_early"
 echo
 echo "Options:"
+
+AS_IF([test "$hostprep_only" != "yes"],
+[
 echo "  Final Target Arch....: $build_arch"
 echo "  Multilib.............: $build_multilib"
+],
+[
+echo "  Hostprep Only........: $hostprep_only"
+])
+
 echo "  Xen Enabled..........: $xen_enabled"
+
+AS_IF([test "$hostprep_only" != "yes"], [
 echo "  Xen Detour...........: $xen_detour"
 echo "  Stage1 Xen...........: $stage1_xen"
 echo "  Stage1 Xen Only......: $stage1_xen_only"
@@ -862,11 +887,17 @@ echo "  CLFS_ARCH............: $CLFS_ARCH"
 echo "  CLFS_ARCH_STRING.....: $CLFS_ARCH_STRING"
 echo "  BUILD32..............: $BUILD32"
 echo "  BUILD64..............: $BUILD64"
+])
+
 echo
 echo "Other Variables:"
 echo "  BUILDROOT............: $BUILDROOT"
 echo "  PREFIX_EARLY.........: $PREFIX_EARLY"
+
+AS_IF([test "$hostprep_only" != "yes"], [
 echo "  PREFIX_CROSS.........: $PREFIX_CROSS"
 echo "  PREFIX_FINAL.........: $PREFIX_FINAL"
 echo "  CLFS.................: $CLFS"
+])
+
 echo
