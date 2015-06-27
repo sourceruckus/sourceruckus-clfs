@@ -7,23 +7,38 @@ This may or may not involve using out-of-tree autoconf... depending on how much
 work it takes (I'd probably have to gut the script-based bootstrap system...)
 
 
-* Problems:
-** /tools symlinks
-Maybe /tools-x86_64-64 style throughout?
+* Problems [1/3]:
+- [ ] /tools symlinks
 
-** /ruckus can't be passed RO if EXT4?
-Maybe use EXT4 w/out journal? seems sketchy... can we just disable the journal
-when we go to pass through to the domUs?
+  Maybe /tools-x86_64-64 style throughout?  Wouldn't be hard to run the CLFS
+  patch through sed before applying...
 
-[    1.336144] EXT4-fs (xvdb1): write access unavailable, cannot proceed
+- [X] /ruckus can't be passed RO if EXT4?
 
+  Maybe use EXT4 w/out journal? seems sketchy... can we just disable the
+  journal when we go to pass through to the domUs?
 
-** will need some rw space instead of /ruckus
-Perhaps just make sure / is big enough and have a /ruckus_out directory?  This
-would be used instead of /ruckus for bootstrap-stage2 and the final build
-phase.  Might need to be a seperate rw partition to keep it out of our fs
-dumps... (could use list of inodes and stat to figure them out from filenames,
-see description of -e in dump(8)).
+  [    1.336144] EXT4-fs (xvdb1): write access unavailable, cannot proceed
+
+  -o noload!  that was easy...
+
+  *NOTE* but what happens if fstype isn't ext4?
+
+- [ ] will need some rw space instead of /ruckus
+
+  Perhaps just make sure / is big enough and have a /ruckus_out directory?
+  This would be used instead of /ruckus for bootstrap-stage2 and the final
+  build phase.  Might need to be a seperate rw partition to keep it out of our
+  fs dumps... (could use list of inodes and stat to figure them out from
+  filenames, see description of -e in dump(8)).
+
+  We actually need the original build tree (at least bootstrap-early/config)
+  once we boot into the build env... so we may as well start the build off at
+  /media/baby-x86_64/ruckus-build and use the baby rootfs.
+
+  How much extra space in our install device are we talking about here?
+
+  x86_64-64: 6.0G
 
 
 * Then we need a build-aux/build script:
@@ -32,3 +47,20 @@ see description of -e in dump(8)).
 If we're really gonna do this, should we ditch the "--disable-multilib"
 configure flag and just add x86_64-64 as a supported architecture?
 
+build script should:
+  - verify sudo w/out password for build user
+  - root: lvcreate --name baby-$ARCH --size 10G vg00
+  - root: mkfs.ext4 -L baby-$ARCH /dev/vg00/baby-$ARCH
+  - root: mount /dev/vg00/baby-$ARCH /media/baby-$ARCH
+  - root: chown guest /media/baby-$ARCH
+  - root: create /tools-$ARCH /cross-tools-$ARCH symlinks
+  - ./configure ...
+  - make bootstrap
+  - root: make bootstrap-install
+
+  - Once all the selected archs have gotten to this point, we should have a xen
+    hypervisor to boot up into...  Unfortunately, we probably have to have a
+    person reboot and select Xen and follow some procedure to kick us back
+    off...
+
+  - . $PREFIX/ruckus_builder.env
