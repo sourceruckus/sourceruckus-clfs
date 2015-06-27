@@ -118,3 +118,6 @@
 [submodule "src/perl"]
 	path = src/perl
 	url = git://perl5.git.perl.org/perl.git
+[submodule "src/bash"]
+	path = src/bash
+	url = git://git.sv.gnu.org/bash.git
