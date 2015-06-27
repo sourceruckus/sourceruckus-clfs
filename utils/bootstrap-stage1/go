@@ -276,8 +276,9 @@ gt_cv_int_divbyzero_sigfpe=yes
 EOF
             popd
 
-	    compile_generic $1 $OPTS \
-                --without-bash-malloc --cache-file=config.cache || exit 1
+	    configure_generic $1 $OPTS \
+                --without-bash-malloc --cache-file=config.cache &&
+            compile_generic $1 || exit 1
             ;;
 
         # FIXME: remove?
