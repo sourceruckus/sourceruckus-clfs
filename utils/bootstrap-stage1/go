@@ -521,10 +521,25 @@ build()
 	    # this will handle config files for init, mdev, users/groups,
             # logfiles, login scripts, fstab, needed device nodes, etc
 	    
-	    # copy rcS and mdev.conf into etc
+	    # copy rcS into etc
 	    mkdir -vp $CLFS/etc/init.d &&
-	    cp -v $ruckus_confdir/rcS $CLFS/etc/init.d &&
-	    cp -v $ruckus_confdir/mdev.conf $CLFS/etc || exit 1
+	    cp -v $ruckus_confdir/rcS $CLFS/etc/init.d || exit 1
+
+            # install mdev config
+            #
+            # NOTE: We need replace uucp with tty in here for ttyS* because we
+            #       haven't created a uucp user/group (yet?).
+            #
+            # FIXME: Should we just go ahead and make a uucp user account by
+            #        default?  CLFS doesn't, but that doesn't mean I can't...
+            #        Does busybox provide cu or any other tools from the uucp
+            #        package?
+            #
+            cp -v $ruckus_srcdir/src/busybox/examples/mdev_fat.conf \
+                $CLFS/etc/mdev.conf &&
+            sed -i 's|uucp|tty|' $CLFS/etc/mdev.conf &&
+            cp -v $ruckus_srcdir/src/busybox/examples/mdev.conf.* \
+                $CLFS/etc/ || exit 1
 
 	    # copy passwd and group files into etc
 	    cp -v $ruckus_confdir/{passwd,group} $CLFS/etc || exit 1
