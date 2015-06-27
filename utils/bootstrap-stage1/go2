@@ -22,6 +22,7 @@ fix_perms()
     # FIXME: It doesn't track failure, though...
     echo -n "chowning all files to 0:0... "
     find $CLFS -wholename $CLFS/ruckus -prune -o \
+        -wholename $CLFS/ruckus-build -prune -o \
         -exec chown 0:0 {} \;
     echo "done"
 

@@ -1025,6 +1025,7 @@ if [ "$STAGE1_XEN_ONLY" != "yes" ]; then
     mkdir -p $BUILDROOT &&
     tar -c \
         --exclude ./ruckus --exclude ./lost+found \
+        --exclude ./ruckus-build \
         -C $CLFS . \
         | xz -0 > $BUILDROOT/baby-bootstrap-stage1.tar.xz || exit 1
     echo "done."
