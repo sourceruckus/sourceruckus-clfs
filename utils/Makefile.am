@@ -21,6 +21,7 @@ if STAGE2_XEN
 bootstrap-install-local:
 	$(INSTALL_DATA) $(builddir)/ruckus-builder.cfg \
 	    $(PREFIX_EARLY)/etc/xen/ruckus-builder-$(CLFS_ARCH_STRING).cfg
+	$(MKDIR_P) $(PREFIX_EARLY)/boot/$(CLFS_ARCH_STRING)
 	$(INSTALL_DATA) $(CLFS)/boot/* $(PREFIX_EARLY)/boot/$(CLFS_ARCH_STRING)
 
 endif

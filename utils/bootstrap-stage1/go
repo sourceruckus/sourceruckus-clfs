@@ -573,20 +573,34 @@ build()
             else
                 echo "$CLFS_DEV / $CLFS_FSTYPE defaults 1 1" >> $CLFS/etc/fstab
             fi
-            # FIXME: For right now, this needs to be rw, but we could possibly
-            #        play with the idea of making it ro and passing it into
-            #        multiple build domUs in parallel.
-            #
             # NOTE: If configured, RUCKUS_DEV is passed in as the 2nd disk and
             #       mounted in /tmp/ruckus_dev.  /tmp/ruckus_dev/RUCKUS_PATH is
             #       then bind mounted to /ruckus.
             #
             # FIXME: Is there a performace penalty that could be avoided by
             #        mounting directly on /ruckus if RUCKUS_PATH == / ?
+            #
+            # NOTE: This is mounted read-only so that we can:
+            #
+            #       1) Continue to modify the /ruckus source tree from the
+            #          dom0.
+            #
+            #       2) Make ABSOLUTELY sure that I don't ever smoke my /ruckus
+            #          filesystem again.  Xen WILL let you pass /ruckus through
+            #          read-write even if it's still mounted read-write on the
+            #          dom0... at which point baaaad things happen.  :-/
+            #
+            #       3) Have the option to pass it through to multiple
+            #          ruckus-builder domUs in parallel.
+            #
+            # FIXME: We have to set 'noload' for EXT4 to ensure that the
+            #        journal doesn't get written to.  What happens if we're not
+            #        using EXT4...?
+            #
             if [ -n "$RUCKUS_DEV" ]; then
                 mkdir -p $CLFS/ruckus $CLFS/tmp/ruckus_dev
                 if [ "$STAGE2_XEN" = "yes" ]; then
-                    echo "/dev/xvdb1 /tmp/ruckus_dev $RUCKUS_FSTYPE defaults 1 2" >> $CLFS/etc/fstab
+                    echo "/dev/xvdb1 /tmp/ruckus_dev $RUCKUS_FSTYPE defaults,ro,noload 1 2" >> $CLFS/etc/fstab
                 else
                     echo "$RUCKUS_DEV /tmp/ruckus_dev $RUCKUS_FSTYPE defaults 1 2" >> $CLFS/etc/fstab
                 fi

@@ -146,7 +146,7 @@ AC_ARG_WITH(install-dev,
   AS_HELP_STRING([--with-install-dev=DEV], [Install on specified DEV, which must be mounted and writable by build user.]),
   [install_dev=$withval
    # check that it's mounted
-   mtab=`grep "^$install_dev" /proc/mounts`
+   mtab=`grep "^$install_dev " /proc/mounts`
    AS_IF([test -z "$mtab"],
      [AC_MSG_ERROR([
 		*************************************************************
@@ -168,10 +168,11 @@ AC_SUBST(CLFS_FSTYPE, $install_fstype)
 
 # FIXME: isn't there a better way to do this? some m4 or ac macro?
 # FIXME: need to pass this variable along so we can pass device to domU
+# FIXME: ^^ huh?
 abs_srcdir=$(cd $srcdir && pwd)
 
 AS_IF([test -z "$BUILDROOT"],
-  [BUILDROOT=$abs_srcdir/.build])
+  [BUILDROOT=$PWD/.build])
 
 AS_IF([test -z "$PREFIX_EARLY"],
   [PREFIX_EARLY=$prefix])
@@ -191,7 +192,7 @@ AS_IF([test -z "$CLFS"],
   [CLFS=$BUILDROOT/baby])
 
 AC_ARG_VAR(BUILDROOT,
-  [The build dir (default: $abs_srcdir/.build)])
+  [The build dir (default: $PWD/.build)])
 
 AC_ARG_VAR(PREFIX_EARLY,
   [Prefix for bootstrap-early (default: $BUILDROOT/bootstrap-early)])

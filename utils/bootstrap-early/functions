@@ -34,6 +34,8 @@ sourcedir=$ruckus_srcdir/src
 
 # written out by configure
 #
+# NOTE: This means that the ruckus-builder domu will need access to our
+#       original build-dir...
 . $ruckus_builddir/utils/bootstrap-early/config
 
 
