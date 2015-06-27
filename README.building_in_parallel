@@ -7,7 +7,7 @@ This may or may not involve using out-of-tree autoconf... depending on how much
 work it takes (I'd probably have to gut the script-based bootstrap system...)
 
 
-* Problems [1/3]:
+* Problems [1/4]:
 - [ ] /tools symlinks
 
   Maybe /tools-x86_64-64 style throughout?  Wouldn't be hard to run the CLFS
@@ -38,7 +38,18 @@ work it takes (I'd probably have to gut the script-based bootstrap system...)
 
   How much extra space in our install device are we talking about here?
 
-  x86_64-64: 6.0G
+  x86_64:    6.8G
+  x86_64-64: 6.1G
+
+  Of course, those numbers are only up through bootstrap-stage1...  by the
+  time we've done the entire stage2 and final build, it might be waaaaay
+  larger.
+
+- [ ] will we be building too much
+
+  Maybe we need to limit the number of archs that are built in parallel?  Or
+  tone down the NUMJOBS calculation?  Maybe just wait a minute or two in
+  between each one so the peaks and valleys of CPU utilization match up better?
 
 
 * Then we need a build-aux/build script:

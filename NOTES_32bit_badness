@@ -34,11 +34,13 @@ root:/ruckus/utils/bootstrap-stage2# LD_TRACE_LOADED_OBJECTS=1 LD_VERBOSE=yes ./
 
 
 root:/ruckus/utils/bootstrap-stage2# ldd --verbose ./foo32
-/tools/lib/ld-linux.so.2: line 1: ELFí²°4: not found
+/tools/lib/ld-linux.so.2: line 1: ELF*garbage*garbage*garbage*4: not found
 /tools/lib/ld-linux.so.2: line 1: 0: not found
 /tools/lib/ld-linux.so.2: line 2: syntax error: unexpected "("
 
 
-- add bash?
-- upgrade busybox?
+- add bash? nope...
+- upgrade busybox? nope...
+- don't re-use gcc, glibc source trees in bootstrap-cross?
+- kernel config?  # CONFIG_IA32_EMULATION is not set
 - tripple-check glibc build scripts?

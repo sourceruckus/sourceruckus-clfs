@@ -106,6 +106,9 @@ make bootstrap
 *NOTE*: bootstrap took another __ minutes on my A10-6700 (x86_64 multilib), 53
         on the A10-7850K, 35 on the FX-8350.
 
+*NOTE*: x86_64-64, FX-8350, bare-metal: 28 minutes
+        x86_64, FX-8350, xen: 45 minutes
+
 
 sudo make bootstrap-install
 
