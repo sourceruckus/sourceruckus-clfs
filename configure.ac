@@ -96,7 +96,7 @@ AS_IF([test "$build_arch" = "i686"],
    CLFS_ARCH_STRING=$CLFS_ARCH
    BUILD32=
    BUILD64=
-   CLFS_TARGET=$build_arch-rucus-linux-gnu # FIXME: does this NEED to be 'pc'?
+   CLFS_TARGET=$build_arch-ruckus-linux-gnu # FIXME: does this NEED to be 'pc'?
    CLFS_TARGET32=
    build_multilib=no
   ],
