@@ -2,9 +2,6 @@
 
 * TODO
 
-- Make 32bit Glibc work?  This looks painful... I must have a typo somewhere,
-  or a busybox replacement broke something...
-
 - Proof-of-concept building and installing a brp from within the build system.
 
 - Update srp module to something that actually works
@@ -15,9 +12,6 @@
 
 * Local issues on my box
 
-- need to umount /scrap in order to start the domu, but that's where
-  guest's homedir is... not very convenient...
-
 - missing brctrl on avlinux host... no networking for ruckus-builder domU.
 
 
@@ -26,8 +20,3 @@
 - parallel build problem in gettext? died once during stage1...  died again, i
   swear it was a different place...  might actually be because i didn't do a
   distclean first...?  looks like that might have been it...
-
-- 32bit builds of busybox are segfaulting all over the place, especially
-  mdev... which makes life difficult.  (eglibc 2.18-r24148, gcc
-  4.8.1-branch_update-3, busybox 1.22.1).  Should try upgrading busybox if this
-  still happens after getting the rest of the system up to CLFS 3.0.0.
