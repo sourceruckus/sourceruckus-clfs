@@ -690,7 +690,11 @@ p_early+=" libtool" # warned about libtool.m4 bootstrap failure
 p_early+=" pkg-config" # glib bits need libtool
 p_early+=" make" # automake >= 1.11.1, gettext >= 0.18.1, pkg-config
 
-# FIXME: flex?
+# FIXME: flex?  doesn't seem to be needed to get things built through the
+#        end of bootstrap-stage1 on my avlinux host... but that leaves us
+#        with an unbootstrapped flex sumodule headed into stage2, where we
+#        need to build it before the autotools...
+p_early+=" flex"
 
 
 # to ensure that we don't inadvertantly use a modified version with

@@ -91,7 +91,7 @@ build script should:
 
 ** configure examples
 *** download & hostprep
-./configure \
+INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --with-hostprep-only
 

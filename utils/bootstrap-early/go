@@ -237,6 +237,18 @@ build()
                 make install &&
 	    popd || exit 1
 	    ;;
+        flex)
+            setup_generic $1 &&
+            configure_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
+
+            # having trouble getting the PDF to build, but we don't need it, so
+            # sed it out of the generated Makefile
+            pushd $builddir &&
+            sed -i 's|^dist_doc_DATA =|#NOPE|' doc/Makefile &&
+            popd || exit 1
+
+            compile_generic $1 || exit 1
+            ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
 	    ;;
