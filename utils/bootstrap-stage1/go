@@ -613,6 +613,10 @@ EOF
 	    echo export BUILD64=\"$BUILD64\" >> $CLFS/root/.profile
 	    echo export CLFS_TARGET32=\"$CLFS_TARGET32\" >> $CLFS/root/.profile
 
+            # store this variable, too
+            echo export CLFS_ARCH_STRING=\"$CLFS_ARCH_STRING\" \
+                >> $CLFS/root/.profile
+
             # generate fstab
             #
             # FIXME: CLFS 3.0.0-systemd fstab is excluding some of the standard

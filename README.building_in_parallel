@@ -155,3 +155,8 @@ build script should:
   accidental filesystem corruption (e.g., forgot to remount,ro prior to
   running build script).  We would want to automate the remount,ro,noload in
   the build script to prevent lack-of-sleep from contributing to lost data.
+
+  *NOTE*: This doesn't seem to work quite right... I'm seeing updated files in
+  the dom0, but freshly created subdirs aren't getting picked up by dom0's
+  kernel until the next full remount (i.e., not just -o remount, full umount &&
+  mount)?
