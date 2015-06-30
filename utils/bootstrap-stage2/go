@@ -23,6 +23,14 @@ RUCKUS_BOOTSTRAP_STAGE2=1
 # source our common variables and functions
 . $ruckus_srcdir/utils/bootstrap-early/functions
 
+# change to the bootstrap-stage2 subdir
+#
+# NOTE: We cd to utils/bootstrap-stage2 so that we can be consistent with the
+#       other bootstrap scripts, which are executed by make in their respective
+#       subdirectory.
+#
+cd $ruckus_builddir/utils/bootstrap-stage2 || exit 1
+
 
 build()
 {
@@ -72,7 +80,7 @@ build()
 	    ;;
 
 	expect)
-	    if [ -n "$BUILD64" ]; then
+	    if [ -n "$BUILD32" ]; then
 		OPTS="$OPTS --with-tcl=$PREFIX_TOOLS/lib64"
 	    else
 		OPTS="$OPTS --with-tcl=$PREFIX_TOOLS/lib"
@@ -108,26 +116,15 @@ build()
 
             # set OPTS
             #
-            # NOTE: I'm not sure why, but CLFS builds 32bit perl for x86 and
-            #       x86_64, but it builds 64bit for pure64.  We're building it
-            #       64bit because I ran into compilation errors when I tried to
-            #       build it 32bit.  Either way, we have to override our OPTS
-            #       here.
+            # NOTE: CLFS builds 32bit perl for x86 and x86_64, but it builds
+            #       64bit for pure64.  I'm 99% sure this is because it's
+            #       non-trivial to get perl to install into lib64, so they're
+            #       just building for whatever arch is supposed to be in /lib.
             #
             # NOTE: We also have to set ranlib because perl's Configure script
             #       doesn't get along well with busybox and gets all screwed up
             #       resuling in failure to create libperl.a.
             #
-            # FIXME: did i just install 64bit libpearl in /lib?  shouldn't it
-            #        be --libdir=$PREFIX_TOOLS/lib64?
-            #
-            #        yup, i did.  this is why CLFS compiled 32bit perl in
-            #        /tools... it's non-trivial to get it to install in lib64.
-            #        sigh...
-            #
-            # FIXME: i can't build 32bit perl... because... i can't build any
-            #        32bit programs?!? i need to double check my glibc and gcc
-            #        compilations in cross and stage1...
             OPTS="--prefix=$PREFIX_TOOLS"
             OPTS="$OPTS -Dcc='gcc ${BUILD32}' -Dranlib=ranlib"
 
@@ -147,7 +144,7 @@ build()
             # hold perl's hand even more
             #
             # NOTE: Perl's build system doesn't notice when it has failed and
-            #       happily returns an successful exit status.  So we have to
+            #       happily returns a successful exit status.  So we have to
             #       add a double check here for $PREFIX_TOOLS/bin/perl to be
             #       sure!
             [ -f $PREFIX_TOOLS/bin/perl ] || exit 42
@@ -159,12 +156,13 @@ build()
 	    sudo ln -sf $PREFIX_TOOLS/bin/perl /usr/bin || exit 1
             ;;
 
-        python)
-            # FIXME: fill me in
-            ;;
-
         srp)
             # FIXME: fill me in
+            #
+            # FIXME: python's tarfile cannot open bz2 or xz compressed
+            #        files... because we don't have libbz2 or liblzma.  I'll
+            #        need that if I want srp to create bzip2 or xz compressed
+            #        archives...
             ;;
 
 	*)

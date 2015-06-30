@@ -129,9 +129,8 @@ export LC_ALL=POSIX
 need_pushd=0
 pushd / >/dev/null 2>&1 && popd >/dev/null || need_pushd=1
 if [ $need_pushd -eq 1 ]; then
-    #echo "defining pushd and popd"
-    alias pushd='wd="$(pwd) ${wd}"; cd'
-    alias popd='cd ${wd%% *}; wd=${wd#* }'
+    alias pushd='wd="$(pwd) ${wd}" && cd'
+    alias popd='cd ${wd%% *} && wd=${wd#* }'
 else
     # make bash's pushd/popd be quiet
     alias pushd='pushd >/dev/null'
