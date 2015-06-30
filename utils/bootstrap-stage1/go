@@ -136,10 +136,14 @@ build()
                 else
                     p+=/*-specs-*.patch
                 fi
-                echo "applying $p..."
+                # NOTE: We replace the hardcoded /tools directory in the CLFS
+                #       patches with the configured value for $PREFIX_TOOLS so
+                #       that we can build multiple systems on a single box
+                #       w/out the /tools symlinks colliding.
+                echo "applying $p (PREFIX_TOOLS=$PREFIX_TOOLS)..."
 		pushd $source &&
-		patch -Np1 < $p || exit 1
-		popd
+                sed "s|/tools|$PREFIX_TOOLS|g" $p | patch -Np1 &&
+		popd || exit 1
 	    fi
 
 	    # make GCC look in PREFIX_TOOLS (i.e., not the host sys)
