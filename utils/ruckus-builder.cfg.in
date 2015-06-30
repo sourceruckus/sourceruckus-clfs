@@ -1,5 +1,5 @@
 # -*- mode: python -*-
-kernel = "@PREFIX_EARLY@/boot/@CLFS_ARCH_STRING@/vmlinuz-ruckus-bootstrap"
+kernel = "@PREFIX_HOSTPREP@/boot/@CLFS_ARCH_STRING@/vmlinuz-ruckus-bootstrap"
 
 # FIXME: what if no RUCKUS_DEV?
 #

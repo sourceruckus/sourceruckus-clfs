@@ -27,11 +27,11 @@ RUCKUS_BOOTSTRAP_STAGE2=1
 build()
 {
     # set some common variables for all targets
-    OPTS="--prefix=$PREFIX_FINAL"
+    OPTS="--prefix=$PREFIX_TOOLS"
 
     # put libs in lib64 if we're building x86_64 multilib
     if [ -n "$BUILD32" ]; then
-	OPTS="$OPTS --libdir=$PREFIX_FINAL/lib64"
+	OPTS="$OPTS --libdir=$PREFIX_TOOLS/lib64"
     fi
 
     OPTS="$OPTS --disable-static"
@@ -67,17 +67,17 @@ build()
             #       leave that off.
 	    pushd $builddir &&
 	    sudo make install-private-headers &&
-	    sudo ln -s tclsh8.6 $PREFIX_FINAL/bin/tclsh
+	    sudo ln -s tclsh8.6 $PREFIX_TOOLS/bin/tclsh
 	    popd || exit 1
 	    ;;
 
 	expect)
 	    if [ -n "$BUILD64" ]; then
-		OPTS="$OPTS --with-tcl=$PREFIX_FINAL/lib64"
+		OPTS="$OPTS --with-tcl=$PREFIX_TOOLS/lib64"
 	    else
-		OPTS="$OPTS --with-tcl=$PREFIX_FINAL/lib"
+		OPTS="$OPTS --with-tcl=$PREFIX_TOOLS/lib"
 	    fi
-	    OPTS="$OPTS --with-tclinclude=$PREFIX_FINAL/include"
+	    OPTS="$OPTS --with-tclinclude=$PREFIX_TOOLS/include"
 
 	    setup_generic $1 &&
 	    configure_generic $1 $OPTS || exit 1
@@ -121,7 +121,7 @@ build()
             #       resuling in failure to create libperl.a.
             #
             # FIXME: did i just install 64bit libpearl in /lib?  shouldn't it
-            #        be --libdir=$PREFIX_FINAL/lib64?
+            #        be --libdir=$PREFIX_TOOLS/lib64?
             #
             #        yup, i did.  this is why CLFS compiled 32bit perl in
             #        /tools... it's non-trivial to get it to install in lib64.
@@ -130,7 +130,7 @@ build()
             # FIXME: i can't build 32bit perl... because... i can't build any
             #        32bit programs?!? i need to double check my glibc and gcc
             #        compilations in cross and stage1...
-            OPTS="--prefix=$PREFIX_FINAL"
+            OPTS="--prefix=$PREFIX_TOOLS"
             OPTS="$OPTS -Dcc='gcc ${BUILD32}' -Dranlib=ranlib"
 
             configure_generic $1 $OPTS || exit 1
@@ -150,15 +150,15 @@ build()
             #
             # NOTE: Perl's build system doesn't notice when it has failed and
             #       happily returns an successful exit status.  So we have to
-            #       add a double check here for $PREFIX_FINAL/bin/perl to be
+            #       add a double check here for $PREFIX_TOOLS/bin/perl to be
             #       sure!
-            [ -f $PREFIX_FINAL/bin/perl ] || exit 42
+            [ -f $PREFIX_TOOLS/bin/perl ] || exit 42
 
             # and do a bit of extra work
             #
             # NOTE: CLFS uses ln -sv here, but busybox doesn't support -v so we
             #       leave that off.
-	    sudo ln -sf $PREFIX_FINAL/bin/perl /usr/bin || exit 1
+	    sudo ln -sf $PREFIX_TOOLS/bin/perl /usr/bin || exit 1
             ;;
 
         python)

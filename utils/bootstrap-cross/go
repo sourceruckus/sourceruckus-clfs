@@ -18,7 +18,7 @@ build()
 
     # I'll unset these, too.  We set them in functions so that things building
     # during bootstrap-early can find other libraries installed in
-    # PREFIX_EARLY.
+    # PREFIX_HOSTPREP.
     unset CPPFLAGS
     unset LDFLAGS
 
@@ -41,13 +41,13 @@ build()
 	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
             MAKE+=" ARCH=$CLFS_ARCH"
 
-            # NOTE: We use $PREFIX_FINAL as apposed to $PREFIX_CROSS here (just
+            # NOTE: We use $PREFIX_TOOLS as apposed to $PREFIX_CROSS here (just
             #       like the CLFS book).  There's nothing to cross-compile
             #       here, but it's needed now.
             pushd $builddir &&
             $MAKE mrproper &&
             $MAKE headers_check &&
-            $MAKE INSTALL_HDR_PATH=$PREFIX_FINAL headers_install &&
+            $MAKE INSTALL_HDR_PATH=$PREFIX_TOOLS headers_install &&
             popd || exit 1
 	    ;;
 
@@ -73,7 +73,7 @@ build()
 	pkg-config)
             # CLFS builds pkg-config as a part of the cross-compilation
             # toolchain so that it can have a pkg-config binary installed that
-            # only searches in $PREFIX_FINAL
+            # only searches in $PREFIX_TOOLS
             #
             # NOTE: The internal glib snapshot can be used to remove a host
             #       system dependency, but if the host system has glib and a
@@ -95,12 +95,12 @@ build()
             fi
             if [ -n "$BUILD32" ]; then
                 # x86_64 multi
-	        PKG_PATH="$PREFIX_FINAL/lib64/pkgconfig"
+	        PKG_PATH="$PREFIX_TOOLS/lib64/pkgconfig"
             else
                 # x86 or x86_64 pure
-	        PKG_PATH="$PREFIX_FINAL/lib/pkgconfig"
+	        PKG_PATH="$PREFIX_TOOLS/lib/pkgconfig"
             fi
-            PKG_PATH+=":$PREFIX_FINAL/share/pkgconfig"
+            PKG_PATH+=":$PREFIX_TOOLS/share/pkgconfig"
             CPPFLAGS=$_FLAGS \
 		build_generic $1 --prefix=$PREFIX_CROSS \
 		$_OPTS --with-pc-path=$PKG_PATH \
@@ -164,17 +164,17 @@ build()
             # disable multilib if we're building pure 32 or 64 bit
             if [ -z "$BUILD32" ]; then
                 OPTS+=" --disable-multilib"
-                OPTS+=" --with-lib-path=$PREFIX_FINAL/lib"
+                OPTS+=" --with-lib-path=$PREFIX_TOOLS/lib"
             else
-                OPTS+=" --with-lib-path=$PREFIX_FINAL/lib:$PREFIX_FINAL/lib64"
+                OPTS+=" --with-lib-path=$PREFIX_TOOLS/lib:$PREFIX_TOOLS/lib64"
             fi
 
 	    # NOTE: The CLFS book sets lib-path to /tools as apposed to
-	    #       /tools-cross (i.e., $PREFIX_FINAL instead of
+	    #       /tools-cross (i.e., $PREFIX_TOOLS instead of
 	    #       $PREFIX_CROSS).  This is not a typo.  The lib-path is for
 	    #       run-time, at which point we'll be running the stage1
 	    #       builder and we'll want the cross-compiled binutils to be
-	    #       looking in PREFIX_FINAL.
+	    #       looking in PREFIX_TOOLS.
 	    AR=ar AS=as \
 		build_generic $1 $OPTS \
 		--host=${CLFS_HOST} \
@@ -202,18 +202,18 @@ build()
 		popd
 	    fi
 
-	    # make GCC look in PREFIX_FINAL (i.e., not the host sys)
+	    # make GCC look in PREFIX_TOOLS (i.e., not the host sys)
             pushd $source
 	    echo "#undef STANDARD_STARTFILE_PREFIX_1" >> gcc/config/linux.h
-            echo "#define STANDARD_STARTFILE_PREFIX_1 \"$PREFIX_FINAL/lib/\"" >> gcc/config/linux.h
+            echo "#define STANDARD_STARTFILE_PREFIX_1 \"$PREFIX_TOOLS/lib/\"" >> gcc/config/linux.h
 	    echo "#undef STANDARD_STARTFILE_PREFIX_2" >> gcc/config/linux.h
             echo "#define STANDARD_STARTFILE_PREFIX_2 \"\"" >> gcc/config/linux.h
             popd
 
 	    # create a dummy limits.h so the build will not use the one
 	    # provided by the host distro
-	    mkdir -p $PREFIX_FINAL/include &&
-	    touch $PREFIX_FINAL/include/limits.h || exit 1
+	    mkdir -p $PREFIX_TOOLS/include &&
+	    touch $PREFIX_TOOLS/include/limits.h || exit 1
 
 	    # NOTE: gcc-static, glibc32, glibc64, and gcc-final should NOT use
 	    #       our common OPTS.  these packages are VERY important and so
@@ -228,8 +228,8 @@ build()
             AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
                 configure_generic gcc $OPTS --prefix=$PREFIX_CROSS \
                 --build=${CLFS_HOST} --host=${CLFS_HOST} --target=${CLFS_TARGET} \
-                --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_FINAL \
-                --with-native-system-header-dir=$PREFIX_FINAL/include --disable-nls \
+                --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_TOOLS \
+                --with-native-system-header-dir=$PREFIX_TOOLS/include --disable-nls \
                 --disable-shared --with-mpfr=$PREFIX_CROSS --with-gmp=$PREFIX_CROSS \
                 --with-cloog=$PREFIX_CROSS --with-mpc=$PREFIX_CROSS --without-headers \
                 --with-newlib --disable-decimal-float --disable-libgomp --disable-libmudflap \
@@ -266,7 +266,7 @@ build()
 	    echo "libc_cv_ssp=no" > config.cache
 	    popd
 
-	    # NOTE: glibc builds and installs in PREFIX_FINAL on purpose.
+	    # NOTE: glibc builds and installs in PREFIX_TOOLS on purpose.
 	    #       this package can safely be built now and installed in
 	    #       /tools so we don't have to build it again during the
 	    #       final bootstrap stage.  this is the way the CLFS book
@@ -296,10 +296,10 @@ build()
 
             BUILD_CC="gcc" CC=$tmp_CC \
                 AR="${CLFS_TARGET}-ar" RANLIB="${CLFS_TARGET}-ranlib" \
-                configure_generic glibc --prefix=$PREFIX_FINAL \
+                configure_generic glibc --prefix=$PREFIX_TOOLS \
                 $tmp_host --build=${CLFS_HOST} \
                 --disable-profile --enable-kernel=2.6.32 \
-                --with-binutils=$PREFIX_CROSS/bin --with-headers=$PREFIX_FINAL/include \
+                --with-binutils=$PREFIX_CROSS/bin --with-headers=$PREFIX_TOOLS/include \
                 --enable-obsolete-rpc --cache-file=config.cache || exit 1
 
             compile_generic glibc || exit 1
@@ -335,10 +335,10 @@ build()
 
 	    # install 64-bit libraries in lib64
 	    pushd $builddir
-	    echo "slibdir=$PREFIX_FINAL/lib64" >> configparms
+	    echo "slibdir=$PREFIX_TOOLS/lib64" >> configparms
 	    popd
 
-	    # NOTE: glibc builds and installs in PREFIX_FINAL on purpose.
+	    # NOTE: glibc builds and installs in PREFIX_TOOLS on purpose.
 	    #       this package can safely be built now and installed in
 	    #       /tools so we don't have to build it again during the
 	    #       final bootstrap stage.  this is the way the CLFS book
@@ -351,10 +351,10 @@ build()
 
             BUILD_CC="gcc" CC="${CLFS_TARGET}-gcc ${BUILD64}" \
                 AR="${CLFS_TARGET}-ar" RANLIB="${CLFS_TARGET}-ranlib" \
-                configure_generic glibc64 --prefix=$PREFIX_FINAL \
-                --host=${CLFS_TARGET} --build=${CLFS_HOST} --libdir=$PREFIX_FINAL/lib64 \
+                configure_generic glibc64 --prefix=$PREFIX_TOOLS \
+                --host=${CLFS_TARGET} --build=${CLFS_HOST} --libdir=$PREFIX_TOOLS/lib64 \
                 --disable-profile --enable-kernel=2.6.32 \
-                --with-binutils=$PREFIX_CROSS/bin --with-headers=$PREFIX_FINAL/include \
+                --with-binutils=$PREFIX_CROSS/bin --with-headers=$PREFIX_TOOLS/include \
                 --enable-obsolete-rpc --cache-file=config.cache || exit 1
 
             compile_generic glibc64 || exit 1
@@ -394,8 +394,8 @@ build()
             AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
                 configure_generic gcc-final $OPTS --prefix=$PREFIX_CROSS \
                 --build=${CLFS_HOST} --target=${CLFS_TARGET} --host=${CLFS_HOST} \
-                --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_FINAL \
-                --with-native-system-header-dir=$PREFIX_FINAL/include \
+                --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_TOOLS \
+                --with-native-system-header-dir=$PREFIX_TOOLS/include \
                 --disable-nls --disable-static --enable-languages=c,c++ \
                 --enable-__cxa_atexit --enable-threads=posix --with-mpc=$PREFIX_CROSS \
                 --with-mpfr=$PREFIX_CROSS --with-gmp=$PREFIX_CROSS --with-cloog=$PREFIX_CROSS \
@@ -453,7 +453,7 @@ fi
 packages+=" gcc"
 
 
-mkdir -p $CLFS$PREFIX_CROSS $CLFS$PREFIX_FINAL
+mkdir -p $CLFS$PREFIX_CROSS $CLFS$PREFIX_TOOLS
 
 echo packages: $packages
 for p in $packages; do

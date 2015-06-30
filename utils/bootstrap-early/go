@@ -10,21 +10,21 @@
 # source our common variables and functions
 . $ruckus_srcdir/utils/bootstrap-early/functions
 
-# make sure we can find libs/includes installed in PREFIX_EARLY
+# make sure we can find libs/includes installed in PREFIX_HOSTPREP
 #
 # FIXME: configure for xen/tools suggests using {APPEND,PREPEND}_LIB
 #        instead of LDFLAGS... do I really care?
 if [ -z "$LDFLAGS" ]; then
-    export LDFLAGS=-L$PREFIX_EARLY/lib
+    export LDFLAGS=-L$PREFIX_HOSTPREP/lib
 else
-    export LDFLAGS="-L$PREFIX_EARLY/lib $LDFLAGS"
+    export LDFLAGS="-L$PREFIX_HOSTPREP/lib $LDFLAGS"
 fi
 # FIXME: configure for xen/tools suggests using {APPEND,PREPEND}_INCLUDES
 #        instead of CPPFLAGS... do I really care?
 if [ -z "CPPFLAGS" ]; then
-    export CPPFLAGS=-I$PREFIX_EARLY/include
+    export CPPFLAGS=-I$PREFIX_HOSTPREP/include
 else
-    export CPPFLAGS="-I$PREFIX_EARLY/include $CPPFLAGS"
+    export CPPFLAGS="-I$PREFIX_HOSTPREP/include $CPPFLAGS"
 fi
 
 
@@ -35,11 +35,11 @@ build()
 	    # rsync seems to have a parallel build problem... (still true as of
 	    # v3.0.9)
             #
-	    JOBCOUNT=1 build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	    JOBCOUNT=1 build_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
 	    ;;
         gettext)
 	    setup_generic $1 &&
-	    configure_generic $1 --prefix=$PREFIX_EARLY \
+	    configure_generic $1 --prefix=$PREFIX_HOSTPREP \
 		--disable-shared  || exit 1
 
             # don't build man in gettext-runtime
@@ -67,15 +67,15 @@ build()
             # FIXME: autoconf?
             sed -i.bak 's|.*E4DEFRAG_PROG=|#FOO|' \
                 $ruckus_srcdir/src/e2fsprogs/misc/Makefile.in &&
-            build_generic $1 --prefix=$PREFIX_EARLY &&
+            build_generic $1 --prefix=$PREFIX_HOSTPREP &&
             cp $ruckus_srcdir/src/e2fsprogs/misc/Makefile.in.bak \
                 $ruckus_srcdir/src/e2fsprogs/misc/Makefile.in || exit 1
             ;;
 	ncurses)
-	    build_generic $1 --prefix=$PREFIX_EARLY --with-shared || exit 1
+	    build_generic $1 --prefix=$PREFIX_HOSTPREP --with-shared || exit 1
 	    ;;
 	help2man)
-	    build_generic $1 --prefix=$PREFIX_EARLY --disable-nls || exit 1
+	    build_generic $1 --prefix=$PREFIX_HOSTPREP --disable-nls || exit 1
 	    ;;
 	pkg-config)
             # NOTE: The internal glib snapshot can be used to remove a host
@@ -97,18 +97,19 @@ build()
                 _OPTS="--with-internal-glib"
             fi
 	    # NOTE: We also autodetect what the host system's pkg-config had
-	    #       compiled in for a search path, and add PREFIX_EARLY to it.
+	    #       compiled in for a search path, and add PREFIX_HOSTPREP to
+	    #       it.
 	    PKG_PATH=$(pkg-config --debug 2>&1 | awk -F\' '/^Scanning/ {printf "%s:", $2}')
-	    PKG_PATH+="$PREFIX_EARLY/lib/pkgconfig:$PREFIX_EARLY/share/pkgconfig"
+	    PKG_PATH+="$PREFIX_HOSTPREP/lib/pkgconfig:$PREFIX_HOSTPREP/share/pkgconfig"
             CPPFLAGS=$_FLAGS \
-		build_generic $1 --prefix=$PREFIX_EARLY \
+		build_generic $1 --prefix=$PREFIX_HOSTPREP \
 		$_OPTS --with-pc-path=$PKG_PATH || exit 1
 	    ;;
         bzip2)
             # Doesn't have configure
             build_in_tree=1 setup_generic $1 &&
             pushd $builddir &&
-            make -j$JOBCOUNT && make PREFIX=$PREFIX_EARLY install &&
+            make -j$JOBCOUNT && make PREFIX=$PREFIX_HOSTPREP install &&
             popd || exit 1
             ;;
 	texinfo)
@@ -123,15 +124,15 @@ build()
 	    # We need to set LDFLAGS like this so that texinfo's build can
 	    # find our bootstrap-early stuff (ncurses, specifically).
 	    autoreconf=yes \
-		LDFLAGS=-L$PREFIX_EARLY/lib \
-		build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+		LDFLAGS=-L$PREFIX_HOSTPREP/lib \
+		build_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
 	    ;;
 	gperf)
 	    # Won't build doc, at least on AVLinux 6, which is the
 	    # only system I've run into that doesn't have gperf
 	    # installed already...
 	    setup_generic $1 &&
-	    configure_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	    configure_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
 
 	    pushd $builddir &&
 	    sed -i  '/cd doc;/d' Makefile &&
@@ -149,14 +150,14 @@ build()
             make bios -j$JOBCOUNT clean &&
             make bios installer &&
             make bios install \
-                BINDIR=$PREFIX_EARLY/bin SBINDIR=$PREFIX_EARLY/sbin \
-                LIBDIR=$PREFIX_EARLY/lib DATADIR=$PREFIX_EARLY/share \
-                MANDIR=$PREFIX_EARLY/share/man &&
+                BINDIR=$PREFIX_HOSTPREP/bin SBINDIR=$PREFIX_HOSTPREP/sbin \
+                LIBDIR=$PREFIX_HOSTPREP/lib DATADIR=$PREFIX_HOSTPREP/share \
+                MANDIR=$PREFIX_HOSTPREP/share/man &&
             popd || exit 1
             ;;
         tar)
             GNULIB_SRCDIR=$ruckus_srcdir/src/gnulib \
-	        build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	        build_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
             ;;
 	dev86)
 	    # very strange Makefile, no parallel build, no configure, no
@@ -164,7 +165,7 @@ build()
 	    build_in_tree=1 setup_generic $1 || exit 1
 
 	    pushd $builddir &&
-	    make PREFIX=$PREFIX_EARLY < /dev/null &&
+	    make PREFIX=$PREFIX_HOSTPREP < /dev/null &&
 	    make install &&
 	    popd || exit 1
 	    ;;
@@ -174,8 +175,8 @@ build()
 
 	    pushd $builddir &&
 	    make -j$JOBCOUNT &&
-	    mkdir -p $PREFIX_EARLY/bin &&
-	    install -pD generate/unix/bin*/* $PREFIX_EARLY/bin/ &&
+	    mkdir -p $PREFIX_HOSTPREP/bin &&
+	    install -pD generate/unix/bin*/* $PREFIX_HOSTPREP/bin/ &&
 	    popd || exit 1
 	    ;;
         libaio)
@@ -184,7 +185,7 @@ build()
 
             pushd $builddir &&
             make -j$JOBCOUNT &&
-            make install prefix=$PREFIX_EARLY &&
+            make install prefix=$PREFIX_HOSTPREP &&
             popd || exit 1
             ;;
         xen)
@@ -209,7 +210,7 @@ build()
             #       bootstrap-early.  We'll want docs and stubdom in our final
             #       build, but we don't need them here or in stage1.
 	    autoreconf=yes \
-	        configure_generic $1 --prefix=$PREFIX_EARLY \
+	        configure_generic $1 --prefix=$PREFIX_HOSTPREP \
 		--disable-kernels --disable-docs --disable-stubdom || exit 1
 
             # NOTE: I'm doing a make dist instead of make world because I
@@ -217,7 +218,7 @@ build()
             #       tree.  Saves a bunch of time, and shouldn't be needed.
             #
             # NOTE: We've patched Xen so that we can easily set CONFIG_DIR and
-            #       VAR_DIR to be rooted inside PREFIX_EARLY.  Upstream
+            #       VAR_DIR to be rooted inside PREFIX_HOSTPREP.  Upstream
             #       hardcodes these to /etc and /var.
 	    #
 	    # FIXME: That being said, all we patched was the build
@@ -230,19 +231,20 @@ build()
 	    #        /var: blktap, blktap2, console, xl.conf, ... oh
 	    #        boy pretty much everything
 	    pushd $builddir &&
-            CONFIG_DIR=$PREFIX_EARLY/etc VAR_DIR=$PREFIX_EARLY/var \
+            CONFIG_DIR=$PREFIX_HOSTPREP/etc VAR_DIR=$PREFIX_HOSTPREP/var \
 	        make -j$JOBCOUNT dist &&
-            CONFIG_DIR=$PREFIX_EARLY/etc VAR_DIR=$PREFIX_EARLY/var \
+            CONFIG_DIR=$PREFIX_HOSTPREP/etc VAR_DIR=$PREFIX_HOSTPREP/var \
                 make install &&
 	    popd || exit 1
 	    ;;
 	*)
-	    build_generic $1 --prefix=$PREFIX_EARLY || exit 1
+	    build_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
 	    ;;
     esac
 }
 
 
+mkdir -p $PREFIX_HOSTPREP
 
 # build and install each needed package
 for p in $p_early; do

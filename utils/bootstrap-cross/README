@@ -12,7 +12,7 @@ them will require tweaking of your user's environment.
 
 
 NOTE: Kernel headers and glibc (32 and 64bit) are actually installed in
-      $PREFIX_FINAL (/tools) here.  This is what the CLFS book does, and
+      $PREFIX_TOOLS (/tools) here.  This is what the CLFS book does, and
       we follow suit... even though I'm not entirely sure why this is done.
       It does mean that the final bootstrap stage doesn't have to compile
       eglibc at all...

@@ -174,19 +174,19 @@ abs_srcdir=$(cd $srcdir && pwd)
 AS_IF([test -z "$BUILDROOT"],
   [BUILDROOT=$PWD/.build])
 
-AS_IF([test -z "$PREFIX_EARLY"],
-  [PREFIX_EARLY=$prefix])
+AS_IF([test -z "$PREFIX_HOSTPREP"],
+  [PREFIX_HOSTPREP=$prefix])
 
-AS_IF([test "$PREFIX_EARLY" = "NONE" ],
-  [PREFIX_EARLY=$BUILDROOT/bootstrap-early])
+AS_IF([test "$PREFIX_HOSTPREP" = "NONE" ],
+  [PREFIX_HOSTPREP=$BUILDROOT/bootstrap-early])
 
 # FIXME: $CLFS_ARCH_STRING
 AS_IF([test -z "$PREFIX_CROSS"],
   [PREFIX_CROSS=/cross-tools])
 
 # FIXME: $CLFS_ARCH_STRING
-AS_IF([test -z "$PREFIX_FINAL"],
-  [PREFIX_FINAL=/tools])
+AS_IF([test -z "$PREFIX_TOOLS"],
+  [PREFIX_TOOLS=/tools])
 
 AS_IF([test -z "$CLFS"],
   [CLFS=$BUILDROOT/baby])
@@ -194,7 +194,7 @@ AS_IF([test -z "$CLFS"],
 AC_ARG_VAR(BUILDROOT,
   [The build dir (default: $PWD/.build)])
 
-AC_ARG_VAR(PREFIX_EARLY,
+AC_ARG_VAR(PREFIX_HOSTPREP,
   [Prefix for bootstrap-early (default: $BUILDROOT/bootstrap-early)])
 
 # FIXME: $CLFS_ARCH_STRING
@@ -202,7 +202,7 @@ AC_ARG_VAR(PREFIX_CROSS,
   [Prefix for bootstrap-cross (default: /cross-tools)])
 
 # FIXME: $CLFS_ARCH_STRING
-AC_ARG_VAR(PREFIX_FINAL,
+AC_ARG_VAR(PREFIX_TOOLS,
   [Prefix for bootstrap-final (default: /tools)])
 
 AC_ARG_VAR(CLFS,
@@ -329,7 +329,7 @@ AC_SUBST(RUCKUS_FSTYPE, $ruckus_fstype)
 #        enabled... otherwise we have no way of guaranteing that the
 #        pre-built hypervisor installed in stage2 is the correct version
 #        (i.e., it could be from the host system or be an old build).  I
-#        was originally skipping the detour if PREFIX_EARLY/boot/xen.gz
+#        was originally skipping the detour if PREFIX_HOSTPREP/boot/xen.gz
 #        already existed...
 #
 #
@@ -384,7 +384,7 @@ AM_CONDITIONAL([XEN_ENABLED], [test x$xen_enabled = xyes])
 # FIXME: This could also be used to detect wither we should go on the xen
 #        detour, instead of the nested if ugliness above...
 AS_IF([test "$xen_enabled" = "yes"],
-  [AS_IF([test -f $PREFIX_EARLY/boot/xen.gz],
+  [AS_IF([test -f $PREFIX_HOSTPREP/boot/xen.gz],
     [stage1_xen=no],
     [stage1_xen=yes])],
   [stage1_xen=no])
@@ -808,17 +808,17 @@ AS_IF([test "$prefix_cross_link" = "$CLFS$PREFIX_CROSS"],
 		*************************************************************])
   ])
 
-AC_MSG_CHECKING([for the CLFS $PREFIX_FINAL symlink])
-prefix_final_link=`readlink $PREFIX_FINAL 2>/dev/null`
-AS_IF([test "$prefix_final_link" = "$CLFS$PREFIX_FINAL"],
+AC_MSG_CHECKING([for the CLFS $PREFIX_TOOLS symlink])
+prefix_final_link=`readlink $PREFIX_TOOLS 2>/dev/null`
+AS_IF([test "$prefix_final_link" = "$CLFS$PREFIX_TOOLS"],
   [AC_MSG_RESULT($prefix_final_link)],
   [AC_MSG_RESULT(missing)
    AC_MSG_ERROR([
 		*************************************************************
-		Please create the CLFS $PREFIX_FINAL symlink by executing
+		Please create the CLFS $PREFIX_TOOLS symlink by executing
 		the following command as root, then rerun configure:
 
-		ln -fs $CLFS$PREFIX_FINAL $PREFIX_FINAL
+		ln -fs $CLFS$PREFIX_TOOLS $PREFIX_TOOLS
 		*************************************************************])
   ])
 
@@ -909,11 +909,11 @@ echo "  BUILD64..............: $BUILD64"
 echo
 echo "Other Variables:"
 echo "  BUILDROOT............: $BUILDROOT"
-echo "  PREFIX_EARLY.........: $PREFIX_EARLY"
+echo "  PREFIX_HOSTPREP......: $PREFIX_HOSTPREP"
 
 AS_IF([test "$hostprep_only" != "yes"], [
 echo "  PREFIX_CROSS.........: $PREFIX_CROSS"
-echo "  PREFIX_FINAL.........: $PREFIX_FINAL"
+echo "  PREFIX_TOOLS.........: $PREFIX_TOOLS"
 echo "  CLFS.................: $CLFS"
 ])
 

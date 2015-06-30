@@ -1,5 +1,5 @@
 BUILDROOT=@BUILDROOT@
-PREFIX_EARLY=@PREFIX_EARLY@
+PREFIX_HOSTPREP=@PREFIX_HOSTPREP@
 
 # NOTE: The CLFS book puts the cross-compilation toolcahin in /cross-tools
 #       and the cross-compiled temporary native compilation toolchain in
@@ -11,7 +11,7 @@ PREFIX_EARLY=@PREFIX_EARLY@
 #       For the record, ditching the symlinks and installing directly into
 #       $CLFS does indeed cause breakage in the CLFS instructions...
 PREFIX_CROSS=@PREFIX_CROSS@
-PREFIX_FINAL=@PREFIX_FINAL@
+PREFIX_TOOLS=@PREFIX_TOOLS@
 
 
 # --- CLFS Variables ------------------------------------------------------

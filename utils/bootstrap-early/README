@@ -7,7 +7,7 @@ necessary tools on the originating host system to ensure that we have
 everything needed to complete the build.
 
 All the packages built in this section will get compiled and installed in
-$PREFIX_EARLY (defaults to $BUILDROOT/bootstrap-early).  Actually using them
+$PREFIX_HOSTPREP (defaults to $BUILDROOT/bootstrap-early).  Actually using them
 will require tweaking of your user's environment (PATH, LD_LIBRARY_PATH, etc).
 
 Note that this stage assumes the host system at least has git (to get this),

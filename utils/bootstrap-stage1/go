@@ -28,13 +28,13 @@ build()
     #
     # NOTE: We don't need any conditionals here because all supported build
     #       types use CLFS_TARGET for --host throughout the stage1 bootstrap.
-    OPTS="--prefix=$PREFIX_FINAL"
+    OPTS="--prefix=$PREFIX_TOOLS"
     OPTS+=" --build=${CLFS_HOST}"
     OPTS+=" --host=${CLFS_TARGET}"
 
     # put libs in lib64 if we're building x86_64 multilib
     if [ -n "$BUILD32" ]; then
-	OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+	OPTS+=" --libdir=$PREFIX_TOOLS/lib64"
     fi
 
     OPTS+=" --disable-static"
@@ -78,10 +78,10 @@ build()
 
 	    # NOTE: It also fails to configure if any unknown flags are passed
 	    #       in, so we can't use our generic OPTS variable...
-	    OPTS="--prefix=$PREFIX_FINAL"
+	    OPTS="--prefix=$PREFIX_TOOLS"
 
 	    if [ -n "$BUILD32" ]; then
-		OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+		OPTS+=" --libdir=$PREFIX_TOOLS/lib64"
 	    fi
 
 	    pushd $builddir &&
@@ -114,9 +114,9 @@ build()
             # disable multilib if we're building pure 32 or 64 bit
             if [ -z "$BUILD32" ]; then
                 OPTS+=" --disable-multilib"
-                OPTS+=" --with-lib-path=$PREFIX_FINAL/lib"
+                OPTS+=" --with-lib-path=$PREFIX_TOOLS/lib"
             else
-                OPTS+=" --with-lib-path=$PREFIX_FINAL/lib64:$PREFIX_FINAL/lib"
+                OPTS+=" --with-lib-path=$PREFIX_TOOLS/lib64:$PREFIX_TOOLS/lib"
             fi
 
 	    build_generic $1 $OPTS \
@@ -142,7 +142,7 @@ build()
 		popd
 	    fi
 
-	    # make GCC look in PREFIX_FINAL (i.e., not the host sys)
+	    # make GCC look in PREFIX_TOOLS (i.e., not the host sys)
             #
             # FIXME: This is only ok because we use a dist tarball for gcc's
             #        sources... if we ever swtich to a git tree, we'll need to
@@ -150,7 +150,7 @@ build()
             #        end...
             pushd $source
 	    echo "#undef STANDARD_STARTFILE_PREFIX_1" >> gcc/config/linux.h
-            echo "#define STANDARD_STARTFILE_PREFIX_1 \"$PREFIX_FINAL/lib/\"" >> gcc/config/linux.h
+            echo "#define STANDARD_STARTFILE_PREFIX_1 \"$PREFIX_TOOLS/lib/\"" >> gcc/config/linux.h
 	    echo "#undef STANDARD_STARTFILE_PREFIX_2" >> gcc/config/linux.h
             echo "#define STANDARD_STARTFILE_PREFIX_2 \"\"" >> gcc/config/linux.h
             popd
@@ -172,24 +172,24 @@ build()
             # extra tweaks
             if [ -n "$BUILD32" ]; then
                 # x86_64 multilib
-                OPTS+=" --libdir=$PREFIX_FINAL/lib64"
+                OPTS+=" --libdir=$PREFIX_TOOLS/lib64"
             else
                 # x86_64 pure or x86
                 OPTS+=" --disable-multilib"
             fi
 
-            configure_generic $1 $OPTS --prefix=$PREFIX_FINAL \
+            configure_generic $1 $OPTS --prefix=$PREFIX_TOOLS \
                 --build=${CLFS_HOST} --host=${CLFS_TARGET} \
-                --target=${CLFS_TARGET} --with-local-prefix=$PREFIX_FINAL --disable-nls \
+                --target=${CLFS_TARGET} --with-local-prefix=$PREFIX_TOOLS --disable-nls \
                 --enable-languages=c,c++ --disable-libstdcxx-pch \
-                --with-system-zlib --with-native-system-header-dir=$PREFIX_FINAL/include \
+                --with-system-zlib --with-native-system-header-dir=$PREFIX_TOOLS/include \
                 --disable-libssp --enable-libstdcxx-time --enable-checking=release || exit 1
 
 	    pushd $builddir || exit 1
 	    #  The following will prevent GCC from looking in the wrong
 	    #  directories for headers and libraries
             cp -v Makefile{,.orig} &&
-            sed "/^HOST_\(GMP\|ISL\|CLOOG\)\(LIBS\|INC\)/s:$PREFIX_FINAL:$PREFIX_CROSS:g" \
+            sed "/^HOST_\(GMP\|ISL\|CLOOG\)\(LIBS\|INC\)/s:$PREFIX_TOOLS:$PREFIX_CROSS:g" \
                 Makefile.orig > Makefile || exit 1
 
 	    make -j$JOBCOUNT AS_FOR_TARGET="${AS}" LD_FOR_TARGET="${LD}" &&
@@ -198,7 +198,7 @@ build()
 
             # Install the libiberty header file that is needed by some packages
             pushd $source &&
-            cp -v include/libiberty.h $PREFIX_FINAL/include &&
+            cp -v include/libiberty.h $PREFIX_TOOLS/include &&
             popd || exit 1
 	    ;;
 
@@ -227,7 +227,7 @@ build()
 	    #       possible.  Any exceptions will be noted.
 	    #
 	    # NOTE: if you want to do a make menuconfig to tweak .config,
-	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL in order
+	    #       NCURSES_PREFIX has to be set to $PREFIX_TOOLS in order
 	    #       to use the ncurses installed via bootstrap-early (and
 	    #       our KBUILD patch needs to be applied)
             cp -v $ruckus_confdir/bb-config $builddir/.config &&
@@ -242,7 +242,7 @@ build()
 
 	    # install
             pushd $builddir &&
-	    $MAKE CONFIG_PREFIX=$PREFIX_FINAL install &&
+	    $MAKE CONFIG_PREFIX=$PREFIX_TOOLS install &&
             popd || exit 1
 
 	    # NOTE: busybox binary is setuid root later on under
@@ -250,8 +250,8 @@ build()
 
 	    # FIXME: there are a bunch of config files in
 	    #        $source/examples that we might want installed too
-	    #cp $source/examples/depmod.pl $PREFIX_FINAL/bin &&
-	    #chmod 755 $PREFIX_FINAL/bin/depmod.pl|| exit 1
+	    #cp $source/examples/depmod.pl $PREFIX_TOOLS/bin &&
+	    #chmod 755 $PREFIX_TOOLS/bin/depmod.pl|| exit 1
 
 	    ;;
 
@@ -428,7 +428,7 @@ EOF
 
 	    # We need to set LDFLAGS like this so that texinfo's build can
 	    # find our bootstrap-early stuff (ncurses, specifically).
-	    LDFLAGS=-L$PREFIX_EARLY/lib \
+	    LDFLAGS=-L$PREFIX_HOSTPREP/lib \
 		configure_generic $1 $OPTS || exit 1
 
 	    pushd $builddir &&
@@ -496,19 +496,19 @@ EOF
             #       4. The sed is new (as is the installation of the libtool
             #          library).
 
-            ln -sv $PREFIX_FINAL/bin/{bash,cat,echo,grep,login,pwd,stty} ${CLFS}/bin
-            ln -sv $PREFIX_FINAL/bin/file ${CLFS}/usr/bin
-            ln -sv $PREFIX_FINAL/lib/libgcc_s.so{,.1} ${CLFS}/usr/lib
-            ln -sv $PREFIX_FINAL/lib/libstdc++.so{.6,} ${CLFS}/usr/lib
-            sed -e "s$PREFIX_FINAL/usr/" $PREFIX_FINAL/lib/libstdc++.la > ${CLFS}/usr/lib/libstdc++.la
+            ln -sv $PREFIX_TOOLS/bin/{bash,cat,echo,grep,login,pwd,stty} ${CLFS}/bin
+            ln -sv $PREFIX_TOOLS/bin/file ${CLFS}/usr/bin
+            ln -sv $PREFIX_TOOLS/lib/libgcc_s.so{,.1} ${CLFS}/usr/lib
+            ln -sv $PREFIX_TOOLS/lib/libstdc++.so{.6,} ${CLFS}/usr/lib
+            sed -e "s$PREFIX_TOOLS/usr/" $PREFIX_TOOLS/lib/libstdc++.la > ${CLFS}/usr/lib/libstdc++.la
             ln -sv bash ${CLFS}/bin/sh
-            ln -sv $PREFIX_FINAL/sbin/init ${CLFS}/sbin
-            ln -sv $PREFIX_FINAL/etc/{login.{access,defs},limits} ${CLFS}/etc
+            ln -sv $PREFIX_TOOLS/sbin/init ${CLFS}/sbin
+            ln -sv $PREFIX_TOOLS/etc/{login.{access,defs},limits} ${CLFS}/etc
 
             if [ -n "$BUILD32" ]; then
                 # x86_64 multilib only
-                ln -sv $PREFIX_FINAL/lib64/libgcc_s.so{,.1} ${CLFS}/usr/lib64
-                ln -sv $PREFIX_FINAL/lib64/libstdc++.so{.6,} ${CLFS}/usr/lib64
+                ln -sv $PREFIX_TOOLS/lib64/libgcc_s.so{,.1} ${CLFS}/usr/lib64
+                ln -sv $PREFIX_TOOLS/lib64/libstdc++.so{.6,} ${CLFS}/usr/lib64
 
             elif [ -n "$BUILD64" ]; then
                 # x86_64 pure only
@@ -517,7 +517,7 @@ EOF
                 # suites to link, create a directory and make some symbolic
                 # links:
                 mkdir -pv ${CLFS}/usr/lib64
-                ln -sv $PREFIX_FINAL/lib/libstdc++.so{.6,} ${CLFS}/usr/lib64
+                ln -sv $PREFIX_TOOLS/lib/libstdc++.so{.6,} ${CLFS}/usr/lib64
             fi
 
             # create /etc/mtab symlink for compatibility
@@ -537,7 +537,7 @@ EOF
             # here, is just make symlinks to all the busybox symlinks in the
             # baby system by parsing busybox.links in busybox's builddir
             for x in $(cat .build/busybox/busybox.links || exit 1); do
-                ln -sv $PREFIX_FINAL$x $CLFS$x
+                ln -sv $PREFIX_TOOLS$x $CLFS$x
             done
 
             echo done
@@ -697,7 +697,7 @@ EOF
 	    popd || exit 1
 
 	    # NOTE: if you want to do a make menuconfig to tweak .config,
-	    #       NCURSES_PREFIX has to be set to $PREFIX_FINAL.
+	    #       NCURSES_PREFIX has to be set to $PREFIX_TOOLS.
 
 	    # go!
             #
@@ -706,7 +706,7 @@ EOF
             #        will firmware get found?
 	    pushd $builddir &&
 	    $MAKE -j$JOBCOUNT_KBUILD &&
-            $MAKE INSTALL_MOD_PATH=$PREFIX_FINAL modules_install &&
+            $MAKE INSTALL_MOD_PATH=$PREFIX_TOOLS modules_install &&
 	    popd || exit 1
 
             # FIXME: CLFS does a make firmware_install... but that doesn't seem
@@ -715,7 +715,7 @@ EOF
             #        assume that you've configured with module support... but
             #        you may still need firmware?
             #
-            #$MAKE INSTALL_MOD_PATH=$PREFIX_FINAL firmware_install
+            #$MAKE INSTALL_MOD_PATH=$PREFIX_TOOLS firmware_install
 
             # FIXME: Do we need to run depmod -b $CLFS?  Looks like
             #        modules_install does it at the end...
@@ -732,7 +732,7 @@ EOF
             #
             # FIXME: get this path right... see comment above about /lib vs
             #        /tools/lib.
-            rm -f $PREFIX_FINAL/lib/modules/*/{build,source} || exit 1
+            rm -f $PREFIX_TOOLS/lib/modules/*/{build,source} || exit 1
 
 	    # now actually install the resulting kernel files
 	    pushd $builddir &&
@@ -759,14 +759,14 @@ EOF
             # NOTE: We disable building tools, kernels, docs, and stubdom for
             #       stage1.
 	    autoreconf=yes \
-	        configure_generic $1 --prefix=$PREFIX_EARLY \
+	        configure_generic $1 --prefix=$PREFIX_HOSTPREP \
 		--disable-tools \
 		--disable-kernels --disable-docs --disable-stubdom || exit 1
 
 	    # NOTE: The dist target should just be building the hypervisor, as
 	    #       per our configure args above.
 	    #
-	    # NOTE: We set DESTDIR to install into $PREFIX_EARLY/boot.
+	    # NOTE: We set DESTDIR to install into $PREFIX_HOSTPREP/boot.
 	    MAKE="make"
             case "$CLFS_ARCH" in
                 i386)
@@ -778,10 +778,10 @@ EOF
 	    MAKE+=" CROSS_COMPILE=$CLFS_TARGET-"
 	    pushd $builddir &&
 	    $MAKE -j$JOBCOUNT dist &&
-            $MAKE DESTDIR=$PREFIX_EARLY install &&
+            $MAKE DESTDIR=$PREFIX_HOSTPREP install &&
 	    popd || exit 1
 
-            # also install in PREFIX_FINAL if needed
+            # also install in PREFIX_TOOLS if needed
             #
             # NOTE: If we're building a 32bit system, we won't be able to
             #       compile the hypervisor during the final build phase.
@@ -794,7 +794,7 @@ EOF
             #        contents...
             if [ -z "$BUILD64" ]; then
                 pushd $builddir &&
-                $MAKE DESTDIR=$PREFIX_FINAL install &&
+                $MAKE DESTDIR=$PREFIX_TOOLS install &&
 	        popd || exit 1
             fi
 	    ;;
@@ -994,7 +994,7 @@ elif [ "$XEN_ENABLED" = "yes" ]; then
 fi
 
 
-mkdir -p $PWD/.build
+mkdir -p $CLFS$PREFIX_TOOLS
 
 # now iterate through building for our target architecture using our
 # cross-compiler.

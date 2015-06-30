@@ -71,13 +71,13 @@ RUCKUS_BOOTSTRAP_STAGE2_FILE=/.ruckus_bootstrap_stage2
 #
 if [ -z "$RUCKUS_BOOTSTRAP_STAGE2" ]; then
     # setup environment to use our bootstrap-early stuff
-    export PATH=$PREFIX_EARLY/bin:$PREFIX_EARLY/sbin:$PATH
-    export MANPATH=$PREFIX_EARLY/man:$PREFIX_EARLY/share/man:$MANPATH
-    export PKG_CONFIG_PATH=$PREFIX_EARLY/lib/pkg-config:$PKG_CONFIG_PATH
+    export PATH=$PREFIX_HOSTPREP/bin:$PREFIX_HOSTPREP/sbin:$PATH
+    export MANPATH=$PREFIX_HOSTPREP/man:$PREFIX_HOSTPREP/share/man:$MANPATH
+    export PKG_CONFIG_PATH=$PREFIX_HOSTPREP/lib/pkg-config:$PKG_CONFIG_PATH
     if [ -z "$LD_LIBRARY_PATH" ]; then
-	export LD_LIBRARY_PATH=$PREFIX_EARLY/lib
+	export LD_LIBRARY_PATH=$PREFIX_HOSTPREP/lib
     else
-	export LD_LIBRARY_PATH=$PREFIX_EARLY/lib:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$PREFIX_HOSTPREP/lib:$LD_LIBRARY_PATH
     fi
 
     # and now add in the bootstrap-cross tools

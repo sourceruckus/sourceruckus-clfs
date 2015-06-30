@@ -47,7 +47,7 @@ fix_perms()
     # NOTE: Since we're using busybox for pretty much everything now, this list
     #       is pretty short... ;-)
     setuid_list=""
-    setuid_list+=" $PREFIX_FINAL/bin/busybox"
+    setuid_list+=" $PREFIX_TOOLS/bin/busybox"
 
     for x in $setuid_list; do
         chmod -v u+s $x || exit 1
@@ -77,7 +77,7 @@ fix_perms || exit 1
 # remove the bootstrap and bootstrap-cross symlinks
 #
 # FIXME: do i really want to do this?
-#rm -f $PREFIX_CROSS $PREFIX_FINAL || exit 1
+#rm -f $PREFIX_CROSS $PREFIX_TOOLS || exit 1
 
 # FIXME: clean out utils/*/.build at this point?  should free up over 7G
 #        depending on what was built.
