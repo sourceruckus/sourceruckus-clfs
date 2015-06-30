@@ -586,7 +586,13 @@ EOF
 	    #chmod -v 600 ${CLFS}/var/log/btmp || exit 1
 
 	    # copy profile into root's homedir
-	    cp -v $ruckus_confdir/profile $CLFS/root/.profile
+            #
+            # NOTE: We replace /tools with $PREFIX_TOOLS so we can build
+            #       multiple systems on a single box w/out the /tools symlinks
+            #       colliding.
+            #
+            sed "s|/tools|$PREFIX_TOOLS|g" $ruckus_confdir/profile \
+                > $CLFS/root/.profile || exit 1
 
 	    # make sure these build variables are set
             #

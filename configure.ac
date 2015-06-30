@@ -180,13 +180,11 @@ AS_IF([test -z "$PREFIX_HOSTPREP"],
 AS_IF([test "$PREFIX_HOSTPREP" = "NONE" ],
   [PREFIX_HOSTPREP=$BUILDROOT/bootstrap-early])
 
-# FIXME: $CLFS_ARCH_STRING
 AS_IF([test -z "$PREFIX_CROSS"],
-  [PREFIX_CROSS=/cross-tools])
+  [PREFIX_CROSS=/cross-tools-$CLFS_ARCH_STRING])
 
-# FIXME: $CLFS_ARCH_STRING
 AS_IF([test -z "$PREFIX_TOOLS"],
-  [PREFIX_TOOLS=/tools])
+  [PREFIX_TOOLS=/tools-$CLFS_ARCH_STRING])
 
 AS_IF([test -z "$CLFS"],
   [CLFS=$BUILDROOT/baby])
@@ -197,13 +195,11 @@ AC_ARG_VAR(BUILDROOT,
 AC_ARG_VAR(PREFIX_HOSTPREP,
   [Prefix for bootstrap-early (default: $BUILDROOT/bootstrap-early)])
 
-# FIXME: $CLFS_ARCH_STRING
 AC_ARG_VAR(PREFIX_CROSS,
-  [Prefix for bootstrap-cross (default: /cross-tools)])
+  [Prefix for bootstrap-cross (default: /cross-tools-$CLFS_ARCH_STRING)])
 
-# FIXME: $CLFS_ARCH_STRING
 AC_ARG_VAR(PREFIX_TOOLS,
-  [Prefix for bootstrap-final (default: /tools)])
+  [Prefix for bootstrap-final (default: /tools-$CLFS_ARCH_STRING)])
 
 AC_ARG_VAR(CLFS,
   [Location of baby filesystem during build (default: mountpoint of $install_dev)])
