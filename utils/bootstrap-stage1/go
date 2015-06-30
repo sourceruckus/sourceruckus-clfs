@@ -872,6 +872,9 @@ packages+=" ncurses"
 #
 #         FIXME: is that still true?
 #
+#         We need to still build xz-utils, though, because we're going to need
+#         liblzma.so for Python's lzma/xz support.
+#
 #       - vi: Just as painful to use as I remember the original vi
 #         being... shocking, and yet oddly refreshing, after years of being
 #         spoiled by vim.
@@ -930,7 +933,13 @@ packages+=" texinfo"
 #
 #packages+=" util-linux"
 #packages+=" vim"
-#packages+=" xz-utils"
+
+# srp needs Python's lzma module, which needs liblzma... which buzybox doesn't
+# provide.
+#
+# NOTE: We call this "xz" because that's the name of the git submodule.  CLFS
+#       refers to it as "XZ Utils", as the dist tarball is named xz-utils.
+packages+=" xz"
 
 
 # boot prep
