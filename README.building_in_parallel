@@ -7,11 +7,18 @@ This may or may not involve using out-of-tree autoconf... depending on how much
 work it takes (I'd probably have to gut the script-based bootstrap system...)
 
 
-* Problems [1/4]:
-- [ ] /tools symlinks
+* Problems [2/4]:
+- [X] /tools symlinks
 
   Maybe /tools-x86_64-64 style throughout?  Wouldn't be hard to run the CLFS
   patch through sed before applying...
+
+  We'll use /tools-$CLFS_ARCH_STRING and /cross-tools-$CLFS_ARCH_STRING by
+  default, but allow overriding at configure-time via precious variables.
+
+  For example, to force the same paths as CLFS:
+
+    PREFIX_CROSS=/cross-tools PREFIX_TOOLS=/tools ./configure
 
 - [X] /ruckus can't be passed RO if EXT4?
 
@@ -38,12 +45,15 @@ work it takes (I'd probably have to gut the script-based bootstrap system...)
 
   How much extra space in our install device are we talking about here?
 
-  x86_64:    6.8G
-  x86_64-64: 6.1G
+  x86_64:    6.3G
+  x86_64-64: 6.2G
+  i686:      5.5G
 
   Of course, those numbers are only up through bootstrap-stage1...  by the
   time we've done the entire stage2 and final build, it might be waaaaay
   larger.
+
+  Of course, we could make clean in /ruckus-build to reduce by that much...
 
 - [ ] will we be building too much
 
@@ -51,6 +61,9 @@ work it takes (I'd probably have to gut the script-based bootstrap system...)
   tone down the NUMJOBS calculation?  Maybe just wait a minute or two in
   between each one so the peaks and valleys of CPU utilization match up better?
 
+  The test builds that I've actually looked at used about 370-385% (of 8 cores)
+  building bootstrap over the course of the entire build, but they did redline
+  all 8 cores in some sections (glibc, gcc, kernel, busybox).
 
 * Then we need a build-aux/build script:
 ./build-aux/build --arch-list=i686,x86_64,x86_64-64
@@ -75,3 +88,70 @@ build script should:
     off...
 
   - . $PREFIX/ruckus_builder.env
+
+** configure examples
+*** download & hostprep
+./configure \
+    --prefix=/mnt/root-true/ruckus-hostprep \
+    --with-hostprep-only
+
+*** bootstrap x86_64 multilib
+/media/ruckus/configure \
+    --prefix=/mnt/root-true/ruckus-hostprep \
+    --enable-stage2-auto \
+    --with-install-dev=/dev/mapper/vg00-baby \
+    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+
+*** bootstrap i686
+*NOTE* Disable stage1-xen to make sure we don't accidentally do the Xen detour
+
+/media/ruckus/configure \
+    --prefix=/mnt/root-true/ruckus-hostprep \
+    --enable-stage2-auto \
+    --with-arch=i686 \
+    --without-stage1-xen \
+    --with-install-dev=/dev/mapper/vg00-baby32 \
+    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+
+*** bootstrap x86_64 pure64
+*NOTE* Disable stage1-xen to make sure we don't build the Hypervisor twice
+       (e.g., if we're running 2 x86_64 builds in parallel they might both
+       build Xen during stage1)
+
+/media/ruckus/configure \
+    --prefix=/mnt/root-true/ruckus-hostprep \
+    --enable-stage2-auto \
+    --with-arch=x86_64 --disable-multilib \
+    --without-stage1-xen \
+    --with-install-dev=/dev/mapper/vg00-baby64 \
+    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+
+
+
+* Stage 2 Problems [0/3]
+- [ ] Should we automatically start all the build machines?
+
+  If the hostprep stage is already built (i.e., build it 1st on it's own before
+  we run the build script), then we can just go ahead and start the builder
+  domUs... But hostprep will have to be FULLY built, including the Xen
+  hypervisor.
+
+- [ ] How do we coordinate the multiple build machines?
+
+  How do we know when they're finished building?  We could autostart the build
+  process at bootup and shutdown the virtual machine if it finishes
+  successfully...?  Once the machines are stopped, we can access all the
+  filesystems from the dom0, so that might not be a bad idea.
+
+- [ ] How are we going to collect logfile from build machines?
+
+  Assuming we add build logging to the build script, we'll want to somehow
+  capture the output of the stage2 and final build...  I guess we'll want to
+  redirect stdout/stderr to logfiles in /ruckus-build so we can get at them
+  later.
+
+  Actually, we could even leave our baby filesystems mounted read-only on the
+  dom0 and tail the output from there...  but we'd *really* be begging for
+  accidental filesystem corruption (e.g., forgot to remount,ro prior to
+  running build script).  We would want to automate the remount,ro,noload in
+  the build script to prevent lack-of-sleep from contributing to lost data.

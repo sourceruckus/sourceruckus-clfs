@@ -93,7 +93,7 @@ AM_CONDITIONAL([MULTILIB],
 AS_IF([test "$build_arch" = "i686"],
   [ # x86
    CLFS_ARCH=i386
-   CLFS_ARCH_STRING=$CLFS_ARCH
+   CLFS_ARCH_STRING=x86
    BUILD32=
    BUILD64=
    CLFS_TARGET=$build_arch-ruckus-linux-gnu # FIXME: does this NEED to be 'pc'?
@@ -357,6 +357,11 @@ AC_ARG_ENABLE(xen,
                 If you don't really care about Xen, you can disable it in
                 both the bootstrap and final systems w/ the --disable-xen
                 flag.
+
+                Alternatively, you can bypass the Xen detour but still
+                enable Xen support w/ the --without-stage1-xen flag, but
+                Xen will not be usable unless you've already built and
+                installed the Xen hypervisor in PREFIX_HOSTPREP/boot.
                 *************************************************************])
      ])
   ])
@@ -769,7 +774,7 @@ AS_IF([test "$xen_enabled" != "no"],
 
    p_early+=" xen"
 
-   AS_IF([test "$build_cpu" != "x86_64"],
+   AS_IF([test "$build_cpu" != "x86_64" -a "$stage1_xen" != "no"],
      [case "$build_arch" in
         *64)
           ;;
@@ -797,10 +802,11 @@ AS_IF([test "$prefix_cross_link" = "$CLFS$PREFIX_CROSS"],
   [AC_MSG_RESULT(missing)
    AC_MSG_ERROR([
 		*************************************************************
-		Please create the CLFS $PREFIX_CROSS symlink by executing
-		the following command as root, then rerun configure:
+		Please create PREFIX_CROSS symlink by executing the
+		following command as root, then rerun configure:
 
-		ln -fs $CLFS$PREFIX_CROSS $PREFIX_CROSS
+		ln -fs $CLFS$PREFIX_CROSS \\
+			$PREFIX_CROSS
 		*************************************************************])
   ])
 
@@ -811,10 +817,11 @@ AS_IF([test "$prefix_final_link" = "$CLFS$PREFIX_TOOLS"],
   [AC_MSG_RESULT(missing)
    AC_MSG_ERROR([
 		*************************************************************
-		Please create the CLFS $PREFIX_TOOLS symlink by executing
-		the following command as root, then rerun configure:
+		Please create the PREFIX_TOOLS symlink by executing the
+		following command as root, then rerun configure:
 
-		ln -fs $CLFS$PREFIX_TOOLS $PREFIX_TOOLS
+		ln -fs $CLFS$PREFIX_TOOLS \\
+			$PREFIX_TOOLS
 		*************************************************************])
   ])
 

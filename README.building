@@ -52,6 +52,7 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --enable-stage2-auto \
     --with-arch=i686 \
+    --without-stage1-xen \
     --with-install-dev=/dev/mapper/vg00-baby32 \
     --with-ruckus-dev=/dev/mapper/vg00-ruckus
 
@@ -107,7 +108,11 @@ make bootstrap
         on the A10-7850K, 35 on the FX-8350.
 
 *NOTE*: x86_64-64, FX-8350, bare-metal: 28 minutes
+
+        x86_64-64, FX-8350, xen: 37 minutes
         x86_64, FX-8350, xen: 45 minutes
+        i686, FX-8350, xen: 36 minutes
+
         x86_64, A10-6700, xen: 74 minutes
 
 
