@@ -38,7 +38,8 @@ endif
 #       during hostprep.
 if STAGE1_XEN_ONLY
 hostprep-local:
-	env -i ruckus_srcdir=$(top_srcdir) ruckus_builddir=$(top_builddir) \
+	env -i ruckus_srcdir=$(abs_top_srcdir) \
+	    ruckus_builddir=$(abs_top_builddir) \
 	    $(srcdir)/go
 endif
 
@@ -49,7 +50,8 @@ endif
 #       bootstrap back off after fixing a problem in bootstrap-stage1.
 bootstrap-local:
 	[ -f $(builddir)/.build/ALL_DONE ] && echo nothing to build || \
-	    env -i ruckus_srcdir=$(top_srcdir) ruckus_builddir=$(top_builddir) \
+	    env -i ruckus_srcdir=$(abs_top_srcdir) \
+	    ruckus_builddir=$(abs_top_builddir) \
 	    $(srcdir)/go || exit 1
 
 

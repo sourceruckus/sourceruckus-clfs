@@ -29,6 +29,9 @@
 
 
 # paths to the package scripts and source directories for each package
+#
+# NOTE: These MUST be absolute paths, because we change directory all over the
+#       place and expect them to still be valid paths.
 packagedir=$ruckus_srcdir/packages
 sourcedir=$ruckus_srcdir/src
 

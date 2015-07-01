@@ -9,7 +9,7 @@ EXTRA_DIST+=init
 #       if .build dir already exists.
 #bootstrap-local:
 #	@echo bootstrapping in bootstrap-stage2
-#	env -i ruckus_srcdir=$(top_srcdir) ruckus_builddir=$(top_builddir) $(srcdir)/go
+#	env -i ruckus_srcdir=$(abs_top_srcdir) ruckus_builddir=$(abs_top_builddir) $(srcdir)/go
 
 clean-local:
 	rm -rf $(builddir)/.build
