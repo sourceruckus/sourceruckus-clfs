@@ -65,6 +65,34 @@ work it takes (I'd probably have to gut the script-based bootstrap system...)
   building bootstrap over the course of the entire build, but they did redline
   all 8 cores in some sections (glibc, gcc, kernel, busybox).
 
+  Well, I've now tried building all 3 in parallel... The one time I tried it,
+  my i686 build died on gmp with a gcc segfault.  System was being flogged
+  pretty soundly, but not so much that I would expect gcc to segfault...
+
+  I kicked it back off and then the x86_64 build died in glibc... another
+  compiler segfault.
+
+  And then my box locked up...
+
+  Reduced CPUCOUNT in functions to 4, tried again... and locked up again...
+
+  Reduced CPUCOUNT to 2, tried again...
+
+  x86_64:    7391.78s user 2875.86s system 223% cpu 1:16:40.06 total
+  i686:      6548.03s user 2332.95s system 221% cpu 1:06:44.49 total
+  x86_64-64: 6557.94s user 2359.25s system 221% cpu 1:06:56.89 total
+
+  So a grand total of 1:16 at 665% of 8 cores.
+
+
+  --with-numjobs= to override detected value? or just make CPUCOUNT a precious
+  variable substituted into config instead of hard-coded in functions?
+
+  watch -n1 'for x in baby{,32,64}; do
+    ls -1drt /media/$x/ruckus-build/utils/bootstrap-*/.build/* | tail -n1
+  done'
+
+
 * Then we need a build-aux/build script:
 ./build-aux/build --arch-list=i686,x86_64,x86_64-64
 
@@ -90,6 +118,11 @@ build script should:
   - . $PREFIX/ruckus_builder.env
 
 ** configure examples
+Eventually, all the bootstrap's should also use --enable-stage2-auto
+
+Also, they should be setting CPUCOUNT to actual/no_of_archs... perhaps rounded
+up or +1.
+
 *** download & hostprep
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
@@ -98,7 +131,6 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
 *** bootstrap x86_64 multilib
 /media/ruckus/configure \
     --prefix=/mnt/root-true/ruckus-hostprep \
-    --enable-stage2-auto \
     --with-install-dev=/dev/mapper/vg00-baby \
     --with-ruckus-dev=/dev/mapper/vg00-ruckus
 
@@ -107,7 +139,6 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
 
 /media/ruckus/configure \
     --prefix=/mnt/root-true/ruckus-hostprep \
-    --enable-stage2-auto \
     --with-arch=i686 \
     --without-stage1-xen \
     --with-install-dev=/dev/mapper/vg00-baby32 \
@@ -120,7 +151,6 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
 
 /media/ruckus/configure \
     --prefix=/mnt/root-true/ruckus-hostprep \
-    --enable-stage2-auto \
     --with-arch=x86_64 --disable-multilib \
     --without-stage1-xen \
     --with-install-dev=/dev/mapper/vg00-baby64 \

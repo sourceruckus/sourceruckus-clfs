@@ -1,6 +1,8 @@
 -*- mode: org; mode: flyspell; -*-
 
-* TODO [0/4]
+* TODO [0/5]
+
+- [ ] fix all the FIXMEs in stage1 left over from CLFS 3.0.0 update
 
 - [ ] What to do with flex?
 
