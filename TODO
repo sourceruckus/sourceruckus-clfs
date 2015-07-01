@@ -1,22 +1,32 @@
 -*- mode: org; mode: flyspell; -*-
 
-* TODO
+* TODO [0/4]
 
-- Proof-of-concept building and installing a brp from within the build system.
+- [ ] What to do with flex?
 
-- Update srp module to something that actually works
+  I've got a git repo that was supposedly at v2.5.37, but w/out any tags.  CLFS
+  used 2.5.39, which is tagged but won't bootstrap properly.  It looks like
+  they're ironing this all out still upstream, 2.6.0-pre bootstraps and builds
+  (albeit, in-tree-only and w/out docs), so I'm using that for now...
 
-- Start work on the actual builder process (i.e., CLFS Chapter 10 wrapped up in
-  srp goodness)!
+- [ ] Proof-of-concept building and installing a brp from within the build
+  system.
+
+- [ ] Update srp module to something that actually works
+
+- [ ] Start work on the actual builder process (i.e., CLFS Chapter 10 wrapped
+  up in srp goodness)!
 
 
-* Local issues on my box
+* ISSUES (that i might not fix) [0/2]
 
-- missing brctrl on avlinux host... no networking for ruckus-builder domU.
+- [ ] missing brctrl on avlinux host... no networking for ruckus-builder domU.
 
+  I might not bother fixing this... I can get at all the files on the domU
+  after the fact and don't see any need to add networking thus far.
 
-* ISSUES (that i might not fix)
+- [ ] parallel build problem in gettext?
 
-- parallel build problem in gettext? died once during stage1...  died again, i
-  swear it was a different place...  might actually be because i didn't do a
-  distclean first...?  looks like that might have been it...
+  died once during stage1...  died again, i swear it was a different place...
+  might actually be because i didn't do a distclean first...?  looks like that
+  might have been it...
