@@ -802,6 +802,48 @@ AC_SUBST(XEN_DETOUR, $xen_detour)
 AM_CONDITIONAL([XEN_DETOUR], [test x$xen_detour = xyes])
 
 
+# dejagnu needs expect
+p_early=
+AC_PATH_PROG(EXPECT, [expect])
+AC_ARG_VAR(EXPECT, Path to expect binary)
+AS_IF([test "$EXPECT" != ""], [], [p_early+=" tcl expect"])
+
+# FIXME: we need to force bootstrapping all the rest of the submodules
+#        before booting into bootstrap-builders with /ruckus mounted
+#        read-only...  for now, i'll just tack them onto p_early
+#
+#        hmm... some conditionally built early packages might need to be
+#        bootstrapped regardless: rsync*, gzip**, bzip2**, xz*, tar**,
+#        gperf***, dev86****, acpica****, libaio****, xen
+#
+#        * built in stage1
+#        ** might not actually be needed on final system (e.g., bb)
+#        *** stores autotools generated files in git
+#        **** no bootstrap needed (e.g., static Makefiles)
+#
+p_early+=" dejagnu-bootstrap"
+#p_early+=" bash-bootstrap" # if we really want it...
+#p_early+=" curl-bootstrap" # why do i even have this...?
+p_early+=" git-bootstrap"
+#p_early+=" nasm-bootstrap" # if we really want it... this was for syslinux originally...
+#p_early+=" ntfs-3g-bootstrap" #FIXME: needs libgcrypt?
+#p_early+=" paxutils-bootstrap" #maybe
+#p_early+=" perl-bootstrap" #maybe... how am i getting away with not doing this one...?
+p_early+=" ruckusrd-bootstrap"
+#p_early+=" srp-bootstrap" # not yet
+#p_early+=" util-linux-bootstrap" #maybe... bb
+
+# these ones might have been added to p_early because they're needed on
+# the host system, but blowing through here and double-checking in a
+# bootstrap script won't hurt.
+#
+#p_early+=" gzip-bootstrap" #maybe
+#p_early+=" bzip2-bootstrap" #maybe
+#p_early+=" tar-bootstrap" #maybe
+p_early+=" gperf-bootstrap" #maybe
+p_early+=" xen-bootstrap"
+
+
 # check for CLFS symlinks...
 #
 # FIXME: Put a decent description of the CLFS /tools and /cross-tools

@@ -1,6 +1,19 @@
 -*- mode: org; mode: flyspell; -*-
 
-* TODO [0/6]
+* TODO [0/7]
+
+- [ ] read-only /ruckus bad for non-bootstrapped submodules
+
+  I knew this at one point and forgot apparently... I've been recently
+  counting on being able to bootstrap any submod during stage2 once I've
+  installed the autotools... but that doesn't work if I've got /ruckus mounted
+  read-only.
+
+  I'm going to have to add some sort of prep prior to stage2 to bootstrap any
+  remaining submodules.
+
+  Or can I just make them build in-tree (in copied trees)...?  That might work,
+  but then all my ruckus-builders are going to bootstrap the trees in question.
 
 - [ ] put guts of bootstrap-early/functions in srp
 

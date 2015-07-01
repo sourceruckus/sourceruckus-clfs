@@ -263,6 +263,35 @@ build()
 
             compile_generic $1 || exit 1
             ;;
+        tcl)
+	    setup_generic $1 || exit 1
+
+            # override configure to move down a directory (we only need to
+            # build part of tcl here).
+	    configure=$source/unix/configure
+	    echo configure: $configure
+
+	    configure_generic $1 --prefix=$PREFIX_HOSTPREP &&
+	    compile_generic $1 || exit 1
+
+            ;;
+        dejagnu-bootstrap)
+            # special bootstrap... shouldn't necesarily need to be
+            # bootstrapped, but for some reason needs to rebuild a texinfo file
+            # (timestamps?)
+            setup_generic dejagnu && \
+                configure_generic dejagnu || exit 1
+
+            pushd $builddir &&
+            make -j$JOBCOUNT &&
+            popd || exit 1
+            ;;
+        *-bootstrap)
+            p_real=$(echo $1 | sed 's|-bootstrap||')
+            [ -d $PWD/.build/$p_real ] && break
+            setup_generic $p_real && \
+                autoreconf_generic $p_real || exit 1
+            ;;
 	*)
 	    build_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
 	    ;;
