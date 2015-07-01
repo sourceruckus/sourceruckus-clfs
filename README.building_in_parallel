@@ -129,7 +129,7 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --with-hostprep-only
 
 *** bootstrap x86_64 multilib
-/media/ruckus/configure \
+CPUCOUNT=2 /media/ruckus/configure \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --with-install-dev=/dev/mapper/vg00-baby \
     --with-ruckus-dev=/dev/mapper/vg00-ruckus
@@ -137,7 +137,7 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
 *** bootstrap i686
 *NOTE* Disable stage1-xen to make sure we don't accidentally do the Xen detour
 
-/media/ruckus/configure \
+CPUCOUNT=2 /media/ruckus/configure \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --with-arch=i686 \
     --without-stage1-xen \
@@ -149,7 +149,7 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
        (e.g., if we're running 2 x86_64 builds in parallel they might both
        build Xen during stage1)
 
-/media/ruckus/configure \
+CPUCOUNT=2 /media/ruckus/configure \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --with-arch=x86_64 --disable-multilib \
     --without-stage1-xen \

@@ -9,19 +9,19 @@ kernel = "@PREFIX_HOSTPREP@/boot/@CLFS_ARCH_STRING@/vmlinuz-ruckus-bootstrap"
 #
 disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,r"]
 
-# FIXME: detect mem, vcpus for domU in configure?  maybe just default to 1
-#        cpu and 1024M but add --with-domu-cpus and --with-domu-ram?
+# FIXME: detect mem for domU in configure?  maybe just default to 1024M
+#        but add --with-domu-ram?
 #
 #        mem will depend on how much mem is availalbe in reality, but also
 #        on how much has been reserved for dom0 in the bootloader
 #        config...  could look at /proc/meminfo and do some calculations,
 #        but they'll be thrown off if we're configuring from in Xen...
 #
-#        makes more sense to defult vcpus to match system like this:
-#        grep "^processor[[:space:]]*:" /proc/cpuinfo | wc -l
+#        also, it will depend on how many ruckus-builder guests are going
+#        to be run in parallel.
 #
 memory = 2048
-vcpus = 4
+vcpus = @CPUCOUNT@
 name = "ruckus-builder-@CLFS_ARCH_STRING@"
 
 # FIXME: i need to put a bridge on my avlinux host!

@@ -41,6 +41,15 @@ AM_INIT_AUTOMAKE(1.13 foreign)
 LT_INIT
 
 
+# declare CPUCOUNT as precious and autodetect if not set
+AS_IF([test -z "$CPUCOUNT"],
+  [CPUCOUNT=$(grep "^processor" /proc/cpuinfo | wc -l)])
+
+AC_ARG_VAR(CPUCOUNT,
+  [The number of CPUs to be utilized (autodetected, but should be lowered if
+   building multiple bootstrap configurations in parallel)])
+
+
 # NOTE: We do NOT use AC_CANONICAL_HOST or AC_CANONICAL_TARGET here, for
 #       the following reasons:
 #
@@ -922,6 +931,7 @@ AS_IF([test "$hostprep_only" != "yes"], [
 echo "  PREFIX_CROSS.........: $PREFIX_CROSS"
 echo "  PREFIX_TOOLS.........: $PREFIX_TOOLS"
 echo "  CLFS.................: $CLFS"
+echo "  CPUCOUNT.............: $CPUCOUNT"
 ])
 
 echo

@@ -1,6 +1,11 @@
 -*- mode: org; mode: flyspell; -*-
 
-* TODO [0/5]
+* TODO [0/6]
+
+- [ ] put guts of bootstrap-early/functions in srp
+
+  This way, we'll have access to build_generic (and its component functions) in
+  srp build scriptlets.
 
 - [ ] fix all the FIXMEs in stage1 left over from CLFS 3.0.0 update
 

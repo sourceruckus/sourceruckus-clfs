@@ -94,26 +94,8 @@ if [ -z "$RUCKUS_BOOTSTRAP_STAGE2" ]; then
     fi
 fi
 
-# this variable will be used by default to determine the number of jobs to
+# these variables will be used by default to determine the number of jobs to
 # pass into make.
-#
-# FIXME: should this be configurable via autoconf?  --enable-parallelism=N
-#        where N gets used instead of CPUCOUNT to calc JOBCOUNT and
-#        JOBCOUNT_KBUILD?
-#
-# FIXME: not really sure why you'd want to override this via configure
-#        script... maybe just to disable parallel building entirely?
-#
-# FIXME: now that we can build multiple architectures out-of-tree in parallel,
-#        we need to address this... because my box is locking up.  :-/
-#
-#        do we want a different value for the domUs? will need to do some
-#        benchmarks and see how things scale.
-#
-# 8 == segfaults, lockup
-# 4 == lockup
-# 2 == 1:15 at 665%
-export CPUCOUNT=$(grep "^processor" /proc/cpuinfo | wc -l)
 export JOBCOUNT=$((CPUCOUNT+1))
 export JOBCOUNT_KBUILD=$((CPUCOUNT*4))
 
