@@ -238,7 +238,21 @@ build()
 	    popd || exit 1
 	    ;;
         flex)
-            setup_generic $1 &&
+            # NOTE: flex cannot be built out-of-tree because the rule for
+            #       flex.pot-update assumes the generated skel.c is in srcdir.
+            #
+            #       It looks like skel.c is actually a part of DIST, so that
+            #       assumption should be OK, except that the file doesn't get
+            #       created by flex's autogen.sh and is instead build output
+            #       (which goes in builddir).
+            #
+            #       We could patch the flex autogen.sh to fix this, but I'm not
+            #       sure building this out-of-tree is really worth maintaining
+            #       the patch, making sure it gets applied (what if hostprep
+            #       doesn't get built?), etc.
+            build_in_tree=1 \
+                setup_generic $1 || exit 1
+
             configure_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
 
             # having trouble getting the PDF to build, but we don't need it, so
