@@ -156,6 +156,54 @@ build()
 	    sudo ln -sf $PREFIX_TOOLS/bin/perl /usr/bin || exit 1
             ;;
 
+        python)
+            build_generic $1 $OPTS || exit 1
+
+            # fix multilibiness
+            #
+            # NOTE: Despite respecting --libdir for all dynamically compiled
+            #       libraries, core python installation still goes in
+            #       $PREFIX/lib (i.e., lib vs lib64 is hardcoded in the python
+            #       sources to lib).
+            #
+            # FIXME: LDFLAGS=$PREFIX_TOOLS for extensions setup.py?
+            #
+            #sudo mv $PREFIX_TOOLS/lib/python* $PREFIX_TOOLS/lib64/ || exit 1
+            #
+            # lib/python -> lib64/python, in *.py
+            #
+            #   ./_sysconfigdata.py: ok
+            #   ./config-3.4m/python-config.py: ok*
+            #   ./distutils/command/install.py: ok
+            #   ./pydoc_data/topics.py: ok*
+            #   ./site.py: ok*
+            #   ./sysconfig.py: ok
+            #
+            #   lib/site-python: oops, need to grep for "lib" all by itself to
+            #   catch os.path.join(... "lib", "python" split across multiple
+            #   lines...
+            #
+            # "lib" -> "lib64", in *.py
+            #
+            #   ./distutils/command/build_ext.py: ok
+            #   ./distutils/msvc9compiler.py: probably not right...
+            #   ./distutils/msvccompiler.py: probably not right...
+            #   ./distutils/sysconfig.py: ok
+            #   ./distutils/tests/test_install.py: i think it's ok...
+            #   ./pydoc.py: ok
+            #   ./site.py: ok
+            #   ./tkinter/_fix.py: ok? sys.base_prefix, "externals", "tcltk", "lib")
+            #   ./trace.py: ok
+            #
+            pushd $PREFIX_TOOLS/lib/python* &&
+            find . -name \*.py \
+                -exec sed -i 's|lib/python|lib64/python|g' {} \; \
+                -exec sed -i 's|"lib"|"lib64"|g' {} \; &&
+            mv * $PREFIX_TOOLS/lib64/python*/ &&
+            popd &&
+            rmdir $PREFIX_TOOLS/lib/python* || exit 1
+            ;;
+
         srp)
             # FIXME: fill me in
             #
