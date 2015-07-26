@@ -1,0 +1,63 @@
+-*- org -*-
+
+Python doesn't do multilib... so we snag patches from fedora to make sure it's
+done right (or at least consistently w/ somebody else).
+
+=git://pkgs.fedoraproject.org/python3.git=
+
+* Patches
+Here's a summary, basically copy-n-pasted from the python3.spec file, of each
+patch we're borrowing.
+
+*FIXME*: I might need to rename some of these and conditionally supply
+         patches, not sure yet.
+
+** patch1: Python-3.1.1-rpath.patch
+: Fixup distutils/unixccompiler.py to remove standard library path from rpath:
+: Was Patch0 in ivazquez' python3000 specfile:
+
+** patch102 (only patched for lib64): 00102-lib64.patch
+** patch104 (only patched for lib64): 00104-lib64-fix-for-test_install.patch
+: Only used when "%{_lib}" == "lib64"
+: Another lib64 fix, for distutils/tests/test_install.py; not upstream:
+
+** patch111: 00111-no-static-lib.patch
+: Patch the Makefile.pre.in so that the generated Makefile doesn't try to build
+: a libpythonMAJOR.MINOR.a (bug 550692):
+: Downstream only: not appropriate for upstream
+
+We take this to avoid wasting time/space... probably not really needed.
+
+
+* do I have to --enable-ipv6 --enable-shared, or are they default?
+
+* the devel package tweaks pyconfig.h for additional multilibiness
+Basically, it replaces pyconfig.h w/ pyconfig-32.h and pyconfig-64.h, then
+creates a new pyconfig.h like this:
+
+#+BEGIN_EXAMPLE
+cat > %{buildroot}%{_includedir}/$PyIncludeDir/pyconfig.h << EOF
+#include <bits/wordsize.h>
+
+#if __WORDSIZE == 32
+#include "%{_pyconfig32_h}"
+#elif __WORDSIZE == 64
+#include "%{_pyconfig64_h}"
+#else
+#error "Unknown word size"
+#endif
+EOF
+#+END_EXAMPLE
+
+And then fixes a few references like this:
+
+#+BEGIN_EXAMPLE
+sed -i -e "s/'pyconfig.h'/'%{_pyconfig_h}'/" \
+  %{buildroot}%{pylibdir}/distutils/sysconfig.py \
+  %{buildroot}%{pylibdir}/sysconfig.py
+#+END_EXAMPLE
+
+
+* it also adds a multilib wrapper, but i think we'll handle that like CLFS
+
+* the spec file byte-compiles everything and makes it rpm content, should we?
