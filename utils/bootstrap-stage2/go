@@ -167,12 +167,12 @@ build()
             ;;
 
         srp)
-            # FIXME: fill me in
+            # NOTE: Our python doesn't have bz2, because we haven't installed
+            #       the legit bzip2 package (we use busybox's bzip support).
+            #       Whatever, just disable it here.  We want to use lzma,
+            #       anyway.
             #
-            # FIXME: python's tarfile cannot open bz2 or xz compressed
-            #        files... because we don't have libbz2 or liblzma.  I'll
-            #        need that if I want srp to create bzip2 or xz compressed
-            #        archives...
+            build_generic $1 $OPTS --disable-bzip2 || exit 1
             ;;
 
 	*)
