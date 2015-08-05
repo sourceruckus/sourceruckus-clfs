@@ -175,6 +175,30 @@ build()
             build_generic $1 $OPTS --disable-bzip2 || exit 1
             ;;
 
+	linux_headers)
+            # FIXME: We should check out the specific version CLFS tests glibc
+            #        with here instead of assuming that our run-time kernel is
+            #        the same version we're building glibc against.
+            setup_generic kernel || exit 1
+
+            # get ready
+            MAKE="make KBUILD_SRC=$source -f $source/Makefile"
+            MAKE="$MAKE ARCH=$CLFS_ARCH"
+
+            # NOTE: We install this directly into $CLFS/usr here and let the
+            #       glibc package slurp these files up into its manifest.
+            #
+            # FIXME: We cannot do a mrproper here, because a kernel script that
+            #        depends on bash gets executed... and doesn't work with
+            #        busybox's bash applet.
+            pushd $builddir &&
+            $MAKE headers_check &&
+            sudo $MAKE INSTALL_HDR_PATH=/usr headers_install &&
+            find /usr/include -name .install -or -name ..install.cmd \
+                | sudo xargs rm -fv &&
+            popd || exit 1
+	    ;;
+
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
@@ -222,6 +246,8 @@ packages="$packages perl"
 # srp
 packages="$packages python"
 packages="$packages srp"
+
+packages="$packages linux_headers"
 
 # NOTE: Probably not strictly a requirement... but otherwise we won't be able
 #       to do any git tweakage (submodule, checkout, etc) in the build
