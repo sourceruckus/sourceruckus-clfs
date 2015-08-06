@@ -830,7 +830,7 @@ p_early+=" git-bootstrap"
 #p_early+=" paxutils-bootstrap" #maybe
 #p_early+=" perl-bootstrap" #maybe... how am i getting away with not doing this one...?
 p_early+=" ruckusrd-bootstrap"
-#p_early+=" srp-bootstrap" # not yet
+p_early+=" srp-bootstrap"
 #p_early+=" util-linux-bootstrap" #maybe... bb
 
 # these ones might have been added to p_early because they're needed on

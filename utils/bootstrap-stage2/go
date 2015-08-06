@@ -156,14 +156,48 @@ build()
 	    sudo ln -sf $PREFIX_TOOLS/bin/perl /usr/bin || exit 1
             ;;
 
-        srp)
-            # FIXME: fill me in
-            #
-            # FIXME: python's tarfile cannot open bz2 or xz compressed
-            #        files... because we don't have libbz2 or liblzma.  I'll
-            #        need that if I want srp to create bzip2 or xz compressed
-            #        archives...
+        python)
+            # apply additional patches if we're building x86_64 multilib
+            __patches=
+            if [ -n "$BUILD32" ]; then
+                __patches=$ruckus_srcdir/src/python/*.patch_maybe
+            fi
+            patches=$__patches \
+                build_generic $1 $OPTS || exit 1
             ;;
+
+        srp)
+            # NOTE: Our python doesn't have bz2, because we haven't installed
+            #       the legit bzip2 package (we use busybox's bzip support).
+            #       Whatever, just disable it here.  We want to use lzma,
+            #       anyway.
+            #
+            build_generic $1 $OPTS --disable-bzip2 || exit 1
+            ;;
+
+	linux_headers)
+            # FIXME: We should check out the specific version CLFS tests glibc
+            #        with here instead of assuming that our run-time kernel is
+            #        the same version we're building glibc against.
+            setup_generic kernel || exit 1
+
+            # get ready
+            MAKE="make KBUILD_SRC=$source -f $source/Makefile"
+            MAKE="$MAKE ARCH=$CLFS_ARCH"
+
+            # NOTE: We install this directly into $CLFS/usr here and let the
+            #       glibc package slurp these files up into its manifest.
+            #
+            # FIXME: We cannot do a mrproper here, because a kernel script that
+            #        depends on bash gets executed... and doesn't work with
+            #        busybox's bash applet.
+            pushd $builddir &&
+            $MAKE headers_check &&
+            sudo $MAKE INSTALL_HDR_PATH=/usr headers_install &&
+            find /usr/include -name .install -or -name ..install.cmd \
+                | sudo xargs rm -fv &&
+            popd || exit 1
+	    ;;
 
 	*)
 	    build_generic $1 $OPTS || exit 1
@@ -212,6 +246,8 @@ packages="$packages perl"
 # srp
 packages="$packages python"
 packages="$packages srp"
+
+packages="$packages linux_headers"
 
 # NOTE: Probably not strictly a requirement... but otherwise we won't be able
 #       to do any git tweakage (submodule, checkout, etc) in the build
