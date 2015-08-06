@@ -175,6 +175,37 @@ build()
             build_generic $1 $OPTS --disable-bzip2 || exit 1
             ;;
 
+        git)
+            build_in_tree=yes \
+                setup_generic $1 || exit 1
+
+            # NOTE: Our perl interpreter is 32bit, but we need to compile this
+            #       64bit because we only compiled a 64bit libz... Things seem
+            #       to work out fine like this.
+            #
+            # NOTE: Git's build system is a bit wonky... it has a configure
+            #       script, but doesn't use automake, so the Makefile already
+            #       exists, which causes configure_generic to not configure...
+            pushd $builddir &&
+            ./configure $OPTS &&
+            popd || exit 1
+
+            # fix busybox heartburn
+            #
+            # NOTE: The git Makefile uses 'ar -rcs', but busybox ar doesn't
+            #       support the 's' flag.  This flag tells ar to act as ranlib,
+            #       so we might need to hack things up to call ranlib...
+            #
+            pushd $builddir &&
+            sed -i 's|rcs $@ $^|rc $@ $^ \&\& ranlib $@|' Makefile &&
+            popd || exit 1
+
+            pushd $builddir &&
+            make -j$JOBCOUNT &&
+            sudo make NO_INSTALL_HARDLINKS=1 install &&
+            popd || exit 1
+            ;;
+
 	linux_headers)
             # FIXME: We should check out the specific version CLFS tests glibc
             #        with here instead of assuming that our run-time kernel is
@@ -247,16 +278,13 @@ packages="$packages perl"
 packages="$packages python"
 packages="$packages srp"
 
+# NOTE: We add git here so that we can checkout a specific version of a
+#       submodule in setup_generic (specifcally, we do this for linux_headers).
+packages="$packages git"
+
 packages="$packages linux_headers"
 
-# NOTE: Probably not strictly a requirement... but otherwise we won't be able
-#       to do any git tweakage (submodule, checkout, etc) in the build
-#       environment.
-#
-# FIXME: If we can get away with building this here w/out having to add a bunch
-#        of extra stuff, we should.
-#
-#packages="$packages git"
+
 
 
 # FIXME: might want the following if we're building bare-metal instead of as a
@@ -270,8 +298,6 @@ packages="$packages linux_headers"
 #packages="$packages dnsmasq"
 #
 # dev tools
-#packages="$packages rsync"
-#packages="$packages git"
 #packages="$packages readline"
 #packages="$packages emacs"
 #packages="$packages zsh"
