@@ -684,11 +684,15 @@ EOF
             #        be kinda distro-kernel-ish so that most people with most
             #        hardware can just use our bootstrap config... we'll see.
             #
-            # FIXME: We should check out the specific version CLFS tests glibc
-            #        with here, install it's headers in the final system
-            #        ($CLFS/usr/include), and have the glibc package script
-            #        slurp up the headers.
-
+            #        Either way, the version in src/kernel should get bumped up
+            #        to v4.2+ so that we get multi-layered overlayfs.  And so
+            #        that the following comment is true.  ;-)
+            #
+            # NOTE: This is built using the version checked out in the
+            #       src/kernel submodule, which is NOT the same version CLFS
+            #       uses.  We DO install the CLFS-matched kernel headers to go
+            #       along with glibc in bootstrap-cross and bootstrap-stage2.
+            #
 	    setup_generic $1 || exit 1
 
 	    if [ -n "$BUILD64" ]; then
@@ -874,6 +878,9 @@ packages+=" ncurses"
 #
 #         We need to still build xz-utils, though, because we're going to need
 #         liblzma.so for Python's lzma/xz support.
+#
+#       - ar: Doesn't support 's' (ranlib) or 'u' (update).  So far, I've had
+#         to sed different ar/ranlib usage into perl and git.
 #
 #       - vi: Just as painful to use as I remember the original vi
 #         being... shocking, and yet oddly refreshing, after years of being

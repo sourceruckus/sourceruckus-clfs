@@ -238,6 +238,20 @@ setup_generic()
         # fix relative paths in copied .git file(s)
         find $source -name .git -exec \
             sed -i "s|^gitdir: [./]*|gitdir: $ruckus_srcdir/.|" {} \;
+
+    elif [ -n "$checkout" ]; then
+        # this special case causes us to checkout a specific revision of a git
+        # submodule.  for example, when installing the kernel headers we'll
+        # want to checkout a specific version of the kernel that we've tested
+        # glibc with, but allow the submodule to be commited at a different tag
+        # for our actual kernel build.
+        echo -n "creating local checkout of $checkout from $source in"
+        echo " $builddir/source..."
+        git clone --shared --branch $checkout $source $builddir/source || exit 1
+
+	source=$builddir/source
+	builddir=$builddir/build
+	mkdir -p $builddir || exit 1
     fi
 
     if [ -n "$build_in_tree" ]; then

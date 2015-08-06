@@ -30,10 +30,12 @@ build()
 
     case "$1" in
 	linux_headers)
-            # FIXME: We should check out the specific version CLFS tests glibc
-            #        with here instead of assuming that our run-time kernel is
-            #        the same version we're building glibc against.
-            setup_generic kernel || exit 1
+            # NOTE: We check out the specific kernel version CLFS tests glibc
+            #       with here instead of assuming that our run-time kernel is
+            #       the same version we're building glibc against.
+            #
+            checkout=v3.14.21 \
+                setup_generic kernel || exit 1
 
             # get ready
 	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"

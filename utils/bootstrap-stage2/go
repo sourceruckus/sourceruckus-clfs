@@ -46,6 +46,13 @@ build()
     OPTS="$OPTS --enable-shared"
     OPTS="$OPTS --disable-nls"
 
+    # FIXME: why do i have to unset these??? i was getting build_in_tree == yes
+    #        inside the kernel_headers build...
+    #
+    unset build_in_tree
+    unset use_configure
+    unset checkout
+
     case "$1" in
 	tcl)
 	    setup_generic $1 || exit 1
@@ -207,22 +214,36 @@ build()
             ;;
 
 	linux_headers)
-            # FIXME: We should check out the specific version CLFS tests glibc
-            #        with here instead of assuming that our run-time kernel is
-            #        the same version we're building glibc against.
-            setup_generic kernel || exit 1
+            # NOTE: We check out the specific kernel version CLFS tests glibc
+            #       with here instead of assuming that our run-time kernel is
+            #       the same version we're building glibc against.
+            #
+            checkout=v3.14.21 \
+                setup_generic kernel || exit 1
 
             # get ready
             MAKE="make KBUILD_SRC=$source -f $source/Makefile"
             MAKE="$MAKE ARCH=$CLFS_ARCH"
 
+            # ash compatibilty
+            #
+            # NOTE: ash doesn't allow you to trap ERR, so we have to sed that
+            #       out of link-vmlinux.sh (which is called during make
+            #       mrproper).
+            #
+            # NOTE: We do this in source.  We don't need to undo it because
+            #       we're building in a seperately cloned source tree (i.e.,
+            #       not using src/kernel).
+            #
+            pushd $source &&
+            sed -i 's|SIGTERM ERR|SIGTERM|' scripts/link-vmlinux.sh &&
+            popd || exit 1
+
             # NOTE: We install this directly into $CLFS/usr here and let the
             #       glibc package slurp these files up into its manifest.
             #
-            # FIXME: We cannot do a mrproper here, because a kernel script that
-            #        depends on bash gets executed... and doesn't work with
-            #        busybox's bash applet.
             pushd $builddir &&
+            $MAKE mrproper &&
             $MAKE headers_check &&
             sudo $MAKE INSTALL_HDR_PATH=/usr headers_install &&
             find /usr/include -name .install -or -name ..install.cmd \
