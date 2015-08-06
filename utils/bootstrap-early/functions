@@ -15,15 +15,17 @@
 #   to DISABLE a default bash-ism (e.g., command hashing), in which case you
 #   must check the $BASH variable.
 #
-# - cp, mv, rm, etc don't support -v for verbose output.
-#
 # - Can't use {} globbing (e.g., cp foo{,orig})
+#
+# - Cannot trap ERR.  The kernel's link-vmlinux.sh uses this (called during
+#   mrproper)...
 #
 # Things that are still OK:
 #
 # - $() subshell expansion
 # - wc -l usage
 # - sed -i usage
+# - cp, mv, rm, mkdir, rmdir, ln now support -v for verbose output
 # - pushd/popd are made available here
 # - sudo is made available (sort-of) here
 
