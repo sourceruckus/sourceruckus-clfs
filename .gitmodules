@@ -121,3 +121,6 @@
 [submodule "src/bash"]
 	path = src/bash
 	url = git://git.sv.gnu.org/bash.git
+[submodule "src/gawk"]
+	path = src/gawk
+	url = git://git.sv.gnu.org/gawk.git
