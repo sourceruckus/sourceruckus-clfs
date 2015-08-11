@@ -1,0 +1,43 @@
+-*- mode: org -*-
+
+* dependencies
+
+** manpages
+** glibc
+
+** tzdata
+glibc
+** m4
+glibc
+** ncurses
+glibc
+** pkg-config
+glibc
+** gmp
+glibc
+
+** mpfr
+gmp
+
+** mpc
+mpfr
+
+** isl
+gmp
+
+** cloog
+isl
+
+** zlib
+glibc
+** flex
+glibc
+** bison
+glibc
+
+** binutils
+glibc
+
+** gcc
+zlib, cloog, mpc, flex?, bison?, binutils?
+
