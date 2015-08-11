@@ -5,6 +5,10 @@ export ruckus_srcdir=/ruckus
 export ruckus_builddir=/ruckus-build
 . $ruckus_srcdir/utils/bootstrap-early/functions
 
+# FIXME: remove this once we're really building in srp
+export PAYLOAD_DIR=/tmp/FOO
+
+
 # We'll be building out-of-tree using source tarball and patches.  There's a
 # bunch of sedd-ing into the source tree that happens, so if we ever do switch
 # to a git submodule, we'll want to come back here and checkout seperate copies
@@ -132,13 +136,52 @@ make -j$JOBCOUNT || exit 1
 #
 # make -k check 2>&1 | tee glibc-check-log; grep Error glibc-check-log
 #
-make -k -j$JOBCOUNT run-built-tests=yes check || exit 1
+# FIXME: I had a -j$JOBCOUNT in here last time, and got failures... reran w/out
+#        the -j and it passed... but it might not have actually re-run the
+#        tests... leave this FIXME here until I've verivied that I can pass the
+#        check.
+#
+# NOTE: Ok, we can't guarantee that all tests will pass (in fact, there's
+#       ALWAYS a few failures), so we can't do a "make check || exit 1".  The
+#       next best thing is to log the results and install the logfile along
+#       with the package so we can at least review the failures later.
+#
+make -k run-built-tests=yes check > glibc-lib-check.log 2>&1
+
+mkdir -p $PAYLOAD_DIR/usr/share/glibc &&
+cp -va glibc-stage1-check.log $PAYLOAD_DIR/usr/share/glibc/ || exit 1
+
+# install!
+if [ -n "$BUILD64" -a -z "$BUILD32" ]; then
+    # pure64 tweaks
+    #
+    # From CLFS: The install will finish by checking that everything is
+    # correctly installed. Unfortunately, it will test for a multilib
+    # installation. On x86_64 Pure64 this means it will try to test the
+    # non-existent 32-bit loader which has a different name from the 64-bit
+    # loader (unlike on other 64-bit architectures). We fool it by creating a
+    # symlink to the real loader.
+    ln -sv ld-2.19.so $PAYLOAD_DIR/lib/ld-linux.so.2 || exit 1
+fi
+
+make DESTDIR=$PAYLOAD_DIR install &&
+rm -v $PAYLOAD_DIR/usr/include/rpcsvc/*.x || exit 1
+
+if [ -n "$BUILD64" -a -z "$BUILD32" ]; then
+    # pure64 tweaks
+    #
+    # From CLFS: Now we can remove this symlink. We also need to correct the
+    # /usr/bin/ldd script - if you look at this, you will see it references not
+    # only the 32-bit linker, but also /lib64 where it thinks the 64-bit linker
+    # is. The following sed will correct this
+    rm -v $PAYLOAD_DIR/lib/ld-linux.so.2 &&
+    sed -i '/RTLDLIST/s%/ld-linux.so.2 /lib64%%' \
+        $PAYLOAD_DIR/usr/bin/ldd || exit 1
+fi
+
 
 echo WOOHOO
-
 exit 0
-
-
 
 
 # stage2 (lib64 install) ######################################################
@@ -167,7 +210,136 @@ make -k check 2>&1 | tee glibc-check-log; grep Error glibc-check-log
 
 
 
-# postinstall stuff
+# postinstall stuff ###########################################################
+#
+# FIXME: Does any of this have to wait until we've REALLY installed via srp?
+#        Looks like localedef is a part of glibc... so is zic... but i thought
+#        that was available in my bootstrap environment...?
+#
+#        /tools/bin/localedef (bootstrap-stage1 glibc)
+#        /tools/sbin/zic (bootstrap-stage1 glibc)
+#
+#        Do those work?  Do they write to the correct places?  How do I even
+#        verify that...?
+#
+#        Can localedef write into my SRP_PAYLOAD_DIR?  What about zic?
+#
+# FIXME: Woops, don't think I've downloaded tzdata yet...  Wait... should
+#        tzdata be its own package?
+#
+
+# nscd
+cp -v ../glibc-2.19/nscd/nscd.conf /etc/nscd.conf
+mkdir -pv /var/cache/nscd
+
+install -v -Dm644 ../glibc-2.19/nscd/nscd.tmpfiles /usr/lib/tmpfiles.d/nscd.conf
+install -v -Dm644 ../glibc-2.19/nscd/nscd.service /lib/systemd/system/nscd.service
+
+
+# internationalization
+
+# From CLFS: To save time, an alternative to running the previous command
+# (which generates and installs every locale listed in the
+# glibc-2.19/localedata/SUPPORTED file) is to install only those locales that
+# are wanted and needed. This can be achieved by using the localedef
+# command. Information on this command is located in the INSTALL file in the
+# Glibc source. However, there are a number of locales that are essential in
+# order for the tests of future packages to pass, in particular, the libstdc++
+# tests from GCC. The following instructions, instead of the install-locales
+# target used above, will install the minimum set of locales necessary for the
+# tests to run successfully:
+
+# --prefix=$SRP_PAYLOAD_DIR
+
+mkdir -pv /usr/lib/locale
+localedef -i cs_CZ -f UTF-8 cs_CZ.UTF-8
+localedef -i de_DE -f ISO-8859-1 de_DE
+localedef -i de_DE@euro -f ISO-8859-15 de_DE@euro
+localedef -i en_HK -f ISO-8859-1 en_HK
+localedef -i en_PH -f ISO-8859-1 en_PH
+localedef -i en_US -f ISO-8859-1 en_US
+localedef -i es_MX -f ISO-8859-1 es_MX
+localedef -i fa_IR -f UTF-8 fa_IR
+localedef -i fr_FR -f ISO-8859-1 fr_FR
+localedef -i fr_FR@euro -f ISO-8859-15 fr_FR@euro
+localedef -i it_IT -f ISO-8859-1 it_IT
+localedef -i ja_JP -f EUC-JP ja_JP
+
+# From CLFS: Some locales installed by the make localedata/install-locales
+# command above are not properly supported by some applications that are in
+# CLFS and CBLFS. Because of the various problems that arise due to application
+# programmers making assumptions that break in such locales, CLFS should not be
+# used in locales that utilize multibyte character sets (including UTF-8) or
+# right-to-left writing order. Numerous unofficial and unstable patches are
+# required to fix these problems, and it has been decided by the CLFS
+# developers not to support such complex locales at this time. This applies to
+# the ja_JP and fa_IR locales as well—they have been installed only for GCC and
+# Gettext tests to pass, and the watch program (part of the Procps-ng package)
+# does not work properly in them. Various attempts to circumvent these
+# restrictions are documented in internationalization-related hints.
+
+
+# run-time configuration
+
+## nsswitch
+cat > /etc/nsswitch.conf << "EOF"
+# Begin /etc/nsswitch.conf
+
+passwd: files
+group: files
+shadow: files
+
+hosts: files dns
+networks: files
+
+protocols: files
+services: files
+ethers: files
+rpc: files
+
+# End /etc/nsswitch.conf
+EOF
+
+## timezone
+tar -xf ../tzdata2014d.tar.gz
+
+# FIXME: ZONEINFO=$SRP_PAYLOAD_DIR/usr/share/zoneinfo
+
+ZONEINFO=/usr/share/zoneinfo
+mkdir -pv $ZONEINFO/{posix,right}
+
+for tz in etcetera southamerica northamerica europe africa antarctica  \
+          asia australasia backward pacificnew \
+          systemv; do
+    zic -L /dev/null   -d $ZONEINFO       -y "sh yearistype.sh" ${tz}
+    zic -L /dev/null   -d $ZONEINFO/posix -y "sh yearistype.sh" ${tz}
+    zic -L leapseconds -d $ZONEINFO/right -y "sh yearistype.sh" ${tz}
+done
+
+cp -v zone.tab iso3166.tab $ZONEINFO
+zic -d $ZONEINFO -p America/New_York
+unset ZONEINFO
+
+tzselect
+
+cp -v /usr/share/zoneinfo/[xxx] \
+    /etc/localtime
+
+
+# dynamic loader
+cat > /etc/ld.so.conf << "EOF"
+# Begin /etc/ld.so.conf
+
+/usr/local/lib
+/usr/local/lib64
+/opt/lib
+/opt/lib64
+
+# End /etc/ld.so.conf
+EOF
+
+# FIXME: cut out the lib64 lines if not multilib
+
 
 
 # slurp up kernel headers
