@@ -355,6 +355,15 @@ EOF
 	    compile_generic $1 || exit 1
 	    ;;
 
+        gawk)
+            # NOTE: Can't quite use the generic rule here.  Looks like gawk
+            #       commits configure in git and it's bootstrap.sh script
+            #       actually touches files in the right order to keep configure
+            #       from getting auto-regenerated.
+            autoreconf=yes \
+                build_generic $1 $OPTS || exit 1
+            ;;
+
 	gettext)
             # NOTE: The CLFS 3.0.0 book is getting away with just building
             #       specific binaries inside gettext-tools... I am not so
@@ -914,7 +923,19 @@ packages+=" file"
 # bb
 #
 #packages+=" findutils"
-#packages+=" gawk"
+
+# FIXME: Really wanted to use bb awk, but glibc checks specifically for gawk >=
+#        3.1.2.  According to the glibc INSTALL file:
+#
+#          Some `gawk' extensions are used, including the `asorti' function,
+#          which was introduced in version 3.1.2 of `gawk'.
+#
+# FIXME: Should we leave awk->busybox or replace w/ awk->gawk?  If we replace
+#        altogether, is there any real reason to still build bb awk applet?  I
+#        guess we still should in case we want ruckusrd (or something else!) to
+#        have access to a busybox binary that has basic awk support.
+#
+packages+=" gawk"
 
 packages+=" gettext"
 
@@ -931,7 +952,20 @@ packages+=" make"
 # bb
 #
 #packages+=" patch"
+
+# FIXME: Really want to use bb sed... but glibc INSTALL file says:
+#
+#          Most scripts work with any version of `sed'.  The known exception is
+#          the script `po2test.sed' in the `intl' subdirectory which is used to
+#          generate `msgs.h' for the test suite.  This script works correctly
+#          only with GNU `sed' 3.02.  If you like to run the test suite, you
+#          should definitely upgrade `sed'.
+#
+#        For now, I'm still using bb sed, and it gets through glibc's configure
+#        script ok...
+#
 #packages+=" sed"
+
 #packages+=" tar"
 
 packages+=" texinfo"
