@@ -80,6 +80,9 @@ pushd $source || exit 1
 #
 # NOTE: We autodetect LINKER above
 #
+# FIXME: will this need to point into PAYLOAD_DIR?  is glibc something that we
+#        just cannot build/install propperly using DESTDIR?
+#
 sed -i "s|libs -o|libs -L/usr/lib -Wl,-dynamic-linker=${LINKER} -o|" \
     scripts/test-installation.pl || exit 1
 
@@ -146,10 +149,11 @@ make -j$JOBCOUNT || exit 1
 #       next best thing is to log the results and install the logfile along
 #       with the package so we can at least review the failures later.
 #
-make -k run-built-tests=yes check > glibc-lib-check.log 2>&1
-
-mkdir -p $PAYLOAD_DIR/usr/share/glibc &&
-cp -va glibc-stage1-check.log $PAYLOAD_DIR/usr/share/glibc/ || exit 1
+echo "running stage1 testsuite... this will take a while"
+log=/usr/share/glibc/glibc-stage1-check.log
+mkdir -p $(dirname $PAYLOAD_DIR$log) || exit 1
+#make -k run-built-tests=yes check > $PAYLOAD_DIR$log 2>&1
+make -k run-built-tests=yes check 2>&1 | tee $PAYLOAD_DIR$log
 
 # install!
 if [ -n "$BUILD64" -a -z "$BUILD32" ]; then
@@ -180,34 +184,51 @@ if [ -n "$BUILD64" -a -z "$BUILD32" ]; then
 fi
 
 
-echo WOOHOO
-exit 0
-
-
 # stage2 (lib64 install) ######################################################
+if [ -n "$BUILD32" ]; then
+    # reuse the source dir setup from stage1
+    setup_generic glibc || exit 1
 
-# FIXME: i think we can re-use srcdir as long as we re-sed the LINKER thingy...
-#
-# /lib64 install
-sed -i "s|libs -o|libs -L/usr/lib64 -Wl,-dynamic-linker=${LINKER} -o|" \
-  scripts/test-installation.pl
+    # however, we do have to adjust some variables
+    builddir=$PWD/.build/glibc-stage2
+    mkdir -p $builddir
+    echo "builddir: $builddir"
 
-sed -i 's/\\$$(pwd)/`pwd`/' timezone/Makefile
+    pushd $source || exit 1
 
-pushd $builddir
-echo "slibdir=/lib64" >> configparms
+    # NOTE: Since we're re-using the source dir from stage1, we need to replace
+    #       what we sedded in with a lib64 version...  CLFS does two independant
+    #       seds.
+    #
+    sed -i "s|-L/usr/lib -Wl,-dynamic-link|-L/usr/lib64 -Wl,-dynamic-link|" \
+        scripts/test-installation.pl || exit 1
 
-CC="gcc ${BUILD64}" CXX="g++ ${BUILD64}" \
-    ../glibc-2.19/configure --prefix=/usr \
-    --disable-profile --enable-kernel=2.6.32 \
-    --libexecdir=/usr/lib64/glibc --libdir=/usr/lib64 \
-    --enable-obsolete-rpc
+    pushd $builddir || exit 1
 
-make
+    # From CLFS: Tell Glibc to install its 64-bit libraries into /lib64:
+    echo "slibdir=/lib64" >> configparms
 
-make -k check 2>&1 | tee glibc-check-log; grep Error glibc-check-log
+    OPTS="--prefix=/usr --disable-profile --enable-kernel=2.6.32"
+    OPTS="$OPTS --libexecdir=/usr/lib64/glibc --libdir=/usr/lib64"
+    OPTS="$OPTS --enable-obsolete-rpc"
 
+    CC="gcc ${BUILD64}" CXX="g++ ${BUILD64}" \
+        $configure  $OPTS || exit 1
 
+    # compile it!
+    make -j$JOBCOUNT || exit 1
+
+    # run the testsuite!
+    echo "running stage2 testsuite... this will take a while"
+    log=/usr/share/glibc/glibc-stage2-check.log
+    mkdir -p $(dirname $PAYLOAD_DIR$log) || exit 1
+    #make -k run-built-tests=yes check > $PAYLOAD_DIR$log 2>&1
+    make -k run-built-tests=yes check 2>&1 | tee $PAYLOAD_DIR$log
+
+    # install!
+    make DESTDIR=$PAYLOAD_DIR install &&
+    rm -v $PAYLOAD_DIR/usr/include/rpcsvc/*.x || exit 1
+fi
 
 
 # postinstall stuff ###########################################################
@@ -229,11 +250,12 @@ make -k check 2>&1 | tee glibc-check-log; grep Error glibc-check-log
 #
 
 # nscd
-cp -v ../glibc-2.19/nscd/nscd.conf /etc/nscd.conf
-mkdir -pv /var/cache/nscd
-
-install -v -Dm644 ../glibc-2.19/nscd/nscd.tmpfiles /usr/lib/tmpfiles.d/nscd.conf
-install -v -Dm644 ../glibc-2.19/nscd/nscd.service /lib/systemd/system/nscd.service
+cp -v $source/nscd/nscd.conf $PAYLOAD_DIR/etc/nscd.conf &&
+mkdir -pv $PAYLOAD_DIR/var/cache/nscd &&
+install -v -Dm644 $source/nscd/nscd.tmpfiles \
+    $PAYLOAD_DIR/usr/lib/tmpfiles.d/nscd.conf &&
+install -v -Dm644 $source/nscd/nscd.service \
+    $PAYLOAD_DIR/lib/systemd/system/nscd.service || exit 1
 
 
 # internationalization
@@ -249,21 +271,19 @@ install -v -Dm644 ../glibc-2.19/nscd/nscd.service /lib/systemd/system/nscd.servi
 # target used above, will install the minimum set of locales necessary for the
 # tests to run successfully:
 
-# --prefix=$SRP_PAYLOAD_DIR
-
-mkdir -pv /usr/lib/locale
-localedef -i cs_CZ -f UTF-8 cs_CZ.UTF-8
-localedef -i de_DE -f ISO-8859-1 de_DE
-localedef -i de_DE@euro -f ISO-8859-15 de_DE@euro
-localedef -i en_HK -f ISO-8859-1 en_HK
-localedef -i en_PH -f ISO-8859-1 en_PH
-localedef -i en_US -f ISO-8859-1 en_US
-localedef -i es_MX -f ISO-8859-1 es_MX
-localedef -i fa_IR -f UTF-8 fa_IR
-localedef -i fr_FR -f ISO-8859-1 fr_FR
-localedef -i fr_FR@euro -f ISO-8859-15 fr_FR@euro
-localedef -i it_IT -f ISO-8859-1 it_IT
-localedef -i ja_JP -f EUC-JP ja_JP
+mkdir -pv $PAYLOAD_DIR/usr/lib/locale
+localedef --prefix=$PAYLOAD_DIR -i cs_CZ -f UTF-8 cs_CZ.UTF-8
+localedef --prefix=$PAYLOAD_DIR -i de_DE -f ISO-8859-1 de_DE
+localedef --prefix=$PAYLOAD_DIR -i de_DE@euro -f ISO-8859-15 de_DE@euro
+localedef --prefix=$PAYLOAD_DIR -i en_HK -f ISO-8859-1 en_HK
+localedef --prefix=$PAYLOAD_DIR -i en_PH -f ISO-8859-1 en_PH
+localedef --prefix=$PAYLOAD_DIR -i en_US -f ISO-8859-1 en_US
+localedef --prefix=$PAYLOAD_DIR -i es_MX -f ISO-8859-1 es_MX
+localedef --prefix=$PAYLOAD_DIR -i fa_IR -f UTF-8 fa_IR
+localedef --prefix=$PAYLOAD_DIR -i fr_FR -f ISO-8859-1 fr_FR
+localedef --prefix=$PAYLOAD_DIR -i fr_FR@euro -f ISO-8859-15 fr_FR@euro
+localedef --prefix=$PAYLOAD_DIR -i it_IT -f ISO-8859-1 it_IT
+localedef --prefix=$PAYLOAD_DIR -i ja_JP -f EUC-JP ja_JP
 
 # From CLFS: Some locales installed by the make localedata/install-locales
 # command above are not properly supported by some applications that are in
@@ -282,7 +302,7 @@ localedef -i ja_JP -f EUC-JP ja_JP
 # run-time configuration
 
 ## nsswitch
-cat > /etc/nsswitch.conf << "EOF"
+cat > $PAYLOAD_DIR/etc/nsswitch.conf << "EOF"
 # Begin /etc/nsswitch.conf
 
 passwd: files
@@ -301,33 +321,36 @@ rpc: files
 EOF
 
 ## timezone
-tar -xf ../tzdata2014d.tar.gz
-
-# FIXME: ZONEINFO=$SRP_PAYLOAD_DIR/usr/share/zoneinfo
-
-ZONEINFO=/usr/share/zoneinfo
-mkdir -pv $ZONEINFO/{posix,right}
-
-for tz in etcetera southamerica northamerica europe africa antarctica  \
-          asia australasia backward pacificnew \
-          systemv; do
-    zic -L /dev/null   -d $ZONEINFO       -y "sh yearistype.sh" ${tz}
-    zic -L /dev/null   -d $ZONEINFO/posix -y "sh yearistype.sh" ${tz}
-    zic -L leapseconds -d $ZONEINFO/right -y "sh yearistype.sh" ${tz}
-done
-
-cp -v zone.tab iso3166.tab $ZONEINFO
-zic -d $ZONEINFO -p America/New_York
-unset ZONEINFO
-
-tzselect
-
-cp -v /usr/share/zoneinfo/[xxx] \
-    /etc/localtime
-
+#
+# FIXME: tzdata should be its own package...
+#
+#tar -xf ../tzdata2014d.tar.gz
+#
+## FIXME: ZONEINFO=$SRP_PAYLOAD_DIR/usr/share/zoneinfo
+#
+#ZONEINFO=/usr/share/zoneinfo
+#mkdir -pv $ZONEINFO/{posix,right}
+#
+#for tz in etcetera southamerica northamerica europe africa antarctica  \
+#          asia australasia backward pacificnew \
+#          systemv; do
+#    zic -L /dev/null   -d $ZONEINFO       -y "sh yearistype.sh" ${tz}
+#    zic -L /dev/null   -d $ZONEINFO/posix -y "sh yearistype.sh" ${tz}
+#    zic -L leapseconds -d $ZONEINFO/right -y "sh yearistype.sh" ${tz}
+#done
+#
+#cp -v zone.tab iso3166.tab $ZONEINFO
+#zic -d $ZONEINFO -p America/New_York
+#unset ZONEINFO
+#
+#tzselect
+#
+#cp -v /usr/share/zoneinfo/[xxx] \
+#    /etc/localtime
+#
 
 # dynamic loader
-cat > /etc/ld.so.conf << "EOF"
+cat > $PAYLOAD_DIR/etc/ld.so.conf << "EOF"
 # Begin /etc/ld.so.conf
 
 /usr/local/lib
@@ -338,8 +361,19 @@ cat > /etc/ld.so.conf << "EOF"
 # End /etc/ld.so.conf
 EOF
 
-# FIXME: cut out the lib64 lines if not multilib
-
-
+# cut out the lib64 lines if not multilib
+if [ -z "$BUILD32" ]; then
+    sed -i /lib64/d $PAYLOAD_DIR/etc/ld.so.conf
+fi
 
 # slurp up kernel headers
+#
+# NOTE: This depends on /usr/include being devoid of anything but kernel
+#       headers... which is true during a full source ruckus build, but will
+#       include tons of other stuff if we're just trying to rebuild glibc
+#       package on a running system... I think this is safe, because I don't
+#       think we can really just rebuild glibc w/out needing to do a full
+#       rebuild.
+#
+mkdir -p $PAYLOAD_DIR/usr &&
+cp -va /usr/include $PAYLOAD_DIR/usr/ || exit 1
