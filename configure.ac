@@ -802,11 +802,16 @@ AC_SUBST(XEN_DETOUR, $xen_detour)
 AM_CONDITIONAL([XEN_DETOUR], [test x$xen_detour = xyes])
 
 
-# dejagnu needs expect
-p_early=
+# dejagnu-bootstrap needs expect, which needs tcl.
+#
+# NOTE: If system tcl is used, we may try to install as non-root user into
+#       root-owned system dir.  Easier to just install our own tcl here as
+#       well.
+#
 AC_PATH_PROG(EXPECT, [expect])
 AC_ARG_VAR(EXPECT, Path to expect binary)
 AS_IF([test "$EXPECT" != ""], [], [p_early+=" tcl expect"])
+
 
 # FIXME: we need to force bootstrapping all the rest of the submodules
 #        before booting into bootstrap-builders with /ruckus mounted
@@ -840,7 +845,9 @@ p_early+=" srp-bootstrap"
 #p_early+=" gzip-bootstrap" #maybe
 #p_early+=" bzip2-bootstrap" #maybe
 #p_early+=" tar-bootstrap" #maybe
-p_early+=" gperf-bootstrap" #maybe
+
+#p_early+=" gperf-bootstrap" #maybe #NOPE!
+
 p_early+=" xen-bootstrap"
 
 
