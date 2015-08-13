@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# FIXME: figure out where to get this stuff from...
+export ruckus_srcdir=/ruckus
+export ruckus_builddir=/ruckus-build
+. $ruckus_srcdir/utils/bootstrap-early/functions
+
+# FIXME: remove this once we're really building in srp
+#export PAYLOAD_DIR=/tmp/FOO
+
+
+# We'll be building out-of-tree using source tarball and patches.  There's a
+# bunch of sedd-ing into the source tree that happens, so if we ever do switch
+# to a git submodule, we'll want to come back here and checkout seperate copies
+# of the source for the different build stages.
+#
+# If we're building 64bit multilib, this script builds 32bit libs, then 64bit
+# libs in a single package.  The 2 stages are built in completely separate
+# source/build trees.
+
+
+# prep ########################################################################
+
+# detect exact /tools* path
+#
+# NOTE: For CLFS, this is always /tools, but we append the arch string to that
+#       dir so that we can build multiple bootstrap environments in parallel.
+#
+pushd /tools* &&
+TOOLS=$PWD &&
+popd || exit 1
+echo TOOLS: $TOOLS
+
+# NOTE: I added the $TOOLS expansion and the extra libx32 replacement
+gcc -dumpspecs |  perl -p \
+    -e "s@$TOOLS/lib/ld@/lib/ld@g;" \
+    -e "s@$TOOLS/lib64/ld@/lib64/ld@g;" \
+    -e "s@$TOOLS/libx32/ld@/libx32/ld@g;" \
+    -e "s@\*startfile_prefix_spec:\n@\$_/usr/lib/ @g;" \
+    > $(dirname $(gcc --print-libgcc-file-name))/specs

@@ -1,3 +1,17 @@
+# -*- mode: conf -*-
+[header]
+name = glibc
+version = 2.19
+pkg_rev = 1
+
+description = The Glibc package contains the main C library. This library
+              provides the basic routines for allocating memory, searching
+              directories, opening and closing files, reading and writing
+              files, string handling, pattern matching, arithmetic, and so on.
+
+
+[script]
+%%BUFFER_BEGIN%%
 #!/bin/sh
 
 # FIXME: figure out where to get this stuff from...
@@ -6,7 +20,7 @@ export ruckus_builddir=/ruckus-build
 . $ruckus_srcdir/utils/bootstrap-early/functions
 
 # FIXME: remove this once we're really building in srp
-export PAYLOAD_DIR=/tmp/FOO
+#export PAYLOAD_DIR=/tmp/FOO
 
 
 # We'll be building out-of-tree using source tarball and patches.  There's a
@@ -293,9 +307,9 @@ localedef --prefix=$PAYLOAD_DIR -i ja_JP -f EUC-JP ja_JP
 # right-to-left writing order. Numerous unofficial and unstable patches are
 # required to fix these problems, and it has been decided by the CLFS
 # developers not to support such complex locales at this time. This applies to
-# the ja_JP and fa_IR locales as well—they have been installed only for GCC and
-# Gettext tests to pass, and the watch program (part of the Procps-ng package)
-# does not work properly in them. Various attempts to circumvent these
+# the ja_JP and fa_IR locales as well - they have been installed only for GCC
+# and Gettext tests to pass, and the watch program (part of the Procps-ng
+# package) does not work properly in them. Various attempts to circumvent these
 # restrictions are documented in internationalization-related hints.
 
 
@@ -377,3 +391,5 @@ fi
 #
 mkdir -p $PAYLOAD_DIR/usr &&
 cp -va /usr/include $PAYLOAD_DIR/usr/ || exit 1
+
+%%BUFFER_END%%
