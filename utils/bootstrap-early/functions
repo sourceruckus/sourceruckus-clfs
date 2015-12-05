@@ -299,7 +299,6 @@ configure_generic()
     shift
     echo autoreconf: $autoreconf
 
-    # go guild it!
     pushd $builddir || exit 1
     # only explicitly run configure the first time
     if [ ! -f Makefile ] || [ -n "$autoreconf" ]; then

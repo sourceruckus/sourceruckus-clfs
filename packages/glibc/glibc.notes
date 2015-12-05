@@ -14,13 +14,28 @@ description = The Glibc package contains the main C library. This library
 %%BUFFER_BEGIN%%
 #!/bin/sh
 
-# FIXME: figure out where to get this stuff from...
-export ruckus_srcdir=/ruckus
-export ruckus_builddir=/ruckus-build
-. $ruckus_srcdir/utils/bootstrap-early/functions
+# FIXME: This build script assumes that the following variables are set in your
+#        environment in accordance with the variable set up in the CLFS book.
+#        Decisions are made based on these variables (e.g., pure64 vs
+#        multilib).  Maybe we should stick this in an rc file
+#        somewhere... otherwise a user may innocently tweak their .profile and
+#        change the behavior of this script.
+#
+#        we should either install an /etc/ruckusrc or have srp slurp up the
+#        variables at install-time and embedd their values into it's functions
+#        script.
+#
+#        or both?
+#
+# BUILD32
+# BUILD64
+# CLFS_TARGET32
+#
 
-# FIXME: remove this once we're really building in srp
-#export PAYLOAD_DIR=/tmp/FOO
+# FIXME: figure out where to get this stuff from...
+#export ruckus_srcdir=/ruckus
+#export ruckus_builddir=/ruckus-build
+#. $ruckus_srcdir/utils/bootstrap-early/functions_for_srp
 
 
 # We'll be building out-of-tree using source tarball and patches.  There's a
@@ -58,7 +73,6 @@ if [ -z "$LINKER" ]; then
 fi
 echo LINKER: $LINKER
 
-
 # stage1 (/lib install) #######################################################
 
 # /lib install
@@ -81,8 +95,22 @@ echo LINKER: $LINKER
 # FIXME: pure64 has to add slibdir=/lib to configparams and specify
 #        --libdir=/usr/lib
 #
-setup_generic glibc &&
-pushd $source || exit 1
+# NOTE: i should already have a source dir (extracted, copied, or symlinked).
+#       setup_generic should create a build/lib dir and set builddir and
+#       configure for future use.
+#
+# FIXME: the bootstrap builder's setup_generic also automatically applies
+#        patches found in same dir as source tarball... and could also be
+#        passed in a list of patches to explicitly apply.  this all happens
+#        before autoreconf_generic.
+#
+# FIXME: it could also be told to checkout a new tree (assuming that SOURCE_DIR
+#        is a git repo).  may need to allow setup_generic to create multiple
+#        source dirs (e.g., source-lib and source-lib64) so we can do multiple
+#        builds for packages that don't support out-of-tree building
+#
+setup_generic lib &&
+pushd $sourcedir || exit 1
 
 # From CLFS: At the end of the installation, the build system will run a sanity
 # test to make sure everything installed properly. This script performs its
@@ -201,14 +229,14 @@ fi
 # stage2 (lib64 install) ######################################################
 if [ -n "$BUILD32" ]; then
     # reuse the source dir setup from stage1
-    setup_generic glibc || exit 1
+    setup_generic lib64 || exit 1
 
     # however, we do have to adjust some variables
-    builddir=$PWD/.build/glibc-stage2
-    mkdir -p $builddir
-    echo "builddir: $builddir"
+    #builddir=$PWD/.build/glibc-stage2
+    #mkdir -p $builddir
+    #echo "builddir: $builddir"
 
-    pushd $source || exit 1
+    pushd $SOURCE_DIR || exit 1
 
     # NOTE: Since we're re-using the source dir from stage1, we need to replace
     #       what we sedded in with a lib64 version...  CLFS does two independant
@@ -264,11 +292,11 @@ fi
 #
 
 # nscd
-cp -v $source/nscd/nscd.conf $PAYLOAD_DIR/etc/nscd.conf &&
+cp -v $SOURCE_DIR/nscd/nscd.conf $PAYLOAD_DIR/etc/nscd.conf &&
 mkdir -pv $PAYLOAD_DIR/var/cache/nscd &&
-install -v -Dm644 $source/nscd/nscd.tmpfiles \
+install -v -Dm644 $SOURCE_DIR/nscd/nscd.tmpfiles \
     $PAYLOAD_DIR/usr/lib/tmpfiles.d/nscd.conf &&
-install -v -Dm644 $source/nscd/nscd.service \
+install -v -Dm644 $SOURCE_DIR/nscd/nscd.service \
     $PAYLOAD_DIR/lib/systemd/system/nscd.service || exit 1
 
 

@@ -55,6 +55,7 @@ build()
     unset build_in_tree
     unset use_configure
     unset checkout
+    unset patches
 
     case "$1" in
 	tcl)
