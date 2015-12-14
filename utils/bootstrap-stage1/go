@@ -840,21 +840,16 @@ EOF
 
 
 packages=""
-packages+=" gmp"
-packages+=" mpfr"
-packages+=" mpc"
-packages+=" isl"
-packages+=" cloog"
-packages+=" zlib"
-packages+=" binutils"
-packages+=" gcc"
-packages+=" ncurses"
 
 # busybox of doom!
 #
 # NOTE: We replace a ton of CLFS /tools packages by using busybox here.  The
 #       busybox applets are less featureful than the full GNU tools, but
 #       they're good enough to get our bootstrap system up and running quickly.
+#
+# NOTE: We configure busybox with basically everything turned on, and we just
+#       blindly overwrite the applet links with real binaries as they get
+#       built.
 #
 # NOTE: This means we'll be using busybox's init and mdev instead of sysvinit
 #       and udev.  And we'll be providing our own simple bootscripts instead of
@@ -888,14 +883,25 @@ packages+=" ncurses"
 #         We need to still build xz-utils, though, because we're going to need
 #         liblzma.so for Python's lzma/xz support.
 #
-#       - ar: Doesn't support 's' (ranlib) or 'u' (update).  So far, I've had
-#         to sed different ar/ranlib usage into perl and git.
+#       - ar: Doesn't support 's' (ranlib) or 'u' (update).  This really
+#         shouldn't effect much in here, though, as we build binutils (which
+#         includes a full-fledged ar) as soon as we can.
 #
 #       - vi: Just as painful to use as I remember the original vi
 #         being... shocking, and yet oddly refreshing, after years of being
 #         spoiled by vim.
 #
 packages+=" busybox"
+
+packages+=" gmp"
+packages+=" mpfr"
+packages+=" mpc"
+packages+=" isl"
+packages+=" cloog"
+packages+=" zlib"
+packages+=" binutils"
+packages+=" gcc"
+packages+=" ncurses"
 
 # bb
 #

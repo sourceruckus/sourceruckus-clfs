@@ -46,8 +46,11 @@ build()
     OPTS="$OPTS --enable-shared"
     OPTS="$OPTS --disable-nls"
 
-    # FIXME: why do i have to unset these??? i was getting build_in_tree == yes
-    #        inside the kernel_headers build...
+    # NOTE: These variables all have to be unset.  In bash, setting them on the
+    #       command line essentially sets them inside the child proc's
+    #       environment.  In ash, however, it just sets them in the calling
+    #       shell.  If we don't unset them afterwards, we'll end up
+    #       accidentally using a previous build invocation's variables.
     #
     unset build_in_tree
     unset use_configure
@@ -129,20 +132,14 @@ build()
             #       doesn't get along well with busybox and gets all screwed up
             #       resuling in failure to create libperl.a.
             #
+            # FIXME: wait... wasn't ranlib installed by binutils? i think this
+            #        was fixing a binutils vs perl version issue, not a busybox
+            #        issue.
+            #
             OPTS="--prefix=$PREFIX_TOOLS"
             OPTS="$OPTS -Dcc='gcc ${BUILD32}' -Dranlib=ranlib"
 
-            configure_generic $1 $OPTS || exit 1
-
-            # fix more busybox heartburn
-            #
-            # NOTE: This is done to remove 'u' from ar usage in the toplevel
-            #       Makefile because busybox's ar command doesn't like it (and
-            #       it doesn't appear to be needed anyway).
-            pushd $builddir &&
-            sed -i 's|rcu|rc|' Makefile &&
-            popd || exit 1
-
+            configure_generic $1 $OPTS &&
             compile_generic $1 || exit 1
 
             # hold perl's hand even more
@@ -189,16 +186,6 @@ build()
             #       exists, which causes configure_generic to not configure...
             pushd $builddir &&
             ./configure $OPTS &&
-            popd || exit 1
-
-            # fix busybox heartburn
-            #
-            # NOTE: The git Makefile uses 'ar -rcs', but busybox ar doesn't
-            #       support the 's' flag.  This flag tells ar to act as ranlib,
-            #       so we might need to hack things up to call ranlib...
-            #
-            pushd $builddir &&
-            sed -i 's|rcs $@ $^|rc $@ $^ \&\& ranlib $@|' Makefile &&
             popd || exit 1
 
             pushd $builddir &&
