@@ -37,6 +37,8 @@ description = The Glibc package contains the main C library. This library
 #export ruckus_builddir=/ruckus-build
 #. $ruckus_srcdir/utils/bootstrap-early/functions_for_srp
 
+. $FUNCTIONS || exit 1
+
 
 # We'll be building out-of-tree using source tarball and patches.  There's a
 # bunch of sedd-ing into the source tree that happens, so if we ever do switch
@@ -228,22 +230,17 @@ fi
 
 # stage2 (lib64 install) ######################################################
 if [ -n "$BUILD32" ]; then
-    # reuse the source dir setup from stage1
+    # setup a new build tree and reuse the source dir setup from stage1
     setup_generic lib64 || exit 1
-
-    # however, we do have to adjust some variables
-    #builddir=$PWD/.build/glibc-stage2
-    #mkdir -p $builddir
-    #echo "builddir: $builddir"
-
-    pushd $SOURCE_DIR || exit 1
 
     # NOTE: Since we're re-using the source dir from stage1, we need to replace
     #       what we sedded in with a lib64 version...  CLFS does two independant
     #       seds.
     #
+    pushd $sourcedir &&
     sed -i "s|-L/usr/lib -Wl,-dynamic-link|-L/usr/lib64 -Wl,-dynamic-link|" \
-        scripts/test-installation.pl || exit 1
+        scripts/test-installation.pl &&
+    popd || exit 1
 
     pushd $builddir || exit 1
 
@@ -292,11 +289,11 @@ fi
 #
 
 # nscd
-cp -v $SOURCE_DIR/nscd/nscd.conf $PAYLOAD_DIR/etc/nscd.conf &&
+cp -v $sourcedir/nscd/nscd.conf $PAYLOAD_DIR/etc/nscd.conf &&
 mkdir -pv $PAYLOAD_DIR/var/cache/nscd &&
-install -v -Dm644 $SOURCE_DIR/nscd/nscd.tmpfiles \
+install -v -Dm644 $sourcedir/nscd/nscd.tmpfiles \
     $PAYLOAD_DIR/usr/lib/tmpfiles.d/nscd.conf &&
-install -v -Dm644 $SOURCE_DIR/nscd/nscd.service \
+install -v -Dm644 $sourcedir/nscd/nscd.service \
     $PAYLOAD_DIR/lib/systemd/system/nscd.service || exit 1
 
 
@@ -416,6 +413,11 @@ fi
 #       package on a running system... I think this is safe, because I don't
 #       think we can really just rebuild glibc w/out needing to do a full
 #       rebuild.
+#
+# FIXME: Can we get away with just slurping up asm, asm-generic, and linux
+#        subdirs?  At present, that list would have to also include drm, mtd,
+#        rdma, scsi, sound, uapi, video, and xen... and I don't think
+#        maintaining that list of subdirs makes sense.
 #
 mkdir -p $PAYLOAD_DIR/usr &&
 cp -va /usr/include $PAYLOAD_DIR/usr/ || exit 1
