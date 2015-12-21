@@ -32,11 +32,6 @@ description = The Glibc package contains the main C library. This library
 # CLFS_TARGET32
 #
 
-# FIXME: figure out where to get this stuff from...
-#export ruckus_srcdir=/ruckus
-#export ruckus_builddir=/ruckus-build
-#. $ruckus_srcdir/utils/bootstrap-early/functions_for_srp
-
 . $FUNCTIONS || exit 1
 
 
@@ -309,7 +304,14 @@ install -v -Dm644 $sourcedir/nscd/nscd.service \
 # tests from GCC. The following instructions, instead of the install-locales
 # target used above, will install the minimum set of locales necessary for the
 # tests to run successfully:
-
+#
+# FIXME: can I use the installed localedef (cross-compiled glibc in stage1?) or
+#        do I need to use the localedef that's just been installed in
+#        PAYLOAD_DIR.  Might have to LD_PRELOAD some stuff to use that one if
+#        it's not statically linked...
+#
+# FIXME: also, need to play with error handling here...
+#
 mkdir -pv $PAYLOAD_DIR/usr/lib/locale
 localedef --prefix=$PAYLOAD_DIR -i cs_CZ -f UTF-8 cs_CZ.UTF-8
 localedef --prefix=$PAYLOAD_DIR -i de_DE -f ISO-8859-1 de_DE
@@ -341,6 +343,10 @@ localedef --prefix=$PAYLOAD_DIR -i ja_JP -f EUC-JP ja_JP
 # run-time configuration
 
 ## nsswitch
+#
+# FIXME: Should I go ahead and enable NIS for password, group, and shadow right
+#        here?  or leave it simple like CLFS does?
+#
 cat > $PAYLOAD_DIR/etc/nsswitch.conf << "EOF"
 # Begin /etc/nsswitch.conf
 
@@ -359,36 +365,11 @@ rpc: files
 # End /etc/nsswitch.conf
 EOF
 
-## timezone
-#
-# FIXME: tzdata should be its own package...
-#
-#tar -xf ../tzdata2014d.tar.gz
-#
-## FIXME: ZONEINFO=$SRP_PAYLOAD_DIR/usr/share/zoneinfo
-#
-#ZONEINFO=/usr/share/zoneinfo
-#mkdir -pv $ZONEINFO/{posix,right}
-#
-#for tz in etcetera southamerica northamerica europe africa antarctica  \
-#          asia australasia backward pacificnew \
-#          systemv; do
-#    zic -L /dev/null   -d $ZONEINFO       -y "sh yearistype.sh" ${tz}
-#    zic -L /dev/null   -d $ZONEINFO/posix -y "sh yearistype.sh" ${tz}
-#    zic -L leapseconds -d $ZONEINFO/right -y "sh yearistype.sh" ${tz}
-#done
-#
-#cp -v zone.tab iso3166.tab $ZONEINFO
-#zic -d $ZONEINFO -p America/New_York
-#unset ZONEINFO
-#
-#tzselect
-#
-#cp -v /usr/share/zoneinfo/[xxx] \
-#    /etc/localtime
-#
 
 # dynamic loader
+#
+# NOTE: We copy-n-paste the file from x86_64 CLFS, then sed out the lib64 stuff
+#       if it was unneeded.
 cat > $PAYLOAD_DIR/etc/ld.so.conf << "EOF"
 # Begin /etc/ld.so.conf
 
@@ -402,7 +383,7 @@ EOF
 
 # cut out the lib64 lines if not multilib
 if [ -z "$BUILD32" ]; then
-    sed -i /lib64/d $PAYLOAD_DIR/etc/ld.so.conf
+    sed -i /lib64/d $PAYLOAD_DIR/etc/ld.so.conf || exit 1
 fi
 
 # slurp up kernel headers
@@ -418,6 +399,11 @@ fi
 #        subdirs?  At present, that list would have to also include drm, mtd,
 #        rdma, scsi, sound, uapi, video, and xen... and I don't think
 #        maintaining that list of subdirs makes sense.
+#
+# FIXME: Actually, we cannot build this package outside the bootstrap
+#        environment because the TOOLS and LINKER stuff at the beginning will
+#        fail... so we can almost guarantee that /usr/include will JUST be our
+#        kernel headers.
 #
 mkdir -p $PAYLOAD_DIR/usr &&
 cp -va /usr/include $PAYLOAD_DIR/usr/ || exit 1

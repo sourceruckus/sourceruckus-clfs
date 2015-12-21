@@ -20,7 +20,16 @@ disk = ["@CLFS_DEV@,,xvda1,w", "@RUCKUS_DEV@,,xvdb1,r"]
 #        also, it will depend on how many ruckus-builder guests are going
 #        to be run in parallel.
 #
-memory = 2048
+# FIXME: I might be running out of ram building the glibc package w/ 8
+#        cores and 2G of RAM in a domU... can't quite nail down why it's
+#        aperiodically failing to compile.  I've increased to 4G in my
+#        builder and haven't had it fail again (yet?).
+#
+#        Do I need to make sure I have at least cores/2 Gigs of RAM to
+#        make sure I have enough RAM to service building in parallel w/
+#        that many cores?
+#
+memory = 4096
 vcpus = @CPUCOUNT@
 name = "ruckus-builder-@CLFS_ARCH_STRING@"
 

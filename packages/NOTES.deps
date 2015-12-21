@@ -5,16 +5,21 @@
 ** manpages
 ** glibc
 
+** adjust-toolchain
+glibc
+
+** busybox
+glibc, adjust-toolchain
 ** tzdata
-glibc
+glibc, adjust-toolchain
 ** m4
-glibc
+glibc, adjust-toolchain
 ** ncurses
-glibc
+glibc, adjust-toolchain
 ** pkg-config
-glibc
+glibc, adjust-toolchain
 ** gmp
-glibc
+glibc, adjust-toolchain
 
 ** mpfr
 gmp
@@ -29,14 +34,14 @@ gmp
 isl
 
 ** zlib
-glibc
+glibc, adjust-toolchain
 ** flex
-glibc
+glibc, adjust-toolchain
 ** bison
-glibc
+glibc, adjust-toolchain
 
 ** binutils
-glibc
+glibc, adjust-toolchain
 
 ** gcc
 zlib, cloog, mpc, flex?, bison?, binutils?

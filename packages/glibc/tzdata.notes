@@ -1,0 +1,50 @@
+# -*- mode: conf -*-
+[header]
+name = tzdata
+version = 2014d
+pkg_rev = 1
+
+# FIXME: more more more!
+#
+description = Timezone data.
+
+[script]
+%%BUFFER_BEGIN%%
+#!/bin/sh
+
+# This package doesn't do any complicated building, and we build it right in
+# the SOURCE_DIR.
+#
+# NOTE: If we ever start using a git submodule for tzdata, we'll probably want
+#       to use setup_generic w/ copy=1.
+#
+pushd $SOURCE_DIR || exit 1
+
+ZONEINFO=$SRP_PAYLOAD_DIR/usr/share/zoneinfo
+mkdir -pv $ZONEINFO/{posix,right}
+
+# NOTE: zic is a part of glibc, so we should wait to build this package until
+#       after we've installed glibc.  Although, we could probably get away with
+#       using the zic binary installed in bootstrap-stage1...
+#
+for tz in etcetera southamerica northamerica europe africa antarctica  \
+          asia australasia backward pacificnew \
+          systemv; do
+    zic -L /dev/null   -d $ZONEINFO       -y "sh yearistype.sh" ${tz}
+    zic -L /dev/null   -d $ZONEINFO/posix -y "sh yearistype.sh" ${tz}
+    zic -L leapseconds -d $ZONEINFO/right -y "sh yearistype.sh" ${tz}
+done
+
+cp -v zone.tab iso3166.tab $ZONEINFO
+zic -d $ZONEINFO -p America/New_York
+
+# FIXME: CLFS runs tzselect to pick a timezone at this point.  Should we assume
+#        the user has set some magic environment variable to pick the time
+#        zone?  or just do UTC and let the user change it later?
+#
+#tzselect
+#
+cp -v $ZONEINFO/[xxx] \
+    $PAYLOAD_DIR/etc/localtime
+
+%%BUFFER_END%%

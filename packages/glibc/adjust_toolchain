@@ -1,22 +1,27 @@
 #!/bin/sh
-
-# FIXME: figure out where to get this stuff from...
-export ruckus_srcdir=/ruckus
-export ruckus_builddir=/ruckus-build
-. $ruckus_srcdir/utils/bootstrap-early/functions
-
-# FIXME: remove this once we're really building in srp
-#export PAYLOAD_DIR=/tmp/FOO
-
-
-# We'll be building out-of-tree using source tarball and patches.  There's a
-# bunch of sedd-ing into the source tree that happens, so if we ever do switch
-# to a git submodule, we'll want to come back here and checkout seperate copies
-# of the source for the different build stages.
 #
-# If we're building 64bit multilib, this script builds 32bit libs, then 64bit
-# libs in a single package.  The 2 stages are built in completely separate
-# source/build trees.
+# FIXME: Where should I execute this...?  If I put it in a notes file (either
+#        glibc or a simple hello-world package), it will be modifying the host
+#        system during installation... which I'd really like to be able to
+#        swear off as BAD.
+#
+#        I think I'm going to wrap this up with the multiarch_wrapper, one way
+#        or another.  We'll make that package:
+#
+#         1. (MAYBE) run this script to adjust the toolchain, if needed
+#         2. compile/install the multiarch_wrapper
+#         3. install my foo.c as /usr/share/multiarch_wrapper/test.c
+#         4. compile/install multiarch_wrapper_test{32,64} in /usr/bin
+#         5. create multiarch_wrapper_test symlink in /usr/bin
+#         6. ensure test32 is using /lib/ld-linux.so.2
+#         7. ensure test64 is using /lib64/ld-linux-x86-64.so
+#
+#         8. ensure USE_ARCH=32 and USE_ARCH=64 execute the correct version of
+#            the multiarch_wrapper_test.
+
+
+# snag srp's functions
+. /tools*/share/srp/functions || exit 1
 
 
 # prep ########################################################################
@@ -31,7 +36,11 @@ TOOLS=$PWD &&
 popd || exit 1
 echo TOOLS: $TOOLS
 
-# NOTE: I added the $TOOLS expansion and the extra libx32 replacement
+# NOTE: I added the $TOOLS expansion and the extra libx32 replacement.  The
+#       CLFS book leaves out the lib64 replacement unless building x86_64
+#       multilib and doesn't do anything with libx32 (even though the version
+#       of glibc DOES list it as valid).
+#
 gcc -dumpspecs |  perl -p \
     -e "s@$TOOLS/lib/ld@/lib/ld@g;" \
     -e "s@$TOOLS/lib64/ld@/lib64/ld@g;" \

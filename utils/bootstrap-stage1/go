@@ -549,6 +549,7 @@ EOF
             # installs directly in the baby system.  The easiest thing to do
             # here, is just make symlinks to all the busybox symlinks in the
             # baby system by parsing busybox.links in busybox's builddir
+            #
             for x in $(cat .build/busybox/busybox.links || exit 1); do
                 ln -sv $PREFIX_TOOLS$x $CLFS$x
             done
@@ -890,6 +891,21 @@ packages=""
 #       - vi: Just as painful to use as I remember the original vi
 #         being... shocking, and yet oddly refreshing, after years of being
 #         spoiled by vim.
+#
+# FIXME: considering just installing this right in /usr instead of
+#        /tools... true embedded systems cross-compile this package all the
+#        time, why should I cross-compile it temporarily and then replace it
+#        with a natively compiled version later... just seems silly...
+#
+#        well, it would allow us to build via srp, which would allow the user
+#        to upgrade busybox via srp later on, which might be desirable...
+#
+#        it would also allow us to use a different config here vs the final
+#        build (i.e., we could disable things we don't need for the
+#        bootstrap-environment but leave them enabled for the final build).
+#
+#        so, i guess i'll leave this as-is and install a new busybox in /usr
+#        via srp during the final build.
 #
 packages+=" busybox"
 
