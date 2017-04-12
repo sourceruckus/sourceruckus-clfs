@@ -1,25 +1,37 @@
 -*- mode: org -*-
 
+* how
+
+srp -B manpages.notes,glibc.notes,multiarch_wrapper.notes,tzdata.notes \
+  --src src/manpages,src/glibc/glibc*.tar.*,src/tzdata/tzdata*.tar.*
+
+srp -B notes=manpages.notes,src=src/manpages \
+    -B glibc.notes,src/glibc/glibc*.tar.* \
+    -B tzdata.notes,src/tzdata*.tar.* \
+    -vv --dry-run
+
+
 * dependencies
 
 ** manpages
 ** glibc
 
-** adjust-toolchain
+** multiarch_wrapper
 glibc
 
-** busybox
-glibc, adjust-toolchain
 ** tzdata
-glibc, adjust-toolchain
+multiarch_wrapper
+** busybox
+multiarch_wrapper
+
 ** m4
-glibc, adjust-toolchain
+multiarch_wrapper
 ** ncurses
-glibc, adjust-toolchain
+multiarch_wrapper
 ** pkg-config
-glibc, adjust-toolchain
+multiarch_wrapper
 ** gmp
-glibc, adjust-toolchain
+multiarch_wrapper
 
 ** mpfr
 gmp
@@ -34,14 +46,14 @@ gmp
 isl
 
 ** zlib
-glibc, adjust-toolchain
+multiarch_wrapper
 ** flex
-glibc, adjust-toolchain
+multiarch_wrapper
 ** bison
-glibc, adjust-toolchain
+multiarch_wrapper
 
 ** binutils
-glibc, adjust-toolchain
+multiarch_wrapper
 
 ** gcc
 zlib, cloog, mpc, flex?, bison?, binutils?
