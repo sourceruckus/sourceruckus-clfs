@@ -13,6 +13,7 @@
      "git://anongit.freedesktop.org",
      "git://busybox.net",
      "git://git.code.sf.net/p/flex",
+     "git://git.kernel.org/pub/scm/docs/man-pages",
      "git://git.kernel.org/pub/scm/fs/ext2",
      "git://git.kernel.org/pub/scm/linux/kernel/git/stable",
      "git://git.kernel.org/pub/scm/utils/util-linux",

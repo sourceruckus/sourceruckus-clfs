@@ -124,3 +124,6 @@
 [submodule "src/gawk"]
 	path = src/gawk
 	url = git://git.sv.gnu.org/gawk.git
+[submodule "src/man-pages"]
+	path = src/man-pages
+	url = http://git.kernel.org/pub/scm/docs/man-pages/man-pages
