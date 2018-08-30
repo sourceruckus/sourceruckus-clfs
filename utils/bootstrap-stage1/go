@@ -907,6 +907,22 @@ packages=""
 #        so, i guess i'll leave this as-is and install a new busybox in /usr
 #        via srp during the final build.
 #
+# FIXME: ^^^ revisit that... ^^^ we could make a busybox "package" that
+#        swallows up the cross-compiled busybox binary (and meta-data files,
+#        but not the symlinks) to avoid compiling twice, removing and replacing
+#        symlinks, etc...  upgrading busybox post-build would involve very
+#        careful re-creation of symlinks to avoid overwriting better gnu
+#        utils...  very undecided on this
+#
+#        if we were to build it fresh in final build, we would probably want it
+#        to be right away (e.g., either first or right after glibc).  and it
+#        would end up overwriting symlinks that point to /tools*/bin/busybox
+#        with symlinks that point to /bin/busybox... wich just sounds silly
+#        given that we know this is cross-compile-safe.
+#
+#        it all boils down to: do we plan on allowing/encouraging upgrading
+#        busybox on built systems via srp?  and can that be done safely?
+#
 packages+=" busybox"
 
 packages+=" gmp"
