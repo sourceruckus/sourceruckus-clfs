@@ -4,13 +4,14 @@ name = tzdata
 version = 2014d
 pkg_rev = 1
 
-# FIXME: more more more!
-#
-description = Timezone data.
+description = IANA Time Zone Database files
 
 [script]
 %%BUFFER_BEGIN%%
 #!/bin/sh
+
+# NOTE: This package has been pulled out of the CLFS glibc chapter where it was
+#       oddly hidden...
 
 # This package doesn't do any complicated building, and we build it right in
 # the SOURCE_DIR.

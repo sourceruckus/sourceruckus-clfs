@@ -1,0 +1,20 @@
+# -*- mode: conf -*-
+[header]
+name = man-pages
+version = 3.68
+pkg_rev = 1
+
+description = Linux man pages
+
+[script]
+%%BUFFER_BEGIN%%
+#!/bin/sh
+
+. $FUNCTIONS || exit 1
+
+build_in_tree=1 checkout=HEAD setup_generic man &&
+pushd $sourcedir || exit 1
+
+make DESTDIR=$SRP_PAYLOAD_DIR install || exit 1
+
+%%BUFFER_END%%
