@@ -128,6 +128,45 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --with-hostprep-only
 
+could alternatively do a download & hostprep & stage1-xen-only
+
+cd /media/ruckus
+NOCONFIGURE=1 ./autogen.sh &&
+./init_submodules -m MIRRORS &&
+./get_sources.tar &&
+echo yay
+
+cd /media/hostprep/ruckus-build
+
+/media/ruckus/configure \
+    --prefix=/mnt/root-true/ruckus-hostprep \
+    --with-hostprep-only \
+    --with-arch=x86_64 --disable-multilib \
+    --with-stage1-xen-only
+
+make hostprep
+
+not sure how that would work with current .am files...  bootstrap target might
+not do anything...
+
+also, might have to tweak the .ac file to do some but not all of the sanity
+checks (i.e., check /tools symlinks but don't require install-dev or
+ruckus-dev).
+
+I didn't do things that way originally, because my focus was on building x86_64
+multilib immediately...  but if focus is shifting to i686, we may want to do
+the xen cross-compilation here instead of as a side effect of doing an x86_64
+build or via the i686 xen detour...
+
+Actually, it looks like I've already plumbed this into the .am files... as long
+as you also specify --with-stage1-xen-only?  We should make
+--with-hostprep-only also set stage1_xen_only=yes and maybe
+--disable-multilib...
+
+definitely need to setup a /tools-hostprep if we need to cross-compile xen
+though...
+
+
 *** bootstrap x86_64 multilib
 CPUCOUNT=2 /media/ruckus/configure \
     --prefix=/mnt/root-true/ruckus-hostprep \

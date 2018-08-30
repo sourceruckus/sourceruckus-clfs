@@ -408,4 +408,13 @@ fi
 mkdir -p $PAYLOAD_DIR/usr &&
 cp -va /usr/include $PAYLOAD_DIR/usr/ || exit 1
 
+# FIXME: since we've already discussed the near impossibility of rebuilding
+#        this package outside the bootstrap environment, we might as well
+#        "adjust the toolchain" as a post-install scriptlet.
+#
+#        yes, we cannot BUILD the package outside the bootstrap environment,
+#        but how are we INSTALLING?  make sure this stays ok as we progress
+#        with Makefiles and build/install scripts.
+#
+
 %%BUFFER_END%%

@@ -108,6 +108,7 @@ make bootstrap
         on the A10-7850K, 35 on the FX-8350.
 
 *NOTE*: x86_64-64, FX-8350, bare-metal: 28 minutes
+        i686, FX-8350, bare-metal: 28 minutes
 
         x86_64-64, FX-8350, xen: 37 minutes
         x86_64, FX-8350, xen: 45 minutes

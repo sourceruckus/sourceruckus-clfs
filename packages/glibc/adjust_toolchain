@@ -18,7 +18,16 @@
 #
 #         8. ensure USE_ARCH=32 and USE_ARCH=64 execute the correct version of
 #            the multiarch_wrapper_test.
-
+#
+# FIXME: hold on, this is adjusting the specs for /tools/bin/gcc... so why was
+#        I all worried about modifying it?  i suppose we could do it as
+#        postinstall of glibc IF /tools/bin/gcc exists still...  or we could
+#        try and run it as an intermediate make target in between glibc and
+#        whatever's next?  either way, i definately wouldn't wrap it into
+#        multiarch_wrapper!  that package won't get installed unless we're
+#        building multilib, and I'm not even sure I care enough about it to
+#        bother in that case!
+#
 
 # snag srp's functions
 . /tools*/share/srp/functions || exit 1

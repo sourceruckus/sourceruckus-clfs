@@ -44,7 +44,7 @@ zic -d $ZONEINFO -p America/New_York
 #
 #tzselect
 #
-cp -v $ZONEINFO/[xxx] \
-    $PAYLOAD_DIR/etc/localtime
+#cp -v $ZONEINFO/[xxx] \
+#    $PAYLOAD_DIR/etc/localtime
 
 %%BUFFER_END%%
