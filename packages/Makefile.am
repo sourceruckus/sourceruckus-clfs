@@ -36,10 +36,10 @@ SUBDIRS += bison
 SUBDIRS += binutils
 SUBDIRS += gcc
 
-# FIXME: maybe new bb has these?
+# FIXME: maybe new bb has these?  these were just for systemd...
 #
-SUBDIRS += attr
-SUBDIRS += acl
+#SUBDIRS += attr
+#SUBDIRS += acl
 
 # bb
 #
@@ -55,9 +55,9 @@ SUBDIRS += ncurses
 #SUBDIRS += procps
 #SUBDIRS += e2fsprogs
 
-# FIXME: maybe in new bb version?
+# FIXME: maybe in new bb version?  this was just for systemd
 #
-SUBDIRS += libcap
+#SUBDIRS += libcap
 
 # bb
 #
@@ -75,7 +75,8 @@ SUBDIRS += iproute2
 #
 #SUBDIRS += bzip2
 
-# FIXME: what is this...?  GNU Database Manager?  what needs this?  systemd?
+# FIXME: what is this...?  GNU Database Manager?  what needs this?  not
+#        systemd...  anything?  can we leave this out?
 #
 #SUBDIRS += gdbm
 
@@ -107,7 +108,10 @@ SUBDIRS += gawk
 #SUBDIRS += findutils
 
 SUBDIRS += gettext
-SUBDIRS += gperf
+
+# FIXME: this was just for systemd
+#
+#SUBDIRS += gperf
 
 # bb
 #
@@ -126,9 +130,9 @@ SUBDIRS += groff
 #SUBDIRS += iputils
 #SUBDIRS += kbd
 
-# FIXME: this is just for systemd, right?
+# FIXME: what needed this?  not systemd...  can we remove this?
 #
-SUBDIRS += libpipeline
+#SUBDIRS += libpipeline
 
 # FIXME: portions of these are in bb... can we live w/out the missing
 #        bits?
@@ -137,9 +141,12 @@ SUBDIRS += libpipeline
 
 SUBDIRS += make
 SUBDIRS += xz
-SUBDIRS += expat
-SUBDIRS += perl_xml_parser
-SUBDIRS += intltool
+
+# FIXME: these were just for systemd
+#
+#SUBDIRS += expat
+#SUBDIRS += perl_xml_parser
+#SUBDIRS += intltool
 
 # bb
 #
@@ -147,17 +154,29 @@ SUBDIRS += intltool
 #SUBDIRS += patch
 #SUBDIRS += psmisc
 
+# FIXME: CLFS SYSVINIT adds these...  can we leave them out if we use bb
+#        init?
+#
+#SUBDIRS += libestr
+#SUBDIRS += libee
+#SUBDIRS += rsyslog
+#SUBDIRS += sysvinit
+
 # FIXME: reevaluate this... might really be better off with mdev/eudev and
 #        bb init
 #
 #SUBDIRS += systemd
-
-SUBDIRS += dbus
+#SUBDIRS += dbus
 
 # bb
 #
 #SUBDIRS += tar
 SUBDIRS += texinfo
+
+# FIXME: CLFS SYSVINIT added this...  gonna try to stick with bb mdev for
+#        now.
+#
+# SUBDIRS += eudev
 
 # bb
 #
