@@ -36,6 +36,8 @@ SUBDIRS += bison
 SUBDIRS += binutils
 SUBDIRS += gcc
 
+# FIXME: maybe new bb has these?
+#
 SUBDIRS += attr
 SUBDIRS += acl
 
@@ -50,26 +52,33 @@ SUBDIRS += ncurses
 #
 #SUBDIRS += shadow
 #SUBDIRS += util-linux
-
-SUBDIRS += procps # procps-ng?
-
-# bb
-#
+#SUBDIRS += procps
 #SUBDIRS += e2fsprogs
+
+# FIXME: maybe in new bb version?
+#
 SUBDIRS += libcap
 
 # bb
 #
 #SUBDIRS += coreutils
+
 SUBDIRS += iana-etc
 SUBDIRS += libtool
+
+# FIXME: some equivelent stuff is in bb... but we may need the real deal
+#        (unless newer version of bb is way better).
+#
 SUBDIRS += iproute2
 
 # bb
 #
 #SUBDIRS += bzip2
 
-SUBDIRS += gdbm
+# FIXME: what is this...?  GNU Database Manager?  what needs this?  systemd?
+#
+#SUBDIRS += gdbm
+
 SUBDIRS += perl
 SUBDIRS += readline
 SUBDIRS += autoconf
@@ -79,13 +88,18 @@ SUBDIRS += automake
 #
 #SUBDIRS += bash
 
+# FIXME: maybe in newer bb?
+#
 SUBDIRS += bc
 
 # bb
 #
 #SUBDIRS += diffutils
 
+# FIXME: maybe in newer bb?
+#
 SUBDIRS += file
+
 SUBDIRS += gawk
 
 # bb
@@ -100,27 +114,38 @@ SUBDIRS += gperf
 #SUBDIRS += grep
 
 SUBDIRS += groff
-SUBDIRS += less
 
 # bb
 #
+#SUBDIRS += less
 #SUBDIRS += gzip
 
-SUBDIRS += iputils
-SUBDIRS += kbd
+# FIXME: portions of these are in bb... can we live w/out the missing
+#        bits?
+#
+#SUBDIRS += iputils
+#SUBDIRS += kbd
+
+# FIXME: this is just for systemd, right?
+#
 SUBDIRS += libpipeline
-SUBDIRS += man-db
+
+# FIXME: portions of these are in bb... can we live w/out the missing
+#        bits?
+#
+#SUBDIRS += man-db
+
 SUBDIRS += make
 SUBDIRS += xz
 SUBDIRS += expat
-SUBDIRS += xml_parser
+SUBDIRS += perl_xml_parser
 SUBDIRS += intltool
 
 # bb
 #
 #SUBDIRS += kmod
 #SUBDIRS += patch
-SUBDIRS += psmisc
+#SUBDIRS += psmisc
 
 # FIXME: reevaluate this... might really be better off with mdev/eudev and
 #        bb init
