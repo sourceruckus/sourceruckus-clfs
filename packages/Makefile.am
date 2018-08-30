@@ -36,7 +36,7 @@ SUBDIRS += bison
 SUBDIRS += binutils
 SUBDIRS += gcc
 
-# FIXME: maybe new bb has these?  these were just for systemd...
+# FIXME: these were just for systemd...
 #
 #SUBDIRS += attr
 #SUBDIRS += acl
@@ -55,7 +55,7 @@ SUBDIRS += ncurses
 #SUBDIRS += procps
 #SUBDIRS += e2fsprogs
 
-# FIXME: maybe in new bb version?  this was just for systemd
+# FIXME: this was just for systemd
 #
 #SUBDIRS += libcap
 
@@ -69,7 +69,7 @@ SUBDIRS += libtool
 # FIXME: some equivelent stuff is in bb... but we may need the real deal
 #        (unless newer version of bb is way better).
 #
-SUBDIRS += iproute2
+#SUBDIRS += iproute2
 
 # bb
 #
@@ -89,7 +89,9 @@ SUBDIRS += automake
 #
 #SUBDIRS += bash
 
-# FIXME: maybe in newer bb?
+# FIXME: maybe in newer bb?  doesn't look like it...  but maybe we don't
+#        need it?  i seem to recall kernel makefiles needing it at some
+#        point...
 #
 SUBDIRS += bc
 
@@ -97,10 +99,7 @@ SUBDIRS += bc
 #
 #SUBDIRS += diffutils
 
-# FIXME: maybe in newer bb?
-#
 SUBDIRS += file
-
 SUBDIRS += gawk
 
 # bb
