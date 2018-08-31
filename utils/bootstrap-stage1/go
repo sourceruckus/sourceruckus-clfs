@@ -935,9 +935,19 @@ packages+=" binutils"
 packages+=" gcc"
 packages+=" ncurses"
 
+# NOTE: I really wanted to leave bash out of bootstrap entirely (and maybe even
+#       out of the final system where I'll have zsh), but too many scripts keep
+#       requiring extra bash-isms.  Ash just can't cut it...
+#
+# FIXME: I could actually move bash into stage2, which would avoid
+#        cross-compilation issues.  I can successfully build all the way up
+#        through the end of stage2 as of this writing w/out getting bitten by
+#        missing bash features.
+#
+packages+=" bash"
+
 # bb
 #
-#packages+=" bash"
 #packages+=" bzip2"
 
 # NOTE: We skip check because it's unneeded at this point (do to our other
