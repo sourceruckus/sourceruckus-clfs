@@ -10,9 +10,10 @@ description = Linux man pages
 %%BUFFER_BEGIN%%
 #!/bin/bash
 
-echo $SOURCE_DIR
-echo $BUILD_DIR
-echo $PWD
+# This package doesn't do any complicated building, and we build it right in
+# the SOURCE_DIR.
+#
+pushd $SOURCE_DIR || exit 1
 
 make DESTDIR=$PAYLOAD_DIR install || exit 1
 

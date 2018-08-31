@@ -5,6 +5,15 @@ SUBDIRS =
 # Deviations for CLFS will be noted appropriately.
 #
 SUBDIRS += man-pages
+
+# NOTE: This package has been pulled out of the CLFS glibc chapter where it was
+#       oddly hidden...
+#
+# FIXME: Building requires zic, which is a part of glibc, so we might have
+#        to wait to build this package until after we've installed
+#        glibc... but for now I'm trying it using the cross-compiled zic
+#        in /tools.
+#
 SUBDIRS += tzdata
 
 # NOTE: glibc assumes ownership of all headers in /usr/include under the
