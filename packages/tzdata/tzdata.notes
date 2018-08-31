@@ -10,6 +10,16 @@ description = IANA Time Zone Database files
 %%BUFFER_BEGIN%%
 #!/bin/sh
 
+# FIXME: well... that doesn't quite work...
+#
+# $ srp -b /ruckus/packages/tzdata/tzdata.notes --src /ruckus/src/tzdata/tzdata2014d.tar.gz
+#
+# extracting source tarball /ruckus/src/tzdata/tzdata2014d.tar.gz
+# ../srp_go: line 12: pushd: not found
+#
+
+. $FUNCTIONS || exit 1
+
 # NOTE: This package has been pulled out of the CLFS glibc chapter where it was
 #       oddly hidden...
 
@@ -20,8 +30,11 @@ description = IANA Time Zone Database files
 #       to use setup_generic w/ copy=1.
 #
 pushd $SOURCE_DIR || exit 1
+echo $SOURCE_DIR
 
-ZONEINFO=$SRP_PAYLOAD_DIR/usr/share/zoneinfo
+ZONEINFO=$PAYLOAD_DIR/usr/share/zoneinfo
+
+# FIXME: ash doesn't do {} globbing... so, yeah, i guess maybe we need bash?
 mkdir -pv $ZONEINFO/{posix,right}
 
 # NOTE: zic is a part of glibc, so we should wait to build this package until

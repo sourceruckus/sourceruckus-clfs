@@ -196,10 +196,25 @@ SUBDIRS += kernel-firmware
 
 
 # FIXME: how should we plumb in the image separation?  maybe fake packages
-# that have a make target to create squashfs images and adjust filesystems
-# instead of building/installing packages?
+#        that have a make target to create squashfs images and adjust
+#        filesystems instead of building/installing packages?
 #
 # SUBDIRS += finalize-base
 # SUBDIRS += ... more packages ...
 # SUBDIRS += finalize-server
 #
+
+
+
+# FIXME: make some generic make rules to include for building srp from
+#        content, brp from srp, installing brp, etc, for each of the
+#        SUBDIR .am files to use.
+#
+# srp --build=foo.notes --src=/path/to/src --copysrc
+# srp --build=foo.notes --src=foo.tar.xz --extra=/path/to/extra/files
+#
+#       I don't think we can really do "generic" make rules.  Let's start
+#       by hand-writing build rules per-package.
+#
+# srp -b /ruckus/packages/tzdata/tzdata.notes --src /ruckus/src/tzdata/tzdata2014d.tar.gz
+# srp -b /ruckus/packages/man-pages/man-pages.notes --src /ruckus/src/man-pages --gitsrc

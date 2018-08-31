@@ -12,6 +12,22 @@ description = Linux man pages
 
 . $FUNCTIONS || exit 1
 
+# FIXME: well... that doesn't quite work...
+#
+# $ srp -b /ruckus/packages/man-pages/man-pages.notes --src /ruckus/src/man-pages/
+#
+# creating local checkout of HEAD from /ruckus/src/man-pages in
+# /ruckus/src/man-pages-man...fatal: could not create work tree dir
+# '/ruckus/src/man-pages-man': Read-only file system
+#
+#
+# $ git clone --shared --branch HEAD /ruckus/src/man-pages
+#
+# Cloning into 'man-pages'...
+# fatal: Remote branch HEAD not found in upstream origin
+# fatal: The remote end hung up unexpectedly
+#
+
 build_in_tree=1 checkout=HEAD setup_generic man &&
 pushd $sourcedir || exit 1
 
