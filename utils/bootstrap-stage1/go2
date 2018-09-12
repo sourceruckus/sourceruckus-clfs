@@ -47,7 +47,7 @@ fix_perms()
     # NOTE: Since we're using busybox for pretty much everything now, this list
     #       is pretty short... ;-)
     setuid_list=""
-    setuid_list+=" $PREFIX_TOOLS/bin/busybox"
+    setuid_list+=" $CLFS/bin/busybox"
 
     for x in $setuid_list; do
         chmod -v u+s $x || exit 1

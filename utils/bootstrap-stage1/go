@@ -245,8 +245,12 @@ build()
 	    popd || exit 1
 
 	    # install
+            #
+            # NOTE: We install this directly into $CLFS here and let the
+            #       busybox package slurp these files up into its manifest.
+            #
             pushd $builddir &&
-	    $MAKE CONFIG_PREFIX=$PREFIX_TOOLS install &&
+	    $MAKE CONFIG_PREFIX=$CLFS install &&
             popd || exit 1
 
 	    # NOTE: busybox binary is setuid root later on under
@@ -362,6 +366,10 @@ EOF
             #       from getting auto-regenerated.
             autoreconf=yes \
                 build_generic $1 $OPTS || exit 1
+
+            # overwite busybox's awk symlink
+            ln -fs gawk $PREFIX_TOOLS/bin/awk || exit 1
+
             ;;
 
 	gettext)
@@ -543,16 +551,6 @@ EOF
             #
             rm -vf $CLFS/etc/limits
             rm -vf $CLFS/etc/login.{access,defs}
-
-            # We've got some more symlinks to make, because we use our boostrap
-            # busybox install in place of a bunch of extra packages that CLFS
-            # installs directly in the baby system.  The easiest thing to do
-            # here, is just make symlinks to all the busybox symlinks in the
-            # baby system by parsing busybox.links in busybox's builddir
-            #
-            for x in $(cat .build/busybox/busybox.links || exit 1); do
-                ln -sv $PREFIX_TOOLS$x $CLFS$x
-            done
 
             echo done
 	    ;;
@@ -874,6 +872,9 @@ packages=""
 #       - bash/ash: Might run into bash script incompatibilities, although it
 #         seems to be working fine for now.
 #
+#         UPDATE: I got tired of running into bash-specific things all over the
+#                 place and added bash partway through the stage1 build.
+#
 #       - xz: Only supports decompressing... If we need to compress with xz
 #         from the bootstrap system, we'll need to install the real xz package.
 #         However, this does mean we're perfectly capable of untarring tar.xz
@@ -926,6 +927,10 @@ packages=""
 #
 #        it all boils down to: do we plan on allowing/encouraging upgrading
 #        busybox on built systems via srp?  and can that be done safely?
+#
+# FIXME: and, i'm now switching this over to installing directly into $CLFS
+#        during bootstrap w/ package that simply swallows up the busybox files
+#        that are already built.  will take these FIXMEs out when its all done.
 #
 packages+=" busybox"
 
@@ -981,11 +986,6 @@ packages+=" file"
 #
 #          Some `gawk' extensions are used, including the `asorti' function,
 #          which was introduced in version 3.1.2 of `gawk'.
-#
-# FIXME: Should we leave awk->busybox or replace w/ awk->gawk?  If we replace
-#        altogether, is there any real reason to still build bb awk applet?  I
-#        guess we still should in case we want ruckusrd (or something else!) to
-#        have access to a busybox binary that has basic awk support.
 #
 packages+=" gawk"
 
@@ -1076,7 +1076,6 @@ packages+=" kernel"
 
 packages+=" create-dirs"
 
-# NOTE: create-symlinks requires .build/busybox/busybox.links...
 packages+=" create-symlinks"
 
 # this will handle config files for init, mdev, users/groups, logfiles,
