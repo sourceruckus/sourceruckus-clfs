@@ -12,7 +12,7 @@ description = The Glibc package contains the main C library. This library
 
 [script]
 %%BUFFER_BEGIN%%
-#!/bin/sh
+#!/bin/bash
 
 # FIXME: This build script assumes that the following variables are set in your
 #        environment in accordance with the variable set up in the CLFS book.
@@ -279,9 +279,6 @@ fi
 #
 #        Can localedef write into my SRP_PAYLOAD_DIR?  What about zic?
 #
-# FIXME: Woops, don't think I've downloaded tzdata yet...  Wait... should
-#        tzdata be its own package?
-#
 
 # nscd
 cp -v $sourcedir/nscd/nscd.conf $PAYLOAD_DIR/etc/nscd.conf &&
@@ -416,5 +413,51 @@ cp -va /usr/include $PAYLOAD_DIR/usr/ || exit 1
 #        but how are we INSTALLING?  make sure this stays ok as we progress
 #        with Makefiles and build/install scripts.
 #
+
+%%BUFFER_END%%
+
+
+[postinstall]
+%%BUFFER_BEGIN%%
+#!/bin/bash
+
+# detect exact /tools* path
+#
+# NOTE: For CLFS, this is always /tools, but we append the arch string to that
+#       dir so that we can build multiple bootstrap environments in parallel.
+#
+# NOTE: If this fails, it's because we no longer have the bootstrap /tools
+#       installed... which is fine.  The user will get a warning message that
+#       he/she can safely ignore.
+#
+pushd /tools* &&
+TOOLS=$PWD &&
+popd || exit 1
+echo TOOLS: $TOOLS
+
+# make sure this only mucks w/ the /tools compiler
+#
+# NOTE: This is to prevent us from dorking around with any gcc other than the
+#       one built in during bootstrapping (e.g., when checking to see if we can
+#       build/install a newer glibc on a running system via srp).
+#
+GCC=$TOOLS/bin/gcc
+if [ ! -e $GCC ]; then
+    exit 1
+fi
+
+# NOTE: I added the $GCC and $TOOLS expansions and the extra libx32
+#       replacement.  The CLFS book leaves out the lib64 replacement unless
+#       building x86_64 multilib and doesn't do anything with libx32 (even
+#       though the version of glibc DOES list it as valid).
+#
+$GCC -dumpspecs |  perl -p \
+    -e "s@$TOOLS/lib/ld@/lib/ld@g;" \
+    -e "s@$TOOLS/lib64/ld@/lib64/ld@g;" \
+    -e "s@$TOOLS/libx32/ld@/libx32/ld@g;" \
+    -e "s@\*startfile_prefix_spec:\n@\$_/usr/lib/ @g;" \
+    > $(dirname $($GCC --print-libgcc-file-name))/specs || exit 1
+
+# FIXME: maybe add the CAUTION check from CLFS?
 
 %%BUFFER_END%%

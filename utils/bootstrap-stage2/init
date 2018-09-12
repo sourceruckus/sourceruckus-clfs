@@ -36,11 +36,16 @@ fi
 # FIXME: should really use ^ to search from beggining of line, but it doesn't
 #        look like busybox's awk supports this.
 #
+#        seems fine right now... wonder why i thought it didn't work...
+#
+# FIXME: set shell to /bin/ash... i like it better over a Xen serial login than
+#        bash.  maybe do the same to root.
+#
 build_user=$(awk -F: "/$build_uid:/ {print \$1}" /etc/passwd)
 if [ -z "$build_user" ]; then
     build_user=ruckus
     echo "adding user '$build_user' with uid $build_uid"
-    adduser -h $ruckus_builddir -G $build_group -D -H -u $build_uid $build_user
+    adduser -h $ruckus_builddir -G $build_group -D -H -u $build_uid -s /bin/ash $build_user
     passwd -d $build_user
     cp /root/.profile $ruckus_builddir/
     chown $build_user:$build_group $ruckus_builddir/.profile

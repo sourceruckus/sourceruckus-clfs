@@ -14,6 +14,8 @@ SUBDIRS += man-pages
 #        glibc... but for now I'm trying it using the cross-compiled zic
 #        in /tools.
 #
+#        Seems to work fine...
+#
 SUBDIRS += tzdata
 
 # NOTE: glibc assumes ownership of all headers in /usr/include under the
@@ -87,16 +89,15 @@ SUBDIRS += libtool
 # FIXME: what is this...?  GNU Database Manager?  what needs this?  not
 #        systemd...  anything?  can we leave this out?
 #
+#        wasn't this for man-db?
+#
 #SUBDIRS += gdbm
 
 SUBDIRS += perl
 SUBDIRS += readline
 SUBDIRS += autoconf
 SUBDIRS += automake
-
-# bb
-#
-#SUBDIRS += bash
+SUBDIRS += bash
 
 # FIXME: maybe in newer bb?  doesn't look like it...  but maybe we don't
 #        need it?  i seem to recall kernel makefiles needing it at some
@@ -138,7 +139,8 @@ SUBDIRS += groff
 #SUBDIRS += iputils
 #SUBDIRS += kbd
 
-# FIXME: what needed this?  not systemd...  can we remove this?
+# FIXME: what needed this?  not systemd...  can we remove this?  man-db
+#        needs it.
 #
 #SUBDIRS += libpipeline
 
@@ -212,18 +214,3 @@ SUBDIRS += kernel-firmware
 # SUBDIRS += ... more packages ...
 # SUBDIRS += finalize-server
 #
-
-
-
-# FIXME: make some generic make rules to include for building srp from
-#        content, brp from srp, installing brp, etc, for each of the
-#        SUBDIR .am files to use.
-#
-# srp --build=foo.notes --src=/path/to/src --copysrc
-# srp --build=foo.notes --src=foo.tar.xz --extra=/path/to/extra/files
-#
-#       I don't think we can really do "generic" make rules.  Let's start
-#       by hand-writing build rules per-package.
-#
-# srp -b /ruckus/packages/tzdata/tzdata.notes --src /ruckus/src/tzdata/tzdata2014d.tar.gz
-# srp -b /ruckus/packages/man-pages/man-pages.notes --src /ruckus/src/man-pages --gitsrc

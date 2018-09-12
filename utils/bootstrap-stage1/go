@@ -892,6 +892,10 @@ packages=""
 #         being... shocking, and yet oddly refreshing, after years of being
 #         spoiled by vim.
 #
+#       - coreutils: mktemp requires exactly 6 Xs in TEMPLATE, which is what
+#         the manpage for mkdtemp says, but not how mktemp behaves (it requires
+#         just 3 or more).
+#
 # FIXME: considering just installing this right in /usr instead of
 #        /tools... true embedded systems cross-compile this package all the
 #        time, why should I cross-compile it temporarily and then replace it
