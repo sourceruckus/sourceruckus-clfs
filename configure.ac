@@ -146,6 +146,12 @@ AC_ARG_WITH(ruckus-dev,
   [ruckus_dev=$withval])
 AC_SUBST(RUCKUS_DEV, $ruckus_dev)
 
+AC_ARG_WITH(ruckus-dev-snapshot,
+  AS_HELP_STRING([--with-ruckus-dev-snapshot=DEV], [Make an LVM snapshot of DEV to be used for stage2 bulding (meaning the real /ruckus device can remain mounted read-write on the host system while stage2-builder virtual machines are building using a read-only snapshot).]),
+  [ruckus_dev_snapshot=$withval
+   ruckus_dev=${withval}_snapshot])
+AC_SUBST(RUCKUS_DEV_SNAPSHOT, $ruckus_dev_snapshot)
+
 AC_ARG_WITH(ruckus-path,
   AS_HELP_STRING([--with-ruckus-path=PATH], [Path to ruckus src tree on specified device [default: /]]),
   [ruckus_path=$withval])
@@ -259,7 +265,10 @@ AS_IF([test "$CLFS/ruckus" != "$abs_srcdir" -a -z "$ruckus_dev"],
 
 # if user specified ruckus_dev, it could be wrong...
 AS_IF([test -n "$ruckus_dev"],
-  [mtab=`grep "^$ruckus_dev" /proc/mounts`
+  [AS_IF([test -n "$ruckus_dev_snapshot"],
+     [thedev=$ruckus_dev_snapshot],
+     [thedev=$ruckus_dev])
+   mtab=`grep "^$thedev" /proc/mounts`
    mp=`echo $mtab | awk '{print $2}'`$ruckus_path
    mp=$(cd $mp && pwd)
    AS_IF([test "$mp" != "$abs_srcdir"],
@@ -267,7 +276,7 @@ AS_IF([test -n "$ruckus_dev"],
 		*************************************************************
 		Ruckus Device was specified, but doesn't match reality.
 
-                You specified: --with-ruckus-dev=$ruckus_dev
+                You specified: $the_dev
                 Mountpoint: $mp
                 Srcdir: $abs_srcdir
 		*************************************************************])

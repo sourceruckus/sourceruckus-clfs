@@ -46,7 +46,7 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --enable-stage2-auto \
     --with-install-dev=/dev/mapper/vg00-baby \
-    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
 
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
@@ -54,7 +54,7 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --with-arch=i686 \
     --without-stage1-xen \
     --with-install-dev=/dev/mapper/vg00-baby32 \
-    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
 
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
@@ -62,7 +62,7 @@ INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --with-arch=x86_64 --disable-multilib \
     --without-stage1-xen \
     --with-install-dev=/dev/mapper/vg00-baby64 \
-    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
 
 
 

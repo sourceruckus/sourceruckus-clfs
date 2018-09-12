@@ -171,7 +171,7 @@ though...
 CPUCOUNT=2 /media/ruckus/configure \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --with-install-dev=/dev/mapper/vg00-baby \
-    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
 
 *** bootstrap i686
 *NOTE* Disable stage1-xen to make sure we don't accidentally do the Xen detour
@@ -181,7 +181,7 @@ CPUCOUNT=2 /media/ruckus/configure \
     --with-arch=i686 \
     --without-stage1-xen \
     --with-install-dev=/dev/mapper/vg00-baby32 \
-    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
 
 *** bootstrap x86_64 pure64
 *NOTE* Disable stage1-xen to make sure we don't build the Hypervisor twice
@@ -193,7 +193,7 @@ CPUCOUNT=2 /media/ruckus/configure \
     --with-arch=x86_64 --disable-multilib \
     --without-stage1-xen \
     --with-install-dev=/dev/mapper/vg00-baby64 \
-    --with-ruckus-dev=/dev/mapper/vg00-ruckus
+    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
 
 
 

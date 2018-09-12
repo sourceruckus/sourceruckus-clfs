@@ -56,6 +56,13 @@ fix_perms()
 
 
 
+# make LVM snapshot device if configured
+if [ -n "$RUCKUS_DEV_SNAPSHOT" ]; then
+    echo "creating RUCKUS_DEV snapshot device"
+    lvcreate --snapshot --name=$RUCKUS_DEV --size=100M $RUCKUS_DEV_SNAPSHOT ||
+    exit 1
+fi
+
 
 # remove the cross-compiler and it's utilities
 #
