@@ -59,7 +59,19 @@ fix_perms()
 # make LVM snapshot device if configured
 if [ -n "$RUCKUS_DEV_SNAPSHOT" ]; then
     echo "creating RUCKUS_DEV snapshot device"
-    lvcreate --snapshot --name=$RUCKUS_DEV --size=100M $RUCKUS_DEV_SNAPSHOT ||
+    # NOTE: RUCKUS_DEV is an absolute path, but --name is supposed to be a
+    #       short name... so we need to do some parsing here...  and it COULD
+    #       be specified as /dev/mapper/VG-LV or as /dev/VG/LV... yay
+    #
+    if [ -n "$(echo $RUCKUS_DEV | grep "^/dev/mapper")" ]; then
+        # /dev/mapper
+        thename=$(echo $RUCKUS_DEV | awk -F- '{print $NF}')
+    else
+        # /dev/vg
+        thename=$(basename $RUCKUS_DEV)
+    fi
+    echo lvcreate --snapshot --name=$thename --size=100M $RUCKUS_DEV_SNAPSHOT
+    lvcreate --snapshot --name=$thename --size=100M $RUCKUS_DEV_SNAPSHOT ||
     exit 1
 fi
 

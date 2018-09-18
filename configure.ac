@@ -144,12 +144,12 @@ AM_CONDITIONAL([HOSTPREP_ONLY], [test x$HOSTPREP_ONLY = xyes])
 AC_ARG_WITH(ruckus-dev,
   AS_HELP_STRING([--with-ruckus-dev=DEV], [/ruckus is a seperate partition, as apposed to it being on the installation partition.]),
   [ruckus_dev=$withval])
-AC_SUBST(RUCKUS_DEV, $ruckus_dev)
 
 AC_ARG_WITH(ruckus-dev-snapshot,
   AS_HELP_STRING([--with-ruckus-dev-snapshot=DEV], [Make an LVM snapshot of DEV to be used for stage2 bulding (meaning the real /ruckus device can remain mounted read-write on the host system while stage2-builder virtual machines are building using a read-only snapshot).]),
   [ruckus_dev_snapshot=$withval
    ruckus_dev=${withval}_snapshot])
+AC_SUBST(RUCKUS_DEV, $ruckus_dev)
 AC_SUBST(RUCKUS_DEV_SNAPSHOT, $ruckus_dev_snapshot)
 
 AC_ARG_WITH(ruckus-path,
