@@ -1,5 +1,5 @@
 SUBDIRS=
-SUBDIRS+=packages
+#SUBDIRS+=packages
 SUBDIRS+=utils
 
 EXTRA_DIST=

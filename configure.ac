@@ -921,8 +921,6 @@ AC_SUBST(CLFS_ARCH_STRING)
 AC_CONFIG_FILES([
   Makefile
   packages/Makefile
-  packages/ruckusrd/Makefile
-  packages/syslinux/Makefile
   utils/Makefile
   utils/bootstrap-early/Makefile
   utils/bootstrap-early/config
