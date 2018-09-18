@@ -234,7 +234,8 @@ build()
 	    #       NCURSES_PREFIX has to be set to $PREFIX_TOOLS in order
 	    #       to use the ncurses installed via bootstrap-early (and
 	    #       our KBUILD patch needs to be applied)
-            cp -v $ruckus_confdir/bb-config $builddir/.config &&
+            #
+            cp -v $packagedir/busybox/config $builddir/.config &&
 	    pushd $builddir &&
 	    $MAKE oldconfig &&
             popd || exit 1
@@ -260,6 +261,11 @@ build()
 	    #        $source/examples that we might want installed too
 	    #cp $source/examples/depmod.pl $PREFIX_TOOLS/bin &&
 	    #chmod 755 $PREFIX_TOOLS/bin/depmod.pl|| exit 1
+
+            # install some extra files for the package to slurp up
+            mkdir -p $CLFS/usr/share/busybox &&
+            cp -va $source/examples $builddir/busybox.links \
+                $CLFS/usr/share/busybox || exit 1
 
 	    ;;
 

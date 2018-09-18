@@ -1,5 +1,11 @@
 SUBDIRS =
 
+# Before we get started w/ CLFS stuff, lets build a busybox package that
+# slurps up the cross-compiled busybox files we built during
+# bootstrap-stage1.
+#
+SUBDIRS += busybox
+
 # BEGIN CLFS Chapter 10 - Installing Basic System Software
 #
 # Deviations for CLFS will be noted appropriately.

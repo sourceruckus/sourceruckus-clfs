@@ -1,0 +1,52 @@
+# -*- mode: conf -*-
+[header]
+name = busybox
+version = 1.29.2
+pkg_rev = 1
+
+description = BusyBox - the swiss army knife of embedded Linux
+
+  BusyBox combines tiny versions of many common UNIX utilities into a single
+  small executable.  It provides minimalist replacements for most of the
+  utilities you usually find in bzip2, coreutils, dhcp, diffutils, e2fsprogs,
+  file, findutils, gawk, grep, inetutils, less, modutils, net-tools, procps,
+  sed, shadow, sysklogd, sysvinit, tar, util-linux, and vim.  The utilities
+  in BusyBox often have fewer options than their full-featured cousins;
+  however, the options that are included provide the expected functionality
+  and behave very much like their larger counterparts.
+
+
+[script]
+%%BUFFER_BEGIN%%
+#!/bin/bash
+
+# NOTE: This package just slurps up preexisting cross-compiled files from the
+#       host system into a brp unless REALLY_BUILD_IT is set in the
+#       environment.
+#
+if [ -n "$REALLY_BUILD_IT" ]; then
+    # source functions (for JOBCOUNT)
+    . $FUNCTIONS || exit 1
+
+    # set MAKE for out-of-tree kbuild
+    MAKE="make KBUILD_SRC=$SOURCE_DIR -f $SOURCE_DIR/Makefile"
+
+    # configure and build it
+    $MAKE mrproper &&
+    cp -v $EXTRA_DIR/config .config &&
+    $MAKE oldconfig &&
+    $MAKE -j$JOBCOUNT_KBUILD &&
+    $MAKE CONFIG_PREFIX=$PAYLOAD_DIR install || exit 1
+
+    # grab extra files
+    mkdir -p $PAYLOAD_DIR/usr/share/busybox &&
+    cp -va $SOURCE_DIR/examples $BUILD_DIR/busybox.lnks \
+        $PAYLOAD_DIR/usr/share/busybox || exit 1
+
+else
+    # slurp up prebuilt files
+    mkdir -p $PAYLOAD_DIR/usr/{bin,share} &&
+    cp -va /usr/bin/busybox $PAYLOAD_DIR/usr/bin/ &&
+    cp -va /usr/share/busybox $PAYLOAD_DIR/usr/share/ || exit 1
+fi
+%%BUFFER_END%%

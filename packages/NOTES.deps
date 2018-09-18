@@ -2,36 +2,49 @@
 
 * how
 
-srp -B manpages.notes,glibc.notes,multiarch_wrapper.notes,tzdata.notes \
-  --src src/manpages,src/glibc/glibc*.tar.*,src/tzdata/tzdata*.tar.*
+build.deps should specify what packages need to already be INSTALLED prior to
+building each package.
 
-srp -B notes=manpages.notes,src=src/manpages \
-    -B glibc.notes,src/glibc/glibc*.tar.* \
-    -B tzdata.notes,src/tzdata*.tar.* \
-    -vv --dry-run
+none of this first batch of packages actually depend on anything... so really
+they can all be built at the same time and installed in whatever order they
+finish building in.
+
+srp --build-deps=build.deps \
+    -B busybox/busybox.notes,src=../src/busybox \
+    -B man-pages/man-pages.notes,src=../src/man-pages,gitsrc=HEAD \
+    -B tzdata/tzdata.notes,src=../src/tzdata/tzdata2014d.tar.gz \
+    -B glibc/glibc.notes,src=../src/glibc/glibc-2.19.tar.xz
+
+this 2nd batch of packages have distinct interdependencies, in addition to
+pretty much all requiring that glibc already is installed.
+
+srp -build-deps=build.deps \
+    -B m4 \
+    -B gmp \
+    -B mpfr \
+    -B mpc \
+    -B isl \
+    -B cloog \
+    -B zlib \
+    -B flex \
+    -B bison \
+    -B binutils \
+    -B gcc
 
 
 * dependencies
 
-** manpages
+** busybox
+** man-pages
+** tzdata
 ** glibc
 
-** multiarch_wrapper
-glibc
-
-** tzdata
-multiarch_wrapper
-** busybox
-multiarch_wrapper
 
 ** m4
-multiarch_wrapper
-** ncurses
-multiarch_wrapper
-** pkg-config
-multiarch_wrapper
+glibc
+
 ** gmp
-multiarch_wrapper
+glibc
 
 ** mpfr
 gmp
@@ -45,16 +58,29 @@ gmp
 ** cloog
 isl
 
+
 ** zlib
-multiarch_wrapper
+glibc
+
 ** flex
-multiarch_wrapper
+glibc
+
 ** bison
-multiarch_wrapper
+glibc
 
 ** binutils
-multiarch_wrapper
+zlib,flex,bison
 
 ** gcc
-zlib, cloog, mpc, flex?, bison?, binutils?
+cloog,mpc,binutils
 
+
+** multiarch_wrapper
+gcc
+
+
+** pkg-config
+gcc
+
+** ncurses
+gcc,pkg-config?
