@@ -496,6 +496,27 @@ EOF
 
 	create-symlinks)
 
+            # remove busybox symlinks in $CLFS/{bin,sbin} that have legit
+            # binaries present in $PREFIX_TOOLS/{bin,sbin}.
+            #
+            # NOTE: Originally, we installed busybox in $PREFIX_TOOLS, allowing
+            #       further bootstrap package installation to overwrite bb
+            #       symlinks in there.  When we moved busybox's installation to
+            #       $CLFS (to avoid needlessly compiling it twice), it
+            #       essentially "promotes" the bb versions of things because of
+            #       how PATH is setup.  If we installed stuff in $PREFIX_TOOLS
+            #       to be used instead of bb applets (e.g., binutils), we need
+            #       to break the bb symlinks now.
+            #
+            echo checking busybox symlinks...
+            pushd $CLFS
+            for x in $(find bin sbin -lname \*busybox -exec ls $PREFIX_TOOLS/{} 2>/dev/null \;); do
+                y=$(echo $x | sed "s|^$PREFIX_TOOLS/||")
+                echo "removing bb applet symlink $y, exposing $x"
+                rm -v $y || exit 1
+            done
+            popd
+
             # NOTE: This freshly copy-n-pasted block of symlinks from the CLFS
             #       3.0.0-systemd book differ from what was here previously,
             #       but you can't tell from the patch, because I took out all
@@ -555,10 +576,12 @@ EOF
             #
             # NOTE: This list can be double-checked with 'find $CLFS -xtype l'
             #
+            # FIXME: should i automate this?  at least add a 'find $CLFS -xtype
+            #        -l -printf WARNING: broken link detected' or something?
+            #
             rm -vf $CLFS/etc/limits
             rm -vf $CLFS/etc/login.{access,defs}
 
-            echo done
 	    ;;
 
 	create-conf)
