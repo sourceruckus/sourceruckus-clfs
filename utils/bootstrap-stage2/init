@@ -1,9 +1,15 @@
 #!/bin/bash
 
+# source .profile so we get a sane PATH (and other helpful variables)
+. /root/.profile
+
 # FIXME: make stage2 builddir configurable somehow?
 #
 export ruckus_srcdir=/ruckus
 export ruckus_builddir=/ruckus-build
+
+# set this so we can detect that we're in the stage2 bootstrap environment
+RUCKUS_BOOTSTRAP_STAGE2=1
 
 # source our common variables and functions
 . $ruckus_srcdir/utils/bootstrap-early/functions
