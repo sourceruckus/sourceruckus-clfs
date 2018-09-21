@@ -339,6 +339,48 @@ for p in $packages; do
     build $p || exit 1
 done
 
+# make a backup of our progress, because starting over sucks
+#
+# NOTE: We have to change some paths here (compared to the cross and stage1
+#       backups) because we've booted the system now (i.e., the $CLFS
+#       mountpoint is now /).
+#
+# NOTE: We have to exclude a few extra directories here (compared to the cross
+#       and stage1 backups).  Since we've actually booted up now, any of the
+#       virtual filesys mountpoints might be full of virtual junk we don't want
+#       backed up.  Likewise, the mdev populated /dev isn't wanted.
+#
+# NOTE: We use sudo (probably via the alias in functions) to do this as root to
+#       ensure that we have permission to read all the files.  Conveniently,
+#       only tar runs as root, so the redirected output of xz is owned by our
+#       build user.
+#
+# NOTE: We don't do an incremental tar here because bb tar doesn't support -g,
+#       and it would contain all the files anyways because we've chowned the
+#       entire filesystem prior to booting.
+#
+# NOTE: I occasionally consider removing compression from our backups because
+#       it gets annoying waiting for them to complete.  Here's some timing info
+#       to justify leaving xz compression in place (from a 32bit build):
+#
+#       W/out any compression took 4 seconds and resulted in a 675M file.
+#
+#       Using xz -0 took 57 seconds and resulted in a 201M file.
+#
+echo -n "creating bootstrap-stage2 backup... "
+sudo tar -c \
+    --exclude ./lost+found \
+    --exclude ./proc \
+    --exclude ./sys \
+    --exclude ./tmp \
+    --exclude ./dev \
+    --exclude ./run \
+    --exclude .${ruckus_srcdir#$CLFS} \
+    --exclude .${ruckus_builddir#$CLFS} \
+    -C / . \
+    | xz -0 > ${BUILDROOT#$CLFS}/baby-bootstrap-stage2.tar.xz || exit 1
+echo "done."
+
 echo ""
 echo "-------------------------------------------------------------------"
 echo "Work complete!  Time to kick off the final system builder!"

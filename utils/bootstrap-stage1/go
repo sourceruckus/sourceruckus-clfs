@@ -1150,6 +1150,9 @@ done
 
 # make a backup of our progress, because starting over sucks
 #
+# NOTE: This is a "new" GNU-format incremental backup, which uses a .snar file
+#       to keep track of what's been archived when.
+#
 # NOTE: I considered removing the compression from our backup, because it
 #       seemed like it was taking forever.  Here's some timing info from a
 #       while ago.
@@ -1167,10 +1170,13 @@ done
 #
 if [ "$STAGE1_XEN_ONLY" != "yes" ]; then
     echo -n "creating bootstrap-stage1 backup... "
-    mkdir -p $BUILDROOT &&
+    cp $BUILDROOT/baby-bootstrap-cross.snar \
+        $BUILDROOT/baby-bootstrap-stage1.snar &&
     tar -c \
-        --exclude ./ruckus --exclude ./lost+found \
-        --exclude ./ruckus-build \
+        --exclude ./lost+found \
+        --exclude .${ruckus_srcdir#$CLFS} \
+        --exclude .${ruckus_builddir#$CLFS} \
+        -g $BUILDROOT/baby-bootstrap-stage1.snar \
         -C $CLFS . \
         | xz -0 > $BUILDROOT/baby-bootstrap-stage1.tar.xz || exit 1
     echo "done."

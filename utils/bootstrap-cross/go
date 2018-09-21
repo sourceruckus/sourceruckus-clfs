@@ -465,4 +465,22 @@ for p in $packages; do
     build $p || exit 1
 done
 
+# make a backup of our progress, because starting over sucks
+#
+# NOTE: This is a "new" GNU-format incremental backup, which uses a .snar file
+#       to keep track of what's been archived when.
+#
+if [ "$STAGE1_XEN_ONLY" != "yes" ]; then
+    echo -n "creating bootstrap-cross backup... "
+    mkdir -p $BUILDROOT &&
+    tar -c \
+        --exclude ./lost+found \
+        --exclude .${ruckus_srcdir#$CLFS} \
+        --exclude .${ruckus_builddir#$CLFS} \
+        -g $BUILDROOT/baby-bootstrap-cross.snar \
+        -C $CLFS . \
+        | xz -0 > $BUILDROOT/baby-bootstrap-cross.tar.xz || exit 1
+    echo "done."
+fi
+
 touch .build/ALL_DONE
