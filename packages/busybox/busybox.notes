@@ -1,7 +1,7 @@
 # -*- mode: conf -*-
 [header]
 name = busybox
-version = 1.29.2
+version = 1.29.3
 pkg_rev = 1
 
 description = BusyBox - the swiss army knife of embedded Linux
