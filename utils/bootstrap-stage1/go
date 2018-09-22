@@ -926,41 +926,6 @@ packages=""
 #         the manpage for mkdtemp says, but not how mktemp behaves (it requires
 #         just 3 or more).
 #
-# FIXME: considering just installing this right in /usr instead of
-#        /tools... true embedded systems cross-compile this package all the
-#        time, why should I cross-compile it temporarily and then replace it
-#        with a natively compiled version later... just seems silly...
-#
-#        well, it would allow us to build via srp, which would allow the user
-#        to upgrade busybox via srp later on, which might be desirable...
-#
-#        it would also allow us to use a different config here vs the final
-#        build (i.e., we could disable things we don't need for the
-#        bootstrap-environment but leave them enabled for the final build).
-#
-#        so, i guess i'll leave this as-is and install a new busybox in /usr
-#        via srp during the final build.
-#
-# FIXME: ^^^ revisit that... ^^^ we could make a busybox "package" that
-#        swallows up the cross-compiled busybox binary (and meta-data files,
-#        but not the symlinks) to avoid compiling twice, removing and replacing
-#        symlinks, etc...  upgrading busybox post-build would involve very
-#        careful re-creation of symlinks to avoid overwriting better gnu
-#        utils...  very undecided on this
-#
-#        if we were to build it fresh in final build, we would probably want it
-#        to be right away (e.g., either first or right after glibc).  and it
-#        would end up overwriting symlinks that point to /tools*/bin/busybox
-#        with symlinks that point to /bin/busybox... wich just sounds silly
-#        given that we know this is cross-compile-safe.
-#
-#        it all boils down to: do we plan on allowing/encouraging upgrading
-#        busybox on built systems via srp?  and can that be done safely?
-#
-# FIXME: and, i'm now switching this over to installing directly into $CLFS
-#        during bootstrap w/ package that simply swallows up the busybox files
-#        that are already built.  will take these FIXMEs out when its all done.
-#
 packages+=" busybox"
 
 packages+=" gmp"

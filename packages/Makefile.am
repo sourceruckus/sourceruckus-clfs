@@ -41,17 +41,18 @@ SUBDIRS += tzdata
 #
 SUBDIRS += glibc
 
-SUBDIRS += m4
-SUBDIRS += gmp
-SUBDIRS += mpfr
-SUBDIRS += mpc
-SUBDIRS += isl
-SUBDIRS += cloog
-SUBDIRS += zlib
-SUBDIRS += flex
-SUBDIRS += bison
-SUBDIRS += binutils
-SUBDIRS += gcc
+FOOSUBDIRS =
+FOOSUBDIRS += m4
+FOOSUBDIRS += gmp
+FOOSUBDIRS += mpfr
+FOOSUBDIRS += mpc
+FOOSUBDIRS += isl
+FOOSUBDIRS += cloog
+FOOSUBDIRS += zlib
+FOOSUBDIRS += flex
+FOOSUBDIRS += bison
+FOOSUBDIRS += binutils
+FOOSUBDIRS += gcc
 
 # FIXME: these were just for systemd...
 #
@@ -62,8 +63,8 @@ SUBDIRS += gcc
 #
 #SUBDIRS += sed
 
-SUBDIRS += pkg-config # pkg-config-lite?
-SUBDIRS += ncurses
+FOOSUBDIRS += pkg-config # pkg-config-lite?
+FOOSUBDIRS += ncurses
 
 # bb
 #
@@ -80,8 +81,8 @@ SUBDIRS += ncurses
 #
 #SUBDIRS += coreutils
 
-SUBDIRS += iana-etc
-SUBDIRS += libtool
+FOOSUBDIRS += iana-etc
+FOOSUBDIRS += libtool
 
 # FIXME: some equivelent stuff is in bb... but we may need the real deal
 #        (unless newer version of bb is way better).
@@ -89,6 +90,8 @@ SUBDIRS += libtool
 #SUBDIRS += iproute2
 
 # bb
+#
+# FIXME: might want libbzip2...
 #
 #SUBDIRS += bzip2
 
@@ -99,30 +102,30 @@ SUBDIRS += libtool
 #
 #SUBDIRS += gdbm
 
-SUBDIRS += perl
-SUBDIRS += readline
-SUBDIRS += autoconf
-SUBDIRS += automake
-SUBDIRS += bash
+FOOSUBDIRS += perl
+FOOSUBDIRS += readline
+FOOSUBDIRS += autoconf
+FOOSUBDIRS += automake
+FOOSUBDIRS += bash
 
 # FIXME: maybe in newer bb?  doesn't look like it...  but maybe we don't
 #        need it?  i seem to recall kernel makefiles needing it at some
 #        point...
 #
-SUBDIRS += bc
+FOOSUBDIRS += bc
 
 # bb
 #
 #SUBDIRS += diffutils
 
-SUBDIRS += file
-SUBDIRS += gawk
+FOOSUBDIRS += file
+FOOSUBDIRS += gawk
 
 # bb
 #
 #SUBDIRS += findutils
 
-SUBDIRS += gettext
+FOOSUBDIRS += gettext
 
 # FIXME: this was just for systemd
 #
@@ -132,7 +135,7 @@ SUBDIRS += gettext
 #
 #SUBDIRS += grep
 
-SUBDIRS += groff
+FOOSUBDIRS += groff
 
 # bb
 #
@@ -155,8 +158,8 @@ SUBDIRS += groff
 #
 #SUBDIRS += man-db
 
-SUBDIRS += make
-SUBDIRS += xz
+FOOSUBDIRS += make
+FOOSUBDIRS += xz
 
 # FIXME: these were just for systemd
 #
@@ -187,7 +190,7 @@ SUBDIRS += xz
 # bb
 #
 #SUBDIRS += tar
-SUBDIRS += texinfo
+FOOSUBDIRS += texinfo
 
 # FIXME: CLFS SYSVINIT added this...  gonna try to stick with bb mdev for
 #        now.
@@ -201,11 +204,11 @@ SUBDIRS += texinfo
 # NOTE: we use syslinux instead of grub and do magic tricks with ruckusrd.
 #
 #SUBDIRS += grub
-SUBDIRS += ruckusrd
-SUBDIRS += syslinux
+FOOSUBDIRS += ruckusrd
+FOOSUBDIRS += syslinux
 
-SUBDIRS += kernel
-SUBDIRS += kernel-firmware
+FOOSUBDIRS += kernel
+FOOSUBDIRS += kernel-firmware
 
 # END CLFS Chapter 10 - Installing Basic System Software
 #
@@ -220,3 +223,11 @@ SUBDIRS += kernel-firmware
 # SUBDIRS += ... more packages ...
 # SUBDIRS += finalize-server
 #
+
+
+# FIXME: we're eventually going to want real less (for cached searching),
+#        bzip2 (for libbz2), gzip (for libgz), and tar (for
+#        incrementals)... but where/when should we add those?  we
+#        definately don't need those functions on our base system.  we can
+#        probably live w/out them all the way up to a full-fledged
+#        development workstation.

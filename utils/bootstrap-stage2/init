@@ -38,16 +38,7 @@ if [ -z "$build_group" ]; then
 fi
 
 # add user if needed
-#
-# FIXME: should really use ^ to search from beggining of line, but it doesn't
-#        look like busybox's awk supports this.
-#
-#        seems fine right now... wonder why i thought it didn't work...
-#
-# FIXME: set shell to /bin/ash... i like it better over a Xen serial login than
-#        bash.  maybe do the same to root.
-#
-build_user=$(awk -F: "/$build_uid:/ {print \$1}" /etc/passwd)
+build_user=$(awk -F: "/^$build_uid:/ {print \$1}" /etc/passwd)
 if [ -z "$build_user" ]; then
     build_user=ruckus
     echo "adding user '$build_user' with uid $build_uid"
