@@ -36,6 +36,7 @@ done
 #
 # NOTE: We're using a WGET variable here, which is overridable by the user
 #       because we're just friendly like that.  ;-)
+#
 fetch_list=$(find packages src utils -name SOURCE_URL)
 for x in $fetch_list; do
     pushd $(dirname $x) &&
@@ -46,3 +47,7 @@ for x in $fetch_list; do
         tar -rf $cache $(sed "s|.*/|$(dirname $x)/|" $x)
     fi
 done
+
+echo verifying checksums...
+sha256sum --check get_soureces.sha256sums || exit 1
+echo done

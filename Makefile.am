@@ -5,6 +5,7 @@ SUBDIRS+=utils
 EXTRA_DIST=
 EXTRA_DIST+=MIRRORS
 EXTRA_DIST+=get_sources
+EXTRA_DIST+=get_sources.sha256sums
 EXTRA_DIST+=init_submodules
 
 
