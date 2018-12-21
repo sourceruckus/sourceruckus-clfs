@@ -49,5 +49,5 @@ for x in $fetch_list; do
 done
 
 echo verifying checksums...
-sha256sum --check get_soureces.sha256sums || exit 1
+sha256sum --check get_sources.sha256sums || exit 1
 echo done
