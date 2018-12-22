@@ -275,6 +275,16 @@ build()
 	    compile_generic $1 || exit 1
 
             ;;
+	autoconf)
+	    setup_generic $1 || exit 1
+	    configure_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
+
+	    pushd $builddir &&
+	    sed -i 's|lib doc tests|lib tests|' Makefile &&
+	    popd || exit 1
+
+	    compile_generic $1 || exit 1
+	    ;;
         dejagnu-bootstrap)
             # special bootstrap... shouldn't necesarily need to be
             # bootstrapped, but for some reason needs to rebuild a texinfo file
