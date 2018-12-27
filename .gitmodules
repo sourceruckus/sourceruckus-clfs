@@ -127,3 +127,6 @@
 [submodule "src/man-pages"]
 	path = src/man-pages
 	url = http://git.kernel.org/pub/scm/docs/man-pages/man-pages
+[submodule "src/python"]
+	path = src/python
+	url = https://github.com/python/cpython.git
