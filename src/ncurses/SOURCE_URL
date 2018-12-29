@@ -1,2 +1,2 @@
-http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
-http://patches.clfs.org/dev/ncurses-5.9-branch_update-4.patch
+http://ftp.gnu.org/gnu/ncurses/ncurses-6.0.tar.gz
+http://patches.clfs.org/dev/ncurses-6.0-bash_fix-1.patch
