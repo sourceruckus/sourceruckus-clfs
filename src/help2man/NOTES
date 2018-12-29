@@ -1,0 +1,3 @@
+Looks like the help2man git repo (from Debian) uses autoconf w/out
+automake and I can't figure out how to bootstrap the darn thing.  Will
+go back to using a source tarball.
