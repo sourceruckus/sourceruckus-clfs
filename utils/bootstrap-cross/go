@@ -34,7 +34,7 @@ build()
             #       with here instead of assuming that our run-time kernel is
             #       the same version we're building glibc against.
             #
-            checkout=v3.14.21 \
+            checkout=v4.9.21 \
                 setup_generic kernel || exit 1
 
             # get ready
@@ -56,9 +56,13 @@ build()
 	    # build_generic into a bunch of sub-methods, this is pretty easy
 	    # to do.
 
-	    # first, use the generic setup and configure
+            # first, use the generic setup and configure
+            #
+            # NOTE: CLFS doesn't use --without-shared here... We disable it
+            #       here to save some time compiling.
+            #
 	    setup_generic $1 &&
-	    configure_generic $1 $OPTS \
+	    AWK=gawk configure_generic $1 $OPTS \
 		--without-debug \
 		--without-shared || exit 1
 
@@ -75,22 +79,16 @@ build()
             # toolchain so that it can have a pkg-config binary installed that
             # only searches in $PREFIX_TOOLS
             #
-            # NOTE: The internal glib snapshot can be used to remove a host
-            #       system dependency, but if the host system has glib and a
-            #       really old kernel that doesn't define PR_SET_NAME
-            #       (<2.6.9?), it'll fail to compile.
-            #
-	    # NOTE: Some systems need march to be >= i486 to build the
-	    #       included glib bits here...
-            #
             # NOTE: We detect whether the host system has a usable glib
             #       available and only build the internal glib snapshot (with
             #       fingers crossed) if it's needed.
+            #
+            # NOTE: CLFS uses pkg-config-lite.  We're using the full-blown
+            #       pkg-config.
+            #
             if [ "$HOST_HAS_GLIB" = "yes" ]; then
-                _FLAGS=
                 _OPTS=
             else
-                _FLAGS="-march=i486"
                 _OPTS="--with-internal-glib"
             fi
             if [ -n "$BUILD32" ]; then
@@ -101,24 +99,12 @@ build()
 	        PKG_PATH="$PREFIX_TOOLS/lib/pkgconfig"
             fi
             PKG_PATH+=":$PREFIX_TOOLS/share/pkgconfig"
-            CPPFLAGS=$_FLAGS \
-		build_generic $1 --prefix=$PREFIX_CROSS \
+	    build_generic $1 --prefix=$PREFIX_CROSS \
 		$_OPTS --with-pc-path=$PKG_PATH \
                 --host=$CLFS_TARGET || exit 1
 	    ;;
 
 	gmp)
-            # If you are building with a host which has 32-bit user-space with
-            # a 64-bit capable CPU, cross-tools GMP will attempt to link with
-            # 64-bit libraries. Adding ABI=32 to the configure call fixes
-            # it.
-            #
-            # NOTE: We forcefully set ABI=32 if our host system's cpu (as
-            #       reported by autoconf) doesn't have 64 in it... which could
-            #       be incorrect in some bizarre case?
-            if $(echo $CLFS_HOST | awk -F- '{print $1}' | grep -vq 64); then
-                OPTS+=" ABI=32"
-            fi
 	    build_generic $1 $OPTS --enable-cxx || exit 1
 	    ;;
 
@@ -141,21 +127,6 @@ build()
 		--with-gmp-prefix=$PREFIX_CROSS || exit 1
 	    ;;
 
-	cloog)
-            setup_generic $1 &&
-	    LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-		configure_generic $1 $OPTS \
-		--with-gmp-prefix=$PREFIX_CROSS \
-		--with-isl-prefix=$PREFIX_CROSS || exit 1
-
-            pushd $builddir &&
-            cp -v Makefile{,.orig} &&
-            sed '/cmake/d' Makefile.orig > Makefile &&
-            popd || exit 1
-
-            compile_generic $1 || exit 1
-	    ;;
-
 	binutils)
             # add 64bit support if desired
             if [ -n "$BUILD64" ]; then
@@ -175,12 +146,16 @@ build()
 	    #       run-time, at which point we'll be running the stage1
 	    #       builder and we'll want the cross-compiled binutils to be
 	    #       looking in PREFIX_TOOLS.
+	    #
 	    AR=ar AS=as \
 		build_generic $1 $OPTS \
 		--host=${CLFS_HOST} \
 		--target=${CLFS_TARGET} \
 		--with-sysroot=${CLFS} \
-                --disable-werror || exit 1
+		--enable-gold=yes \
+		--enable-plugins \
+		--enable-threads \
+		--disable-werror || exit 1
 	    ;;
 
 	gcc-static)
@@ -229,18 +204,35 @@ build()
                 OPTS+=" --disable-multilib"
             fi
 
-            AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-                configure_generic gcc $OPTS --prefix=$PREFIX_CROSS \
-                --build=${CLFS_HOST} --host=${CLFS_HOST} --target=${CLFS_TARGET} \
-                --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_TOOLS \
-                --with-native-system-header-dir=$PREFIX_TOOLS/include --disable-nls \
-                --disable-shared --with-mpfr=$PREFIX_CROSS --with-gmp=$PREFIX_CROSS \
-                --with-cloog=$PREFIX_CROSS --with-mpc=$PREFIX_CROSS --without-headers \
-                --with-newlib --disable-decimal-float --disable-libgomp --disable-libmudflap \
-                --disable-libssp --disable-libatomic --disable-libitm \
-                --disable-libsanitizer --disable-libquadmath --disable-threads \
-                --disable-target-zlib --with-system-zlib --with-isl=$PREFIX_CROSS \
-                --enable-languages=c --enable-checking=release || exit 1
+            AR=ar LDFLAGS="-Wl,-rpath,/cross-tools/lib" \
+                configure_generic gcc $OPTS \
+                --prefix=$PREFIX_CROSS \
+                --build=${CLFS_HOST} \
+                --host=${CLFS_HOST} \
+                --target=${CLFS_TARGET} \
+                --with-sysroot=${CLFS} \
+                --with-local-prefix=$PREFIX_TOOLS \
+                --with-native-system-header-dir=$PREFIX_TOOLS/include \
+                --disable-shared \
+                --with-mpfr=$PREFIX_CROSS \
+                --with-gmp=$PREFIX_CROSS \
+                --with-isl=$PREFIX_CROSS \
+                --with-mpc=$PREFIX_CROSS \
+                --without-headers \
+                --with-newlib \
+                --disable-decimal-float \
+                --disable-libgomp \
+                --disable-libssp \
+                --disable-libatomic \
+                --disable-libitm \
+                --disable-libsanitizer \
+                --disable-libquadmath \
+                --disable-libvtv \
+                --disable-libcilkrts \
+                --disable-libstdc++-v3 \
+                --disable-threads \
+                --enable-languages=c \
+                --with-glibc-version=2.25 || exit 1
 
 	    pushd $builddir &&
 	    make -j$JOBCOUNT all-gcc all-target-libgcc &&
@@ -250,25 +242,6 @@ build()
 
 	glibc-stage1)
 	    setup_generic glibc || exit 1
-
-            # Apply the following sed so the tzselect script works properly
-            #
-            # NOTE: In source dir!  This is OK because we build from a dist
-            #       tarball (i.e., we're not polluting ruckus/src/gcc) and we
-            #       actually want these changes to stick around until
-            #       glibc-stage2.
-            pushd $source &&
-            cp -v timezone/Makefile{,.orig} &&
-            sed 's/\\$$(pwd)/`pwd`/' timezone/Makefile.orig > timezone/Makefile &&
-            popd || exit 1
-
-	    # Add the following to config.cache to disable ssp when building
-	    # Glibc
-	    #
-	    # NOTE: In $builddir!!!
-	    pushd $builddir
-	    echo "libc_cv_ssp=no" > config.cache
-	    popd
 
 	    # NOTE: glibc builds and installs in PREFIX_TOOLS on purpose.
 	    #       this package can safely be built now and installed in
@@ -302,9 +275,10 @@ build()
                 AR="${CLFS_TARGET}-ar" RANLIB="${CLFS_TARGET}-ranlib" \
                 configure_generic glibc --prefix=$PREFIX_TOOLS \
                 $tmp_host --build=${CLFS_HOST} \
-                --disable-profile --enable-kernel=2.6.32 \
-                --with-binutils=$PREFIX_CROSS/bin --with-headers=$PREFIX_TOOLS/include \
-                --enable-obsolete-rpc --cache-file=config.cache || exit 1
+                --enable-kernel=3.12.0 \
+                --with-binutils=$PREFIX_CROSS/bin \
+                --with-headers=$PREFIX_TOOLS/include \
+                --enable-obsolete-rpc || exit 1
 
             compile_generic glibc || exit 1
 	    ;;
@@ -329,17 +303,9 @@ build()
 	    mkdir -p $builddir
 	    echo "builddir: $builddir"
 
-	    # Add the following to config.cache to disable ssp when building
-	    # Glibc
-	    #
-	    # NOTE: In $builddir!!!
-	    pushd $builddir
-	    echo "libc_cv_ssp=no" > config.cache
-	    popd
-
 	    # install 64-bit libraries in lib64
 	    pushd $builddir
-	    echo "slibdir=$PREFIX_TOOLS/lib64" >> configparms
+            echo "libc_cv_slibdir=$PREFIX_TOOLS/lib64" > config.cache
 	    popd
 
 	    # NOTE: glibc builds and installs in PREFIX_TOOLS on purpose.
@@ -355,11 +321,16 @@ build()
 
             BUILD_CC="gcc" CC="${CLFS_TARGET}-gcc ${BUILD64}" \
                 AR="${CLFS_TARGET}-ar" RANLIB="${CLFS_TARGET}-ranlib" \
-                configure_generic glibc64 --prefix=$PREFIX_TOOLS \
-                --host=${CLFS_TARGET} --build=${CLFS_HOST} --libdir=$PREFIX_TOOLS/lib64 \
-                --disable-profile --enable-kernel=2.6.32 \
-                --with-binutils=$PREFIX_CROSS/bin --with-headers=$PREFIX_TOOLS/include \
-                --enable-obsolete-rpc --cache-file=config.cache || exit 1
+                configure_generic glibc64 \
+                --prefix=$PREFIX_TOOLS \
+                --host=${CLFS_TARGET} \
+                --build=${CLFS_HOST} \
+                --libdir=$PREFIX_TOOLS/lib64 \
+                --enable-kernel=3.12.0 \
+                --with-binutils=$PREFIX_CROSS/bin \
+                --with-headers=$PREFIX_TOOLS/include \
+                --enable-obsolete-rpc \
+                --cache-file=config.cache || exit 1
 
             compile_generic glibc64 || exit 1
 	    ;;
@@ -394,17 +365,29 @@ build()
             if [ -z "$BUILD32" ]; then
                 OPTS+=" --disable-multilib"
             fi
+            #
+            # FIXME: CLFS does NOT do --disable-nls for x86_64-multilib, but
+            #        does for x86 and x86_64-64... i think it's just a typo...
+            #        (per CLFS GIT-20170803).
+            #
 
-            AR=ar LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
-                configure_generic gcc-final $OPTS --prefix=$PREFIX_CROSS \
-                --build=${CLFS_HOST} --target=${CLFS_TARGET} --host=${CLFS_HOST} \
-                --with-sysroot=${CLFS} --with-local-prefix=$PREFIX_TOOLS \
+            AR=ar \
+                LDFLAGS="-Wl,-rpath,$PREFIX_CROSS/lib" \
+                configure_generic gcc-final $OPTS \
+                --prefix=$PREFIX_CROSS \
+                --build=${CLFS_HOST} \
+                --target=${CLFS_TARGET} \
+                --host=${CLFS_HOST} \
+                --with-sysroot=${CLFS} \
+                --with-local-prefix=$PREFIX_TOOLS \
                 --with-native-system-header-dir=$PREFIX_TOOLS/include \
-                --disable-nls --disable-static --enable-languages=c,c++ \
-                --enable-__cxa_atexit --enable-threads=posix --with-mpc=$PREFIX_CROSS \
-                --with-mpfr=$PREFIX_CROSS --with-gmp=$PREFIX_CROSS --with-cloog=$PREFIX_CROSS \
-                --with-isl=$PREFIX_CROSS --with-system-zlib --enable-checking=release \
-                --enable-libstdcxx-time || exit 1
+                --disable-nls \
+                --disable-static \
+                --enable-languages=c,c++ \
+                --with-mpc=$PREFIX_CROSS \
+                --with-mpfr=$PREFIX_CROSS \
+                --with-gmp=$PREFIX_CROSS \
+                --with-isl=$PREFIX_CROSS || exit 1
 
 	    pushd $builddir &&
 	    make -j$JOBCOUNT AS_FOR_TARGET="${CLFS_TARGET}-as" \
@@ -421,19 +404,6 @@ build()
 
 
 packages=""
-# NOTE: CLFS added bc to cross-tools (and final system) on 2013-07-23... I
-#       remember seing something on the mailing list... but I don't really
-#       remember for sure why it was added.  I think it had something to do
-#       with prepping the linux headers.
-#
-# FIXME: I don't understand why this isn't a host system requirement as
-#        apposed to a cross-tools item... I suspect it ended up in
-#        cross-tools for CLFS because it's so easy/quick to install, why
-#        bother checking host system.  But we've got bootstrap-early to take
-#        care of that...
-#
-# FIXME: I'm handling this in bootstrap-early unless breakage is encountered.
-#packages+=" bc"
 packages+=" file"
 packages+=" linux_headers"
 packages+=" m4"
@@ -443,7 +413,6 @@ packages+=" gmp"
 packages+=" mpfr"
 packages+=" mpc"
 packages+=" isl"
-packages+=" cloog"
 packages+=" binutils"
 packages+=" gcc-static"
 packages+=" glibc-stage1"
