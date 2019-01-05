@@ -96,7 +96,7 @@
 	url = git://git.code.sf.net/p/flex/flex
 [submodule "src/isl"]
 	path = src/isl
-	url = ../contrib/isl.git
+	url = git://repo.or.cz/isl.git
 [submodule "src/ruckusrd"]
 	path = src/ruckusrd
 	url = ../ruckusrd.git
