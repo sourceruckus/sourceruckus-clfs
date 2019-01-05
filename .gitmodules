@@ -127,3 +127,6 @@
 [submodule "src/python"]
 	path = src/python
 	url = https://github.com/python/cpython.git
+[submodule "src/file"]
+	path = src/file
+	url = git://github.com/glensc/file.git
