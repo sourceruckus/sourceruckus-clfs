@@ -45,7 +45,7 @@
 	url = git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 [submodule "src/pkg-config"]
 	path = src/pkg-config
-	url = ../contrib/pkg-config.git
+	url = git://anongit.freedesktop.org/pkg-config.git
 [submodule "src/gperf"]
 	path = src/gperf
 	url = git://git.sv.gnu.org/gperf.git
