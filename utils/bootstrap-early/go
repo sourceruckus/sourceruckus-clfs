@@ -309,7 +309,7 @@ build()
 }
 
 
-mkdir -p $PREFIX_HOSTPREP
+mkdir -p $PREFIX_HOSTPREP/include
 
 # build and install each needed package
 for p in $p_early; do
