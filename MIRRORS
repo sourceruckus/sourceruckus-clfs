@@ -19,6 +19,7 @@
      "git://git.kernel.org/pub/scm/utils/util-linux",
      "git://git.samba.org",
      "git://git.sv.gnu.org",
+     "https://github.com/creachadair",
      "git://github.com/bagder",
      "git://github.com/git",
      "git://github.com/glensc",
@@ -41,5 +42,6 @@
  "/mnt/root-true/mirror/qemu":
     [
      "git://git.qemu.org",
+     "git://git.qemu-project.org",
     ]
  }
