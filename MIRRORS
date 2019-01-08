@@ -8,7 +8,7 @@
 # For example:
 #
 
-{"/mnt/root-true/mirror":
+{"/media/flash_of_doom/mirror":
     [
      "git://anongit.freedesktop.org",
      "git://busybox.net",
@@ -36,11 +36,11 @@
      "git://git.kernel.org/pub/scm/linux/kernel/git/firmware",
      "git://perl5.git.perl.org",
     ],
- "/mnt/root-true/mirror/xen":
+ "/media/flash_of_doom/mirror/xen":
     [
      "git://xenbits.xen.org",
     ],
- "/mnt/root-true/mirror/qemu":
+ "/media/flash_of_doom/mirror/qemu":
     [
      "git://git.qemu.org",
      "git://git.qemu-project.org",

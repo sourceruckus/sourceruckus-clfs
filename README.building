@@ -29,35 +29,30 @@ that).
 
 * Configuring
 
-./autogen.sh \
-    --prefix=/mnt/root-true/ruckus-hostprep \
-    --enable-stage2-auto \
-    --with-install-dev=/dev/sdf1 \
-    --with-ruckus-dev=/dev/sda3 \
-    --with-ruckus-path=/ruckus
-
-
-
+** hostprep only
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
     --prefix=/mnt/root-true/ruckus-hostprep \
     --with-hostprep-only
 
+** 64bit multilib
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
-    --prefix=/mnt/root-true/ruckus-hostprep \
+    --prefix=/scrap/ruckus-hostprep \
     --enable-stage2-auto \
     --with-install-dev=/dev/mapper/vg00-baby \
     --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
 
+** 32bit w/out Xen (assuming it's already built)
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
-    --prefix=/mnt/root-true/ruckus-hostprep \
+    --prefix=/scrap/ruckus-hostprep \
     --enable-stage2-auto \
     --with-arch=i686 \
     --without-stage1-xen \
     --with-install-dev=/dev/mapper/vg00-baby32 \
     --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
 
+** 64bit (pure64) w/out Xen (assuming it's already built)
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
-    --prefix=/mnt/root-true/ruckus-hostprep \
+    --prefix=/scrap/ruckus-hostprep \
     --enable-stage2-auto \
     --with-arch=x86_64 --disable-multilib \
     --without-stage1-xen \
@@ -88,12 +83,8 @@ make hostprep
         are with prebootstrapped submodules (i.e., after building once and
         then cleaning).
 
-*NOTE*: hostprep took about __ minutes on my AMD A10-6700 APU box (x86_64
-        multilib, prebootstrapped).  (8 minutes on a AMD A10-7850K, 5 minutes
-        on my AMD FX-8350)
-
-*NOTE*: hostprep took about __ minutes on my AMD A10-6700 APU box (i686 w/ Xen
-        Detour, prebootstrapped).  (17 minutes on my AMD FX-8350)
+*NOTE*: hostprep took about 19 minutes on my my AMD FX-8350 (CentOS 7, x86_64
+        multilib, prebootstrapped).
 
 
 ** Stage 1
