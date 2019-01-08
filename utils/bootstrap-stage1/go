@@ -50,19 +50,6 @@ build()
 		--enable-cxx || exit 1
 	    ;;
 
-        cloog)
-            setup_generic $1 &&
-	    configure_generic $1 $OPTS \
-		--with-isl=system || exit 1
-
-            # prevent the attempted installation of an invalid file
-            pushd $builddir &&
-            sed -i '/cmake/d' Makefile &&
-            popd || exit 1
-
-            compile_generic $1 || exit 1
-            ;;
-
 	zlib)
 	    # NOTE: zlib doesn't use autotools... despite the "configure"
 	    #       script and autotool-ish configure flags.  This means it
@@ -295,76 +282,6 @@ EOF
             compile_generic $1 || exit 1
             ;;
 
-        # FIXME: remove?
-        bison)
-            setup_generic $1 || exit 1
-
-            # Apply a sed which disables the building of bison.help
-            # when cross-compiling.
-            #
-            # NOTE: In $source!  This means we either have to undo
-            #       this at the end or make a copy of the source tree
-            #       (because bison is a git submodule in src/)
-            pushd $source &&
-            [ -f Makefile.in.orig ] && exit 1
-            cp -v Makefile.in{,.orig} &&
-            sed '/bison.help:/s/^/# /' Makefile.in.orig > Makefile.in &&
-            popd || exit 1
-
-            # The configure script does not determine the correct
-            # value for the following. Set the value manually:
-            #
-            # NOTE: In $builddir!!!
-            pushd $builddir
-            echo "ac_cv_prog_lex_is_flex=yes" > config.cache
-            popd
-
-            M4=m4 configure_generic $1 $OPTS \
-                --cache-file=config.cache &&
-            compile_generic $1 || exit 1
-
-            # revert the Makefile.in changes
-            pushd $source &&
-            mv Makefile.in{.orig,} &&
-            popd || exit 1
-            ;;
-
-        # FIXME: remove?
-	flex)
-	    setup_generic $1 || exit 1
-
-	    # When cross-compiling, the configure script does not determine
-	    # the correct values for the following, so we'll set the values
-	    # manually
-	    pushd $builddir &&
-	    echo ac_cv_func_malloc_0_nonnull=yes > config.cache &&
-	    echo ac_cv_func_realloc_0_nonnull=yes >> config.cache &&
-	    popd || exit 1
-
-            M4=m4 configure_generic $1 $OPTS \
-		--cache-file=config.cache || exit 1
-
-            # NOTE: We can't let flex build manpage, because help2man tries to
-            #       run ../flex --help, which is cross-compiled for a
-            #       non-native architecture.  The following sed statements
-            #       disable manpage and pdf generation for now.
-            #
-            # NOTE: CLFS doesn't run into this because they use dist tarballs
-            #       as apposed to git trees.
-	    #
-	    # FIXME: I think?  I'm not entirely sure why the behavior isn't
-	    #        more consistent accross host systems... definately
-	    #        barfs on avlinux, but even when "cross-compiling" for
-	    #        i686 on an i686.  And I swear I got past this w/out any
-	    #        issues on a really old 32bit fedora box...
-            pushd $builddir &&
-            sed -i 's|^dist_man_MANS|#dist_man_MANS|' doc/Makefile &&
-            sed -i 's|^dist_doc_DATA|#dist_doc_DATA|' doc/Makefile &&
-            popd || exit 1
-
-	    compile_generic $1 || exit 1
-	    ;;
-
         gawk)
             # NOTE: Can't quite use the generic rule here.  Looks like gawk
             #       commits configure in git and it's bootstrap.sh script
@@ -418,28 +335,6 @@ EOF
             # NOTE: Can't build in parallel (as of 0.19.1)
             #
             JOBCOUNT=1 compile_generic $1 || exit 1
-	    ;;
-
-        # FIXME: remove?
-	m4)
-	    setup_generic $1 || exit 1
-
-	    # Configure can not properly determine the results of the
-	    # following tests
-	    pushd $builddir &&
-	    echo gl_cv_func_btowc_eof=yes > config.cache &&
-	    echo gl_cv_func_mbrtowc_incomplete_state=yes >> config.cache &&
-	    echo gl_cv_func_mbrtowc_sanitycheck=yes >> config.cache &&
-	    echo gl_cv_func_mbrtowc_null_arg=yes >> config.cache &&
-	    echo gl_cv_func_mbrtowc_retval=yes >> config.cache &&
-	    echo gl_cv_func_mbrtowc_nul_retval=yes >> config.cache &&
-	    echo gl_cv_func_wcrtomb_retval=yes >> config.cache &&
-	    echo gl_cv_func_wctob_works=yes >> config.cache &&
-	    popd || exit 1
-
-	    configure_generic $1 $OPTS \
-		--cache-file=config.cache &&
-	    compile_generic $1 || exit 1
 	    ;;
 
 	texinfo)
@@ -932,7 +827,6 @@ packages+=" gmp"
 packages+=" mpfr"
 packages+=" mpc"
 packages+=" isl"
-packages+=" cloog"
 packages+=" zlib"
 packages+=" binutils"
 packages+=" gcc"
@@ -963,13 +857,7 @@ packages+=" bash"
 #packages+=" coreutils"
 #packages+=" diffutils"
 
-# FIXME: no longer in equivelent CLFS chapter?
-#packages+=" bison"
-
 packages+=" file"
-
-# FIXME: no longer in equivelent CLFS chapter?
-#packages+=" flex"
 
 # bb
 #
@@ -989,9 +877,6 @@ packages+=" gettext"
 #
 #packages+=" grep"
 #packages+=" gzip"
-
-# FIXME: no longer in equivelent CLFS chapter?
-#packages+=" m4"
 
 packages+=" make"
 
@@ -1026,6 +911,7 @@ packages+=" texinfo"
 #
 # NOTE: We call this "xz" because that's the name of the git submodule.  CLFS
 #       refers to it as "XZ Utils", as the dist tarball is named xz-utils.
+#
 packages+=" xz"
 
 
@@ -1042,8 +928,12 @@ packages+=" xz"
 #        no bootstrap files left over.  Not sure how important that is,
 #        though.
 
-# NOTE: We skip check because it's unneeded at this point (do to our other
-#       deviations from the CLFS book?)
+# NOTE: We skip bc because it's unneeded at this point.  CLFS builds it in
+#       Chapter 7 (which roughly equates to our bootstrap-stage1), but then
+#       they install it in /cross-tools (which is the prefix used for the cross
+#       compilation toolchain).  I believe they did this because CLFS doesn't
+#       have a bootstrap-early equivalent.  We check for bc via configure and
+#       add it to hostprep (aka bootstrap-early) if needed.
 #
 #packages+=" bc"
 
@@ -1058,13 +948,20 @@ packages+=" xz"
 
 packages+=" kernel"
 
-# NOTE: We leave out grub for two reasons.
+# NOTE: We leave out grub for three reasons.
 #
 #       1) We boot our bootstrap system up as a Xen virtual machine, so we
 #          don't need a bootloader.
 #
 #       2) I'd use SYSLINUX if we really need a bootloader at this point.
 #          Better bang for the buck (EXT, FAT, IS9660 support, etc).
+#
+#       3) We've already checked the host system for syslinux via configure and
+#          built it via hostprep if missing, so we know we can make the
+#          bootstrap system bootable if not using Xen.  With syslinux
+#          installed/configured on the bootstrap system, we'll be able to boot
+#          bot won't necesarily be able to reinstall extlinux or make bootable
+#          ISOs... but we'll cover that later on during the final system build.
 #
 #packages+=" grub"
 
@@ -1073,7 +970,11 @@ packages+=" create-dirs"
 packages+=" create-symlinks"
 
 # this will handle config files for init, mdev, users/groups, logfiles,
-# login scripts, fstab, needed device nodes, etc
+# login scripts, fstab, etc
+#
+# NOTE: CLFS has a stand-alone section for device nodes that we've swallowed up
+#       into fix_perms() in our go2 script (run via make install as root).
+#
 packages+=" create-conf"
 
 # and so ends the list of CLFS packages
@@ -1089,6 +990,7 @@ packages+=" create-conf"
 #
 # NOTE: This also ensures that the rsync submodule is bootstrapped prior to
 #       booting into the stage2 builder.
+#
 packages+=" rsync"
 
 

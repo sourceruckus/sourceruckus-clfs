@@ -32,6 +32,12 @@ fix_perms()
     #chgrp -v 13 $CLFS/var/{run/utmp,log/lastlog} || exit 1
 
     # create initial device nodes
+    #
+    # NOTE: CLFS does this in Chapter 7 (which roughly correlates w/ our
+    #       bootstrap-stage1 create-conf script).  We do it here instead so
+    #       that we can do it conditionally and w/ the right permissions (this
+    #       script runs as root).
+    #
     if [ ! -c $CLFS/dev/console ]; then
         mknod -m 0600 ${CLFS}/dev/console c 5 1 || exit 1
     fi
