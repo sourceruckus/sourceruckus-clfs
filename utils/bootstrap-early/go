@@ -230,11 +230,56 @@ build()
 	    #
 	    #        /var: blktap, blktap2, console, xl.conf, ... oh
 	    #        boy pretty much everything
+            #
+            # NOTE: I'm trying to patch less w/ the Xen 4.11
+            #       upgrade... Upstream now respects a whole slew of extra
+            #       variables at install-time, so we're doing things that way.
+            #
+            # FIXME: but i don't know if the installed binaries and scripts
+            #        will work at all... need to test and probably patch for
+            #        that.
+            #
+            # FIXME: might need to goof w/ systemd support...  INSTALL says it
+            #        will use systemd if devel packages are found, in which
+            #        case you can't start things normally...  It doesn't look
+            #        like systemd is being used, though, and i'm definately
+            #        seeing the sysvinit scripts get installed... so... yeah...
+            #
 	    pushd $builddir &&
-            CONFIG_DIR=$PREFIX_HOSTPREP/etc VAR_DIR=$PREFIX_HOSTPREP/var \
-	        make -j$JOBCOUNT dist &&
-            CONFIG_DIR=$PREFIX_HOSTPREP/etc VAR_DIR=$PREFIX_HOSTPREP/var \
-                make install &&
+            make BOOT_DIR=$PREFIX_HOSTPREP/boot \
+                EFI_DIR=$PREFIX_HOSTPREP/lib/efi \
+                DEBUG_DIR=$PREFIX_HOSTPREP/lib/debug \
+                POLICY_LOADPATH=$PREFIX_HOSTPREP/boot \
+                INITD_DIR=$PREFIX_HOSTPREP/etc/rc.d/init.d \
+                SYSCONFIG_DIR=$PREFIX_HOSTPREP/etc/sysconfig \
+                XEN_CONFIG_DIR=$PREFIX_HOSTPREP/etc/xen \
+                XEN_SCRIPT_DIR=$PREFIX_HOSTPREP/etc/xen \
+                XEN_DUMP_DIR=$PREFIX_HOSTPREP/var/lib/xen/dump \
+                XEN_LOG_DIR=$PREFIX_HOSTPREP/var/log/xen \
+                XEN_RUN_DIR=$PREFIX_HOSTPREP/var/run/xen \
+                XEN_RUN_STORED=$PREFIX_HOSTPREP/var/run/xenstored \
+                XEN_LIB_DIR=$PREFIX_HOSTPREP/var/lib/xen \
+                XEN_LIB_STORED=$PREFIX_HOSTPREP/var/lib/xenstored \
+                BASH_COMPLETION_DIR=$PREFIX_HOSTPREP/etc/bash_completion.d \
+                XEN_PAGING_DIR=$PREFIX_HOSTPREP/var/lib/xen/xenpaging \
+	        -j$JOBCOUNT dist &&
+            make BOOT_DIR=$PREFIX_HOSTPREP/boot \
+                EFI_DIR=$PREFIX_HOSTPREP/lib/efi \
+                DEBUG_DIR=$PREFIX_HOSTPREP/lib/debug \
+                POLICY_LOADPATH=$PREFIX_HOSTPREP/boot \
+                INITD_DIR=$PREFIX_HOSTPREP/etc/rc.d/init.d \
+                SYSCONFIG_DIR=$PREFIX_HOSTPREP/etc/sysconfig \
+                XEN_CONFIG_DIR=$PREFIX_HOSTPREP/etc/xen \
+                XEN_SCRIPT_DIR=$PREFIX_HOSTPREP/etc/xen \
+                XEN_DUMP_DIR=$PREFIX_HOSTPREP/var/lib/xen/dump \
+                XEN_LOG_DIR=$PREFIX_HOSTPREP/var/log/xen \
+                XEN_RUN_DIR=$PREFIX_HOSTPREP/var/run/xen \
+                XEN_RUN_STORED=$PREFIX_HOSTPREP/var/run/xenstored \
+                XEN_LIB_DIR=$PREFIX_HOSTPREP/var/lib/xen \
+                XEN_LIB_STORED=$PREFIX_HOSTPREP/var/lib/xenstored \
+                BASH_COMPLETION_DIR=$PREFIX_HOSTPREP/etc/bash_completion.d \
+                XEN_PAGING_DIR=$PREFIX_HOSTPREP/var/lib/xen/xenpaging \
+                install &&
 	    popd || exit 1
 	    ;;
         flex)
