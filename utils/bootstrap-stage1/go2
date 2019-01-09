@@ -26,10 +26,11 @@ fix_perms()
         -exec chown --no-dereference 0:0 {} \;
     echo "done"
 
-    # FIXME: where did this come from...? I can't find them in the CLFS
-    #        3.0.0-systemd book... are they no longer needed?
+    # NOTE: CLFS SYSVINIT book does this in Chapter 7 (which roughly correlates
+    #       w/ our bootstrap-stage1 create-conf script).  We do it here instead
+    #       in order to correct our chown 0:0 above.
     #
-    #chgrp -v 13 $CLFS/var/{run/utmp,log/lastlog} || exit 1
+    chgrp -v 13 ${CLFS}/var/log/{faillog,lastlog} || exit 1
 
     # create initial device nodes
     #

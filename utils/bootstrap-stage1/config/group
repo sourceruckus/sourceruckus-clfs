@@ -17,10 +17,8 @@ cdrom:x:15:
 adm:x:16:
 console:x:17:
 cdrw:x:18:
-messagebus:x:27:
-systemd-journal:x:28:
 mail:x:30:
-news:x:31:news
+news:x:31:
 wheel:x:39:
 users:x:1000:
 nogroup:x:65533:

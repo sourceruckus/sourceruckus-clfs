@@ -61,6 +61,7 @@ build()
 	    #        perhaps build support for into our generic build
 	    #        scripts... although, the real problem here is
 	    #        configure failing if passed any invalid args...
+            #
 	    build_in_tree=yes setup_generic $1 || exit 1
 
 	    # NOTE: It also fails to configure if any unknown flags are passed
@@ -79,21 +80,6 @@ build()
 	    ;;
 
 	binutils)
-	    # FIXME: CLFS 20130924 has a sed statement to fix build problems
-	    #        on host systems w/ texinfo 5.x.  My boxes hav 4.x, so I
-	    #        don't need it for now, but we should add this check to
-	    #        configure.  Either add the sed statement here
-	    #        universally and conditionally build texinfo 5.x in
-	    #        bootstrap-early or have the configure script enable the
-	    #        sed statement only if host system has texinfo 5.x.
-	    #        Whichever is easier.
-            #
-            # FIXME: If we do it, don't forget to un-sed at the end as we might
-            #        be building in-tree or referencing a git checkout...
-	    #
-	    # sed -i -e 's/@colophon/@@colophon/' \
-	    #     -e 's/doc@cygnus.com/doc@@cygnus.com/' bfd/doc/bfd.texinfo
-
             # add 64bit support if desired
             if [ -n "$BUILD64" ]; then
                 OPTS+=" --enable-64-bit-bfd"
@@ -107,7 +93,11 @@ build()
             fi
 
 	    build_generic $1 $OPTS \
-                --target=${CLFS_TARGET} || exit 1
+                --target=${CLFS_TARGET} \
+                --enable-gold=yes \
+                --enable-plugins \
+                --with-system-zlib \
+                --enable-threads || exit 1
 	    ;;
 
 	gcc)
@@ -139,6 +129,7 @@ build()
             #        sources... if we ever swtich to a git tree, we'll need to
             #        either make a copy of the source tree or undo this at the
             #        end...
+            #
             pushd $source
 	    echo "#undef STANDARD_STARTFILE_PREFIX_1" >> gcc/config/linux.h
             echo "#define STANDARD_STARTFILE_PREFIX_1 \"$PREFIX_TOOLS/lib/\"" >> gcc/config/linux.h
@@ -169,28 +160,37 @@ build()
                 OPTS+=" --disable-multilib"
             fi
 
-            configure_generic $1 $OPTS --prefix=$PREFIX_TOOLS \
-                --build=${CLFS_HOST} --host=${CLFS_TARGET} \
-                --target=${CLFS_TARGET} --with-local-prefix=$PREFIX_TOOLS --disable-nls \
-                --enable-languages=c,c++ --disable-libstdcxx-pch \
-                --with-system-zlib --with-native-system-header-dir=$PREFIX_TOOLS/include \
-                --disable-libssp --enable-libstdcxx-time --enable-checking=release || exit 1
+            # FIXME: CLFS (per CLFS GIT-20170803) does NOT do --disable-nls in
+            #        Chapter 6, but does in Chapter 5 (but only in x86 and
+            #        x86_64-64)...  definately looks like there's unintentional
+            #        inconsistency here...  not sure which way to go here...
+            #
+            #        For now, I'm going to NOT --disable-nls here.
+            #
+            configure_generic $1 $OPTS \
+                --prefix=$PREFIX_TOOLS \
+                --build=${CLFS_HOST} \
+                --host=${CLFS_TARGET} \
+                --target=${CLFS_TARGET} \
+                --with-local-prefix=$PREFIX_TOOLS \
+                --enable-languages=c,c++ \
+                --with-system-zlib \
+                --with-native-system-header-dir=$PREFIX_TOOLS/include \
+                --disable-libssp \
+                --enable-install-libiberty || exit 1
 
 	    pushd $builddir || exit 1
-	    #  The following will prevent GCC from looking in the wrong
-	    #  directories for headers and libraries
-            cp -v Makefile{,.orig} &&
-            sed "/^HOST_\(GMP\|ISL\|CLOOG\)\(LIBS\|INC\)/s:$PREFIX_TOOLS:$PREFIX_CROSS:g" \
-                Makefile.orig > Makefile || exit 1
-
 	    make -j$JOBCOUNT AS_FOR_TARGET="${AS}" LD_FOR_TARGET="${LD}" &&
 	    make install &&
 	    popd || exit 1
 
             # Install the libiberty header file that is needed by some packages
-            pushd $source &&
-            cp -v include/libiberty.h $PREFIX_TOOLS/include &&
-            popd || exit 1
+            #
+            # FIXME: looks like this is done elsewhere w/ CLFS GIT-20170803
+            #
+            #pushd $source &&
+            #cp -v include/libiberty.h $PREFIX_TOOLS/include &&
+            #popd || exit 1
 	    ;;
 
 	ncurses)
@@ -198,8 +198,11 @@ build()
             #        problems, but I haven't run into the bug it fixes, so I've
             #        left it out for now.
 	    build_generic $1 $OPTS \
-                --without-debug --without-ada \
-                --enable-overwrite --with-build-cc=gcc || exit 1
+                --with-shared \
+                --without-debug \
+                --without-ada \
+                --enable-overwrite \
+                --with-build-cc=gcc || exit 1
 	    ;;
 
 	busybox)
@@ -257,6 +260,10 @@ build()
 	    ;;
 
         bash)
+            # NOTE: CLFS (GIT-20170803) applies upstream patches (up to
+            #       patchlevel 12).  We track the git repo as a submodule and
+            #       use the latest available (rigth now, patch 23)
+            #
             setup_generic $1 || exit 1
 
             # fix a bunch of cross-compilation configure errors
@@ -278,21 +285,30 @@ EOF
             popd
 
 	    configure_generic $1 $OPTS \
-                --without-bash-malloc --cache-file=config.cache &&
+                --without-bash-malloc \
+                --cache-file=config.cache &&
             compile_generic $1 || exit 1
             ;;
 
         gawk)
+            # remove busybox's awk symlink
+            #
+            # NOTE: The gawk install target creates awk->gawk, but only if it
+            #       doesn't already exist.
+            rm -f $PREFIX_TOOLS/bin/awk
+
             # NOTE: Can't quite use the generic rule here.  Looks like gawk
             #       commits configure in git and it's bootstrap.sh script
             #       actually touches files in the right order to keep configure
             #       from getting auto-regenerated.
+            #
+            # FIXME: Why am I forcing an autoreconf if I don't have to...?  Did
+            #        the included configure script not work for some reason?
+            #        Did I just want to know that I *could* bootstrap it w/ the
+            #        installed versions of autotools?
+            #
             autoreconf=yes \
                 build_generic $1 $OPTS || exit 1
-
-            # overwite busybox's awk symlink
-            ln -fs gawk $PREFIX_TOOLS/bin/awk || exit 1
-
             ;;
 
 	gettext)
@@ -303,38 +319,45 @@ EOF
             #       instead of a dist tarball, but my build just turns into a
             #       nightmare unless I just do a plain old full build.
             #
-            #       The CLFS book also works around a faulty wcwidth autoconf
-            #       check, which I don't seem to need to do.
-            #
             #       I do need to disable building the man and texinfo pages,
             #       though...
+            #
+            # FIXME: still needed?
+            #
 
 	    setup_generic $1 || exit
+
+            pushd $builddir/gettext-tools || exit 1
 
 	    # FIXME: We've got --enable-shared --disable-static in
 	    #        $OPTS... Does disabling shared now re-enable static?
             #
-            # NOTE: We don't need CLFS's config.cache work-around, as mentioned
-            #       above.
-	    configure_generic $1 $OPTS \
+            EMACS="no" \
+	        configure_generic $1 $OPTS \
 		--disable-shared  || exit 1
 
             # don't build man in gettext-runtime
-            pushd $builddir/gettext-runtime &&
-            sed -i 's|\(^SUBDIRS = [[:space:][:alnum:]$(-_]*\) man |\1 |' \
-                Makefile &&
-            popd || exit 1
+            #pushd $builddir/gettext-runtime &&
+            #sed -i 's|\(^SUBDIRS = [[:space:][:alnum:]$(-_]*\) man |\1 |' \
+            #    Makefile &&
+            #popd || exit 1
 
             # don't build man or info in gettext-tools
-            pushd $builddir/gettext-tools &&
-            sed -i 's|\(^SUBDIRS = [[:space:][:alnum:]$(-_]*\) man |\1 |' \
-                Makefile &&
-            sed -i 's|\(^SUBDIRS =\) doc |\1 |' Makefile &&
-            popd || exit 1
+            #pushd $builddir/gettext-tools &&
+            #sed -i 's|\(^SUBDIRS = [[:space:][:alnum:]$(-_]*\) man |\1 |' \
+            #    Makefile &&
+            #sed -i 's|\(^SUBDIRS =\) doc |\1 |' Makefile &&
+            #popd || exit 1
 
             # NOTE: Can't build in parallel (as of 0.19.1)
             #
-            JOBCOUNT=1 compile_generic $1 || exit 1
+            #JOBCOUNT=1 compile_generic $1 || exit 1
+
+            make -C gnulib-lib &&
+            make -C intl pluralx.c &&
+            make -C src msgfmt msgmerge xgettext &&
+            cp -v src/{msgfmt,msgmerge,xgettext} $PREFIX_TOOLS/bin &&
+            popd || exit 1
 	    ;;
 
 	texinfo)
@@ -342,26 +365,14 @@ EOF
                 build_generic $1 $OPTS || exit 1
             ;;
 
-        # FIXME: remove
-        texinfo-old)
-	    # We have a configure.ac patch and need to force an autoreconf
-	    autoreconf=yes \
-		setup_generic $1 || exit 1
-
-	    # We need to set LDFLAGS like this so that texinfo's build can
-	    # find our bootstrap-early stuff (ncurses, specifically).
-	    LDFLAGS=-L$PREFIX_HOSTPREP/lib \
-		configure_generic $1 $OPTS || exit 1
-
-	    pushd $builddir &&
-	    make -j$JOBCOUNT -C tools/gnulib/lib &&
-	    make -j$JOBCOUNT -C tools &&
-	    make -j$JOBCOUNT &&
-	    make install &&
-	    popd || exit 1
-	    ;;
-
 	create-dirs)
+            # NOTE: This 1st block of dirs is copy-pasted from the x86 CLFS
+            #       section (and is identical to pure64).  The extra dirs
+            #       created by the x86_64-multilib section are created below.
+            #
+            # FIXME: The GIT-20170803 CLFS Book's multilib section doesn't
+            #        create lib/firmware at all... I'm assuming that's a typo.
+            #
             mkdir -pv ${CLFS}/{bin,boot,dev,{etc/,}opt,home,lib/firmware,mnt}
             mkdir -pv ${CLFS}/{proc,media/{floppy,cdrom},run/{,shm},sbin,srv,sys}
             mkdir -pv ${CLFS}/var/{lock,log,mail,spool}
@@ -412,33 +423,15 @@ EOF
             done
             popd
 
-            # NOTE: This freshly copy-n-pasted block of symlinks from the CLFS
-            #       3.0.0-systemd book differ from what was here previously,
-            #       but you can't tell from the patch, because I took out all
-            #       the 2>/dev/null redirections and untabified at the same
-            #       time:
+            # NOTE: This 1st block of symlinks is copy-pasted from the x86 CLFS
+            #       section (and is identical to pure64).  The extra symlinks
+            #       created by the x86_64-multilib section are created below.
             #
-            #       1. The following symlink were removed:
-            #          - /bin/passwd
-            #          - /bin/sleep
-            #          - /sbin/agetty
-            #          - /sbin/blkid
-            #          - /var/run (not really, it's made in create-dirs now)
+            # NOTE: Be careful updating, the sed statement's quotes are single
+            #       in the CLFS book, but we stick $PREFIX_TOOLS in there,
+            #       which doesn't get expanded unless we also switch to double
+            #       qoutes.
             #
-            #       2. The following symlinks have been added:
-            #          - /bin/sh
-            #          - /sbin/init
-            #          - /etc/login.access (broken)
-            #          - /etc/login.defs (broken)
-            #          - /etc/limits (broken)
-            #          - /etc/mtab
-            #
-            #       3. The stdc++ lib is specified differently (was a glob
-            #          before).
-            #
-            #       4. The sed is new (as is the installation of the libtool
-            #          library).
-
             ln -sv $PREFIX_TOOLS/bin/{bash,cat,echo,grep,login,pwd,stty} ${CLFS}/bin
             ln -sv $PREFIX_TOOLS/bin/file ${CLFS}/usr/bin
             ln -sv $PREFIX_TOOLS/lib/libgcc_s.so{,.1} ${CLFS}/usr/lib
@@ -452,15 +445,6 @@ EOF
                 # x86_64 multilib only
                 ln -sv $PREFIX_TOOLS/lib64/libgcc_s.so{,.1} ${CLFS}/usr/lib64
                 ln -sv $PREFIX_TOOLS/lib64/libstdc++.so{.6,} ${CLFS}/usr/lib64
-
-            elif [ -n "$BUILD64" ]; then
-                # x86_64 pure only
-
-                # To enable some C++ tests in the Glibc and Binutils test
-                # suites to link, create a directory and make some symbolic
-                # links:
-                mkdir -pv ${CLFS}/usr/lib64
-                ln -sv $PREFIX_TOOLS/lib/libstdc++.so{.6,} ${CLFS}/usr/lib64
             fi
 
             # create /etc/mtab symlink for compatibility
@@ -474,9 +458,15 @@ EOF
             # FIXME: should i automate this?  at least add a 'find $CLFS -xtype
             #        -l -printf WARNING: broken link detected' or something?
             #
-            rm -vf $CLFS/etc/limits
-            rm -vf $CLFS/etc/login.{access,defs}
-
+            #rm -vf $CLFS/etc/limits
+            #rm -vf $CLFS/etc/login.{access,defs}
+            #
+            blarg=$(find $CLFS -xtype l
+                -printf "WARNING: broken link detected: %p\n")
+            if [ -n "$blarg" ]; then
+                echo $blarg
+                exit 1
+            fi
 	    ;;
 
 	create-conf)
@@ -504,18 +494,45 @@ EOF
                 $CLFS/etc/ || exit 1
 
 	    # copy passwd and group files into etc
+            #
+            # NOTE: We maintain these as files instead of as here-documents so
+            #       that we can tweak CLFS' recommendations more easily.
+            #
+            # NOTE: We use /bin/ash for root's shell (at least for now) because
+            #       it plays nicer with Xen's virtual console device than bash
+            #       does.
+            #
+            # FIXME: CLFS Systemd vs Sysvinit books have very different
+            #        passwd/group files... gonna have to pick one...
+            #
+            #        I think we should be using the sysvinit one for now, since
+            #        we're not going to build systemd to boot our bootstrap
+            #        system.  During final build, if/when we build systemd,
+            #        we'll add users/groups via srp.
+            #
+            # FIXME: The CLFS book (GIT-20170803) seems to have typos in the
+            #        passwd file... it left out the "comment" field and didn't
+            #        double up the ':' separator...
+            #
 	    cp -v $ruckus_confdir/{passwd,group} $CLFS/etc || exit 1
 	    
 	    # initialize login related log files.
 	    #
+            # NOTE: Only the SYSVINIT variant of CLFS does this.  These files
+            #       are either not used by Systemd, or it creates them itself.
+            #       Either way, since I'm still kinda undecided on final system
+            #       init, and may use SYSVINIT for a while prior to installing
+            #       Systemd, we'll create these.  Also of note, we create and
+            #       chmod the files here but chgrp them in go2's fix_perms()
+            #       (as root) after chowning everythig to 0:0.
+            #
 	    # NOTE: busybox's init replacement might not use these, but if
 	    #       switch over to the real sysvinit later on we'll want
 	    #       these files
             #
-            # FIXME: dup! check go2
-	    #touch ${CLFS}/var/run/utmp ${CLFS}/var/log/{btmp,lastlog,wtmp} &&
-	    #chmod -v 664 ${CLFS}/var/run/utmp ${CLFS}/var/log/lastlog &&
-	    #chmod -v 600 ${CLFS}/var/log/btmp || exit 1
+            touch ${CLFS}/var/log/{btmp,faillog,lastlog,wtmp} &&
+            chmod -v 664 ${CLFS}/var/log/{faillog,lastlog} &&
+            chmod -v 600 ${CLFS}/var/log/btmp || exit 1
 
 	    # copy profile into root's homedir
             #
@@ -523,7 +540,7 @@ EOF
             #       multiple systems on a single box w/out the /tools symlinks
             #       colliding.
             #
-            sed "s|/tools|$PREFIX_TOOLS|g" $ruckus_confdir/profile \
+            sed "s|:/tools|:$PREFIX_TOOLS|g" $ruckus_confdir/profile \
                 > $CLFS/root/.profile || exit 1
 
 	    # make sure these build variables are set
@@ -539,8 +556,6 @@ EOF
 	    #       build some 32bit libs at the beginning of the final system
 	    #       build (looks like cloog is the last one that needs it).
             #
-            # FIXME: Why does nothing after cloog need --host=$CLFS_TARGET32
-            #        when building 32bit libs...?
 	    echo export BUILD32=\"$BUILD32\" >> $CLFS/root/.profile
 	    echo export BUILD64=\"$BUILD64\" >> $CLFS/root/.profile
 	    echo export CLFS_TARGET32=\"$CLFS_TARGET32\" >> $CLFS/root/.profile
@@ -554,7 +569,12 @@ EOF
             # FIXME: CLFS 3.0.0-systemd fstab is excluding some of the standard
             #        virtual filesystems... /proc, /sys, /run, and /dev... not
             #        sure why.
+            #
             echo "# -*- mode: sh -*- " > $CLFS/etc/fstab
+            echo "#" >> $CLFS/etc/fstab
+            echo "# device  mount_point  fstype  options  dump  fsck_order" \
+                >> $CLFS/etc/fstab
+            echo "" >> $CLFS/etc/fstab
             if [ "$STAGE2_XEN" = "yes" ]; then
                 echo "/dev/xvda1 / $CLFS_FSTYPE defaults 1 1" >> $CLFS/etc/fstab
             else
@@ -643,7 +663,7 @@ EOF
 	    # get set
 	    cp -v $ruckus_confdir/$kernel_config $builddir/.config &&
 	    pushd $builddir &&
-	    $MAKE oldconfig &&
+	    $MAKE olddefconfig &&
 	    popd || exit 1
 
 	    # NOTE: if you want to do a make menuconfig to tweak .config,
@@ -654,6 +674,10 @@ EOF
             # FIXME: used to use INSTALL_MOD_PATH=$CLFS, but somewhere along
             #        the line CLFS switched to /tools... will modprobe work?
             #        will firmware get found?
+            #
+            # FIXME: i guess it must work, because i don't remember having any
+            #        problems w/ modules last time i tried building...
+            #
 	    pushd $builddir &&
 	    $MAKE -j$JOBCOUNT_KBUILD &&
             $MAKE INSTALL_MOD_PATH=$PREFIX_TOOLS modules_install &&
@@ -682,15 +706,22 @@ EOF
             #
             # FIXME: get this path right... see comment above about /lib vs
             #        /tools/lib.
+            #
             rm -f $PREFIX_TOOLS/lib/modules/*/{build,source} || exit 1
 
 	    # now actually install the resulting kernel files
+            #
+            # NOTE: We used to install in $CLFS/boot, but CLFS book shifted to
+            #       $PREFIX_TOOLS at some point.  I guess it doesn't really
+            #       matter, and sticking them in there does make it easier to
+            #       remove the bootstrap files later on...
+            #
 	    pushd $builddir &&
-            mkdir -p $CLFS/boot &&
+            mkdir -p $PREFIX_TOOLS/boot &&
 	    cp -v arch/$CLFS_ARCH/boot/bzImage \
-                $CLFS/boot/vmlinuz-ruckus-bootstrap &&
-	    cp -v System.map $CLFS/boot/System.map-ruckus-bootstrap &&
-	    cp -v .config $CLFS/boot/config-ruckus-bootstrap &&
+                $PREFIX_TOOLS/boot/vmlinuz-ruckus-bootstrap &&
+	    cp -v System.map $PREFIX_TOOLS/boot/System.map-ruckus-bootstrap &&
+	    cp -v .config $PREFIX_TOOLS/boot/config-ruckus-bootstrap &&
 	    popd || exit 1
 	    ;;
 
@@ -749,11 +780,14 @@ EOF
             fi
 	    ;;
 
-	rsync)
+	#rsync)
 	    # seems to have a parallel build problem... (still true as of
 	    # v3.0.9)
-	    JOBCOUNT=1 build_generic $1 $OPTS || exit 1
-	    ;;
+            #
+            # FIXME: how about now?
+            #
+	    #JOBCOUNT=1 build_generic $1 $OPTS || exit 1
+	    #;;
 
 	*)
 	    build_generic $1 $OPTS || exit 1

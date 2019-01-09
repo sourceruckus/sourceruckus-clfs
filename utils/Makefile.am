@@ -22,7 +22,7 @@ bootstrap-install-local:
 	$(INSTALL_DATA) $(builddir)/ruckus-builder.cfg \
 	    $(PREFIX_HOSTPREP)/etc/xen/ruckus-builder-$(CLFS_ARCH_STRING).cfg
 	$(MKDIR_P) $(PREFIX_HOSTPREP)/boot/$(CLFS_ARCH_STRING)
-	$(INSTALL_DATA) $(CLFS)/boot/* \
+	$(INSTALL_DATA) $(PREFIX_TOOLS)/boot/* \
 	    $(PREFIX_HOSTPREP)/boot/$(CLFS_ARCH_STRING)
 
 endif
