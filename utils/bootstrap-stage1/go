@@ -327,7 +327,16 @@ EOF
 
 	    setup_generic $1 || exit
 
-            pushd $builddir/gettext-tools || exit 1
+            # tweak vars to just build gettext-tools
+            source=$source/gettext-tools
+            builddir=$builddir/gettext-tools
+            configure=$source/configure
+            echo source: $source
+            echo builddir: $builddir
+            echo configure: $configure
+
+            mkdir -p $builddir &&
+            pushd $builddir || exit 1
 
 	    # FIXME: We've got --enable-shared --disable-static in
 	    #        $OPTS... Does disabling shared now re-enable static?

@@ -18,7 +18,9 @@ that).
 
 *NOTE*: x86_64 multilib through bootstrap-stage1 is about 15G plus about 100M
         for the installed hostprep stuff.  About 7G can be deleted by cleaning
-        out the build files in utils.
+        out the build files in utils.  UPDATE: well, I just ran out of space
+        doing this on a clean 20G partition...  so I'm guessing this has
+        increased since the last time I looked.  ;-)
 
 *NOTE*: pre-bootstrap-install, install dev has about 900M used (x86_64
         multilib).  After bootstrap-install, it's dropped to 580M.
@@ -96,7 +98,8 @@ make bootstrap
         bootstrap-install target.
 
 *NOTE*: bootstrap took another __ minutes on my A10-6700 (x86_64 multilib), 53
-        on the A10-7850K, 35 on the FX-8350.
+        on the A10-7850K, 35 on the FX-8350.  (45 mins then out of space, then
+        another 15 until gettext failure...)
 
 *NOTE*: x86_64-64, FX-8350, bare-metal: 28 minutes
         i686, FX-8350, bare-metal: 28 minutes
