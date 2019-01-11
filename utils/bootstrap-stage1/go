@@ -654,15 +654,28 @@ EOF
 	    fi
 
 	    # get ready
-	    MAKE="make KBUILD_SRC=$source -f $source/Makefile"
+            #
+            # NOTE: Kbuild requires PWD to be $source, but will put all build
+            #       files in an output dir via O=/path/to/outputdir.  Gives us
+            #       the same result as the PWD=builddir -f
+            #       /path/to/sourc/Makefile way of doing things, but does
+            #       require some faith in the Makefile to respect outputdir
+            #       100% of the time.  (FYI, I have never noticed KBuild
+            #       writing into $source w/ outputdir set...).
+            #
+            # NOTE: Also, the make mrproper SHOULD be pointless.  We just
+            #       created the directory fresh.  Unless this is a subsequent
+            #       run w/ a dirty source tree... so we do it anyways.
+            #
+	    MAKE="make O=$builddir"
 	    MAKE+=" ARCH=$CLFS_ARCH CROSS_COMPILE=$CLFS_TARGET-"
-	    pushd $builddir &&
+	    pushd $source &&
 	    $MAKE mrproper &&
 	    popd || exit 1
 
 	    # get set
 	    cp -v $ruckus_confdir/$kernel_config $builddir/.config &&
-	    pushd $builddir &&
+	    pushd $source &&
 	    $MAKE olddefconfig &&
 	    popd || exit 1
 
@@ -678,7 +691,7 @@ EOF
             # FIXME: i guess it must work, because i don't remember having any
             #        problems w/ modules last time i tried building...
             #
-	    pushd $builddir &&
+	    pushd $source &&
 	    $MAKE -j$JOBCOUNT_KBUILD &&
             $MAKE INSTALL_MOD_PATH=$PREFIX_TOOLS modules_install &&
 	    popd || exit 1
