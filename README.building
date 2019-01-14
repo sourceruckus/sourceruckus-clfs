@@ -71,6 +71,9 @@ make hostprep
 *NOTE*: hostprep took about 19 minutes on my my AMD FX-8350 (CentOS 7, x86_64
         multilib, prebootstrapped).
 
+*NOTE*: Building hostprep doesn't require a ton of space.  On CentOS 7 the
+        build tree is about 830M and the installed files were an additional
+        183M.
 
 ** Configure Stage 1
 
@@ -124,8 +127,9 @@ make bootstrap
 
 *NOTE*: bootstrap took another __ minutes on my A10-6700 (x86_64 multilib), 53
         on the A10-7850K, 35 on the FX-8350.  (45 mins then out of space, then
-        another 15 until gettext failure, then another 10 until kernel
-        failure, then another 15 until create-symlinks failure...)
+        another 15 until gettext failure, then another 10 until kernel failure,
+        another 15 until create-symlinks failure, then another 2 until backup
+        finished.  but that was in a NON-bootstrapped source tree.)
 
 *NOTE*: x86_64-64, FX-8350, bare-metal: 28 minutes
         i686, FX-8350, bare-metal: 28 minutes

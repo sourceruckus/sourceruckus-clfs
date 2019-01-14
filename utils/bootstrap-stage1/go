@@ -786,15 +786,6 @@ EOF
             fi
 	    ;;
 
-	#rsync)
-	    # seems to have a parallel build problem... (still true as of
-	    # v3.0.9)
-            #
-            # FIXME: how about now?
-            #
-	    #JOBCOUNT=1 build_generic $1 $OPTS || exit 1
-	    #;;
-
 	*)
 	    build_generic $1 $OPTS || exit 1
 	    ;;
