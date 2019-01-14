@@ -442,19 +442,16 @@ EOF
             # remove the broken symlinks created by the copy-n-pasted CLFS
             # scriptlet above
             #
-            # NOTE: This list can be double-checked with 'find $CLFS -xtype l'
+            # NOTE: As of CLFS GIT-20170803-x86_64, this removes the following
+            #       broken symlinks:
             #
-            # FIXME: should i automate this?  at least add a 'find $CLFS -xtype
-            #        -l -printf WARNING: broken link detected' or something?
+            #       $CLFS/etc/limits
+            #       $CLFS/etc/login.{access,defs}
             #
-            #rm -vf $CLFS/etc/limits
-            #rm -vf $CLFS/etc/login.{access,defs}
-            #
-            blarg=$(find $CLFS -xtype l
-                -printf "WARNING: broken link detected: %p\n")
+            blarg=$(find $CLFS -xtype l -printf "%p ")
             if [ -n "$blarg" ]; then
-                echo $blarg
-                exit 1
+                echo "WARNING: broken link(s) detected: $blarg"
+                rm -vf $blarg
             fi
 	    ;;
 
@@ -761,10 +758,16 @@ EOF
 	    MAKE+=" CROSS_COMPILE=$CLFS_TARGET-"
 	    pushd $builddir &&
 	    $MAKE -j$JOBCOUNT dist &&
-            $MAKE DESTDIR=$PREFIX_HOSTPREP install &&
 	    popd || exit 1
 
-            # also install in PREFIX_TOOLS if needed
+            # install in PREFIX_HOSTPREP if we're on the Xen detour
+            if [ "$STAGE1_XEN_ONLY" = "yes" ]; then
+                pushd $builddir &&
+                $MAKE DESTDIR=$PREFIX_HOSTPREP install &&
+                popd || exit 1
+            fi
+
+            # install in PREFIX_TOOLS if needed
             #
             # NOTE: If we're building a 32bit system, we won't be able to
             #       compile the hypervisor during the final build phase.
@@ -775,6 +778,7 @@ EOF
             # FIXME: Don't forget to make the xen final system build script
             #        slurp up the pre-existing hypervisor into it's package
             #        contents...
+            #
             if [ -z "$BUILD64" ]; then
                 pushd $builddir &&
                 $MAKE DESTDIR=$PREFIX_TOOLS install &&

@@ -400,19 +400,25 @@ AM_CONDITIONAL([XEN_ENABLED], [test x$xen_enabled = xyes])
 # NOTE: This is to avoid rebuilding the xen hypervisor when bootstrapping
 #       multiple architectures sharing a common hostprep area.
 #
-# FIXME: This could also be used to detect wither we should go on the xen
+# FIXME: This could also be used to detect wether we should go on the xen
 #        detour, instead of the nested if ugliness above...
+#
+# Build Xen in stage1 if we're building 32bit (and install in
+# PREFIX_TOOLS) or if we're building ON A 32BIT HOST (will trigger xen
+# detour, WITH_STAGE1_XEN_ONLY, and eventual installation of xen.gz
+# into PREFIX_HOSTPREP during hostprep).
+#
 AS_IF([test "$xen_enabled" = "yes"],
-  [AS_IF([test -f $PREFIX_HOSTPREP/boot/xen.gz],
-    [stage1_xen=no],
-    [stage1_xen=yes])],
+  [AS_IF([test "$build_arch" != "x86_64" -o "$build_cpu" != "x86_64"],
+    [stage1_xen=yes],
+    [stage1_xen=no])],
   [stage1_xen=no])
 
 # we might want to disable building the xen hypervisor in stage1, for
 # example if we've got two builds going in parallel (both would autodetect
 # to build the hypervisor).
 AC_ARG_WITH(stage1-xen,
-  AS_HELP_STRING([--with-stage1-xen], [Build the Xen hypervisor in bootstrap-stage1.]),
+  AS_HELP_STRING([--with-stage1-xen], [Build the Xen hypervisor in bootstrap-stage1.  This is autodetected if building on 32bit host (for hostprep xen detour) or if building x86 final system (which can't compile hypervisor), but can be overriden here.]),
   stage1_xen=$withval)
 #  stage1_xen=no)
 

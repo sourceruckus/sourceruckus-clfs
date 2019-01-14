@@ -29,44 +29,11 @@ that).
         mkfs.ext4 -O ^has_journal /dev/sdXN
 
 
-* Configuring
+* Source Tree Prep
 
-** hostprep only
 INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
-    --prefix=/mnt/root-true/ruckus-hostprep \
+    --prefix=/scrap/ruckus-hostprep \
     --with-hostprep-only
-
-** 64bit multilib
-INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
-    --prefix=/scrap/ruckus-hostprep \
-    --enable-stage2-auto \
-    --with-install-dev=/dev/mapper/vg00-baby \
-    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
-
-** 32bit w/out Xen (assuming it's already built)
-INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
-    --prefix=/scrap/ruckus-hostprep \
-    --enable-stage2-auto \
-    --with-arch=i686 \
-    --without-stage1-xen \
-    --with-install-dev=/dev/mapper/vg00-baby32 \
-    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
-
-** 64bit (pure64) w/out Xen (assuming it's already built)
-INIT_SUBMOD_ARGS="-m MIRRORS" ./autogen.sh \
-    --prefix=/scrap/ruckus-hostprep \
-    --enable-stage2-auto \
-    --with-arch=x86_64 --disable-multilib \
-    --without-stage1-xen \
-    --with-install-dev=/dev/mapper/vg00-baby64 \
-    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
-
-
-
-
-* Building
-
-** Prep
 
 make download
 
@@ -74,6 +41,22 @@ make download
         git submodules or download URL's happen to be down (or have changed).
         I haven't timed it.
 
+make distclean
+
+*NOTE*: W/out this, you won't be able to build out-of-tree in the following
+        steps.  And every time I say "But I don't need to build out-of-tree
+        this time", I always eventually seem to wish that I had...
+
+
+* Building
+
+** Hostprep
+
+mkdir /scrap/hostprep/ruckus-build
+cd /scrap/hostprep/ruckus-build
+/scrap/ruckus/configure \
+    --prefix=/scrap/ruckus-hostprep \
+    --with-hostprep-only
 
 make hostprep
 
@@ -89,6 +72,48 @@ make hostprep
         multilib, prebootstrapped).
 
 
+** Configure Stage 1
+
+mkdir /scrap/baby/ruckus-build
+cd /scrap/baby/ruckus-build
+
+*NOTE*: The --prefix needs to continue to match in all of these, because
+        bootstrap-install installs domU config files into
+        $PREFIX_HOSTPREP/boot.
+
+*NOTE*: Eventually, we'll want --enabled-stage2-auto in all of these... but for
+        now, I keep copy-n-pasting these commands and then removing that.  At
+        this point in development, I still like to inspect the bootstrap system
+        upon 1st boot and then manually configure the stage2 building.
+
+*** 64bit multilib
+
+/scrap/ruckus/configure \
+    --prefix=/scrap/ruckus-hostprep \
+    --with-install-dev=/dev/mapper/vg00-baby \
+    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
+
+*** 32bit
+
+*NOTE*: We *could* specify --without-stage1-xen here to explicitly skip
+        building the Xen hypervisor.  We've already built one via hostprep, but
+        building it again here will install it in $PREFIX_TOOLS/boot, which is
+        available from the bootstrap system.
+
+/scrap/ruckus/configure \
+    --prefix=/scrap/ruckus-hostprep \
+    --with-arch=i686 \
+    --with-install-dev=/dev/mapper/vg00-baby32 \
+    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
+
+*** 64bit (pure64)
+
+/scrap/ruckus/configure \
+    --prefix=/scrap/ruckus-hostprep \
+    --with-arch=x86_64 --disable-multilib \
+    --with-install-dev=/dev/mapper/vg00-baby64 \
+    --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
+
 ** Stage 1
 
 make bootstrap
@@ -100,7 +125,7 @@ make bootstrap
 *NOTE*: bootstrap took another __ minutes on my A10-6700 (x86_64 multilib), 53
         on the A10-7850K, 35 on the FX-8350.  (45 mins then out of space, then
         another 15 until gettext failure, then another 10 until kernel
-        failure...)
+        failure, then another 15 until create-symlinks failure...)
 
 *NOTE*: x86_64-64, FX-8350, bare-metal: 28 minutes
         i686, FX-8350, bare-metal: 28 minutes
