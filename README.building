@@ -81,8 +81,9 @@ mkdir /scrap/baby/ruckus-build
 cd /scrap/baby/ruckus-build
 
 *NOTE*: The --prefix needs to continue to match in all of these, because
-        bootstrap-install installs domU config files into
-        $PREFIX_HOSTPREP/boot.
+        bootstrap for 32bit slurps hostprep's Xen hypervisor files from
+        $PREFIX_HOSTPREP/boot into $PREFIX_TOOLS/boot and bootstrap-install
+        installs domU config files into $PREFIX_HOSTPREP/boot.
 
 *NOTE*: Eventually, we'll want --enabled-stage2-auto in all of these... but for
         now, I keep copy-n-pasting these commands and then removing that.  At
@@ -97,11 +98,6 @@ cd /scrap/baby/ruckus-build
     --with-ruckus-dev-snapshot=/dev/mapper/vg00-ruckus
 
 *** 32bit
-
-*NOTE*: We *could* specify --without-stage1-xen here to explicitly skip
-        building the Xen hypervisor.  We've already built one via hostprep, but
-        building it again here will install it in $PREFIX_TOOLS/boot, which is
-        available from the bootstrap system.
 
 /scrap/ruckus/configure \
     --prefix=/scrap/ruckus-hostprep \

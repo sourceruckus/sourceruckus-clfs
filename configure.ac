@@ -360,12 +360,12 @@ AC_ARG_ENABLE(xen,
    AS_IF([test "$xen_enabled" != "yes"], [stage2_xen=no])
   ],
   [xen_enabled=yes
-   AS_IF([test "$build_arch" != x86_64],
+   AS_IF([test "$build_arch" != x86_64 -a "$build_cpu" != "x86_64"],
      [AC_MSG_WARN([
 		*************************************************************
-		Xen requires a 64bit hypervisor.  The build will go on a
-		detour to cross-compile the hypervisor automatically.  This
-		entails reconfiguring, building the cross-compilation
+		Xen requires a 64bit hypervisor.  Building hostprep will go
+		on a detour to cross-compile the hypervisor automatically.
+		This entails reconfiguring, building the cross-compilation
 		toolchain, cross-compiling xen, removing the
 		cross-compilation toolchain, reconfiguring back to the
 		original config, and carrying on with the build.  Log files
@@ -373,13 +373,8 @@ AC_ARG_ENABLE(xen,
 		but it does work.
 
                 If you don't really care about Xen, you can disable it in
-                both the bootstrap and final systems w/ the --disable-xen
+                hostprep, bootstrap, and final system w/ the --disable-xen
                 flag.
-
-                Alternatively, you can bypass the Xen detour but still
-                enable Xen support w/ the --without-stage1-xen flag, but
-                Xen will not be usable unless you've already built and
-                installed the Xen hypervisor in PREFIX_HOSTPREP/boot.
                 *************************************************************])
      ])
   ])
@@ -395,14 +390,6 @@ AM_CONDITIONAL([STAGE2_XEN], [test x$stage2_xen = xyes])
 AM_CONDITIONAL([XEN_ENABLED], [test x$xen_enabled = xyes])
 
 
-# don't bother building xen if we already have it
-#
-# NOTE: This is to avoid rebuilding the xen hypervisor when bootstrapping
-#       multiple architectures sharing a common hostprep area.
-#
-# FIXME: This could also be used to detect wether we should go on the xen
-#        detour, instead of the nested if ugliness above...
-#
 # Build Xen in stage1 if we're building 32bit (and install in
 # PREFIX_TOOLS) or if we're building ON A 32BIT HOST (will trigger xen
 # detour, WITH_STAGE1_XEN_ONLY, and eventual installation of xen.gz
@@ -413,14 +400,6 @@ AS_IF([test "$xen_enabled" = "yes"],
     [stage1_xen=yes],
     [stage1_xen=no])],
   [stage1_xen=no])
-
-# we might want to disable building the xen hypervisor in stage1, for
-# example if we've got two builds going in parallel (both would autodetect
-# to build the hypervisor).
-AC_ARG_WITH(stage1-xen,
-  AS_HELP_STRING([--with-stage1-xen], [Build the Xen hypervisor in bootstrap-stage1.  This is autodetected if building on 32bit host (for hostprep xen detour) or if building x86 final system (which can't compile hypervisor), but can be overriden here.]),
-  stage1_xen=$withval)
-#  stage1_xen=no)
 
 AC_SUBST(STAGE1_XEN, $stage1_xen)
 AM_CONDITIONAL([STAGE1_XEN], [test x$stage1_xen = xyes])

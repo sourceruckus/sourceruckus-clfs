@@ -724,7 +724,7 @@ EOF
 	    popd || exit 1
 	    ;;
 
-        xen)
+        xen-detour)
 	    # NOTE: Just build the hypervisor.  This step is generally just
 	    #       done to augment the bootstrap-early xen build on 32bit
 	    #       systems with a cross-compiled 64bit hypervisor.
@@ -758,32 +758,25 @@ EOF
 	    MAKE+=" CROSS_COMPILE=$CLFS_TARGET-"
 	    pushd $builddir &&
 	    $MAKE -j$JOBCOUNT dist &&
+            $MAKE DESTDIR=$PREFIX_HOSTPREP install &&
 	    popd || exit 1
+            ;;
 
-            # install in PREFIX_HOSTPREP if we're on the Xen detour
-            if [ "$STAGE1_XEN_ONLY" = "yes" ]; then
-                pushd $builddir &&
-                $MAKE DESTDIR=$PREFIX_HOSTPREP install &&
-                popd || exit 1
-            fi
-
-            # install in PREFIX_TOOLS if needed
+        xen-slurp)
+            # install hostprep's hypervisor in PREFIX_TOOLS if needed
             #
             # NOTE: If we're building a 32bit system, we won't be able to
             #       compile the hypervisor during the final build phase.
             #       Instead of building a new cross-compilation toolchain
-            #       later, we just pre-install the hypervisor on the final
-            #       system here.
+            #       later, we just pre-install the hypervisor we built during
+            #       hostprep onto the final system here.
             #
             # FIXME: Don't forget to make the xen final system build script
             #        slurp up the pre-existing hypervisor into it's package
             #        contents...
             #
-            if [ -z "$BUILD64" ]; then
-                pushd $builddir &&
-                $MAKE DESTDIR=$PREFIX_TOOLS install &&
-	        popd || exit 1
-            fi
+            mkdir -p $PREFIX_TOOLS/boot &&
+            cp -va $PREFIX_HOSTPREP/boot/xen* $PREFIX_TOOLS/boot/ || exit 1
 	    ;;
 
 	*)
@@ -1026,13 +1019,12 @@ packages+=" rsync"
 
 
 # If we have STAGE1_XEN_ONLY set, replace the entire pacakges list with just
-# xen.  Otherwise, if we're building for 64bit, but building on 32bit, and
-# want to use Xen for stage2, we need to cross-compile the hypervisor here in
-# addition to the other packages.
+# xen-detour.  Otherwise, if STAGE1_XEN is set, add xen-slurp to the package
+# list.
 if [ "$STAGE1_XEN_ONLY" = "yes" ]; then
-    packages=xen
+    packages=xen-detour
 elif [ "$STAGE1_XEN" = "yes" ]; then
-    packages+=" xen"
+    packages+=" xen-slurp"
 fi
 
 
