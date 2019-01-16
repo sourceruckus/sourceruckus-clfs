@@ -52,7 +52,7 @@ make distclean
 
 ** Hostprep
 
-mkdir /scrap/hostprep/ruckus-build
+mkdir -p /scrap/hostprep/ruckus-build
 cd /scrap/hostprep/ruckus-build
 /scrap/ruckus/configure \
     --prefix=/scrap/ruckus-hostprep \
@@ -69,11 +69,13 @@ make hostprep
         then cleaning).
 
 *NOTE*: hostprep took about 19 minutes on my my AMD FX-8350 (CentOS 7, x86_64
-        multilib, prebootstrapped).
+        multilib, prebootstrapped).  Building on a 32bit host is probably
+        around 45 minutes due to the Xen detour.
 
 *NOTE*: Building hostprep doesn't require a ton of space.  On CentOS 7 the
-        build tree is about 830M and the installed files were an additional
-        183M.
+        build tree is about 1.8G and the installed files were an additional
+        183M.  Building on a 32bit host is probably twice that due to the Xen
+        detour.
 
 ** Configure Stage 1
 
@@ -122,10 +124,12 @@ make bootstrap
         bootstrap-install target.
 
 *NOTE*: bootstrap took another __ minutes on my A10-6700 (x86_64 multilib), 53
-        on the A10-7850K, 35 on the FX-8350.  (45 mins then out of space, then
-        another 15 until gettext failure, then another 10 until kernel failure,
-        another 15 until create-symlinks failure, then another 2 until backup
-        finished.  but that was in a NON-bootstrapped source tree.)
+        on the A10-7850K, 35 on the FX-8350.  (381% cpu 1:20:03.40 on CentOS 7,
+        x86_64 multilib, prebootstrapped.  64G ADATA SP600 x4 in RAID5.  Not
+        sure why this is going so much slower than my last round of
+        benchmarks... ooh, my other FX-8350 box had 64G ADATA SP900 x4 in
+        RAID0.  that should be faster, but not twice as fast...  faster host
+        was running AVLinux 6 32bit)
 
 *NOTE*: x86_64-64, FX-8350, bare-metal: 28 minutes
         i686, FX-8350, bare-metal: 28 minutes
@@ -135,6 +139,8 @@ make bootstrap
         i686, FX-8350, xen: 36 minutes
 
         x86_64, A10-6700, xen: 74 minutes
+
+*NOTE*: Building bootstrap required about 15G.
 
 
 sudo make bootstrap-install
