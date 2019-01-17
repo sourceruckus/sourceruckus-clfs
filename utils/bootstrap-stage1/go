@@ -1065,7 +1065,7 @@ if [ "$STAGE1_XEN_ONLY" != "yes" ]; then
     tar -c \
         --exclude ./lost+found \
         --exclude .${ruckus_srcdir#$CLFS} \
-        --exclude .${ruckus_builddir#$CLFS} \
+        --exclude .${ruckus_builddir#$CLFS}* \
         -g $BUILDROOT/baby-bootstrap-stage1.snar \
         -C $CLFS . \
         | xz -0 > $BUILDROOT/baby-bootstrap-stage1.tar.xz || exit 1

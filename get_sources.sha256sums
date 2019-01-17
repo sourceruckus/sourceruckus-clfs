@@ -13,7 +13,7 @@ dbbcbd72a29a51206677a606ea09dfec83ae25cbbf52dee90306bc04812cd034  src/xen/stubdo
 4e48ea0d83dd9441cc1af04ab18cd6c961b9fa54d5cbf2c2feee038988dea459  src/xen/stubdom/tpm_emulator-0.7.4.tar.gz
 246cf3ffa54985118ec2eea2b8d0c71b92114efe6282c2ae90d65029db4cf93a  src/texinfo/texinfo-6.3.tar.xz
 62adfca89b0a1c0164c2cdca59ca210c1d44c3ffc46daf9931cf4942664cb02a  src/bc/bc-1.07.1.tar.gz
-067bd9bb3390e79aa45911537d13c3721f1d9d3769931a30c2681bfee66f23a0  src/glibc/glibc-2.25.tar.xz
+b1900051afad76f7a4f73e71413df4826dce085ef8ddb785a945b66d7d513082  src/glibc/glibc-2.28.tar.xz
 4ff941449631ace0d4d203e3483be9dbc9da454084111f97ea0a2114e19bf066  src/zlib/zlib-1.2.11.tar.xz
 26d3986d2bea109d5dc0e4f8c4822a459276cf021125e8c9f23c3cca5d8c850e  src/syslinux/syslinux-6.03.tar.xz
 d91b0295b72a638e4a564f643e4e6d1928779131f628c00f356c13bf336de46f  src/help2man/help2man-1.47.6.tar.xz
@@ -22,7 +22,7 @@ b28dca90428a3b30e650525cdc16255d76bb6ccd65d448be53e620d95d5cc040  src/expect/exp
 f551c24b30ce8bfb6e96d9f59b42fbea30fa3a6123384172f9e7284bcf647260  src/ncurses/ncurses-6.0.tar.gz
 b9d20fee979e153d11476cb1e5b176cbaed5669dca19f83fcebba25b1cb5d476  src/ncurses/ncurses-6.0-bash_fix-1.patch
 a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd  src/bzip2/bzip2-1.0.6.tar.gz
-8a8136c235f64c6fef69cac0d73a46a1a09bb250776a050aec8f9fc880bebc17  src/gcc/gcc-7.1.0.tar.bz2
+196c3c04ba2613f893283977e6011b2345d1cd1af9abeac58e916b1aab3e0080  src/gcc/gcc-8.2.0.tar.xz
 24f7a48aae6b74755bcbe964ce8bc7240f6ced2141f8d9cf480bc3b3de0d5616  src/check/check-0.11.0.tar.gz
 373e849067f33159470060f35742110ff23b5fba07e42f01fbd0654d7a9a371f  src/tcl/tcl-core8.6.4-src.tar.gz
 617decc6ea09889fb08ede330917a00b16809b8db88c29c31bfbb49cbf88ecc3  src/mpc/mpc-1.0.3.tar.gz

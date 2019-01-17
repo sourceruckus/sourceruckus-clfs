@@ -200,7 +200,13 @@ build()
             #       with here instead of assuming that our run-time kernel is
             #       the same version we're building glibc against.
             #
-            checkout=v3.14.21 \
+            # FIXME: Actually, in this case, we've upgraded glibc after the
+            #        last CLFS update.  We updated glibc to v2.28 (released
+            #        8/1/18), so we're using the latest availabe stable release
+            #        (as of now) of the latest longterm kernel series as of
+            #        8/1/18.
+            #
+            checkout=v4.14.93 \
                 setup_generic kernel || exit 1
 
             # get ready

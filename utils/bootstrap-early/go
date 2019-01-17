@@ -31,12 +31,15 @@ fi
 build()
 {
     case "$1" in
-	rsync)
+	#rsync)
 	    # rsync seems to have a parallel build problem... (still true as of
 	    # v3.0.9)
             #
-	    JOBCOUNT=1 build_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
-	    ;;
+            # FIXME: I think this is fixed upstream either by rsync, make, or
+            #        automake...
+            #
+	    #JOBCOUNT=1 build_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
+	    #;;
         gettext)
 	    setup_generic $1 &&
 	    configure_generic $1 --prefix=$PREFIX_HOSTPREP \
@@ -330,6 +333,16 @@ build()
 
 	    compile_generic $1 || exit 1
 	    ;;
+        make)
+	    build_generic $1 --prefix=$PREFIX_HOSTPREP || exit 1
+
+            # some things look for gnumake or gmake prior to make.  ensure that
+            # our hostprep version gets found and used by making symlinks.
+            pushd $PREFIX_HOSTPREP/bin &&
+            ln -fs make gnumake &&
+            ln -fs make gmake &&
+            popd || exit 1
+            ;;
         dejagnu-bootstrap)
             # special bootstrap... shouldn't necesarily need to be
             # bootstrapped, but for some reason needs to rebuild a texinfo file
