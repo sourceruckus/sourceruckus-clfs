@@ -7,6 +7,9 @@
 [ -n "$ruckus_srcdir" ] || ruckus_srcdir=$PWD/../..
 [ -n "$ruckus_builddir" ] || ruckus_builddir=$PWD/../..
 
+# set this so we can detect that we're in the bootstrap-early environment
+RUCKUS_BOOTSTRAP_EARLY=1
+
 # source our common variables and functions
 . $ruckus_srcdir/utils/bootstrap-early/functions
 
@@ -31,6 +34,11 @@ fi
 build()
 {
     case "$1" in
+        m4)
+            # gosh darned -Werror
+            build_generic $1 --prefix=$PREFIX_HOSTPREP \
+                --disable-gcc-warnings || exit 1
+            ;;
 	#rsync)
 	    # rsync seems to have a parallel build problem... (still true as of
 	    # v3.0.9)

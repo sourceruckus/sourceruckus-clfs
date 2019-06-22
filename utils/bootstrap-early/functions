@@ -359,6 +359,30 @@ compile_generic()
     shift
 
     # if we're in the stage2 bootstrap, we need to install as root user.
+    #
+    # FIXME: should we do this for bootstrap-early (aka hostprep) as well?
+    #        this way we could install hostprep in /usr/local instead of
+    #        /some/strange/path/owned/by/user...  i didn't originally do that,
+    #        because i didn't want to have to assume that the build user had
+    #        passwordless sudo privs, and i don't want the build stalling out
+    #        waiting for user input.  but continually patching Xen's scripts to
+    #        work when it's installed in strange places is painful... and i'm
+    #        feeling less and less inclined to keep the hostprep stuff
+    #        "private" to the build user
+    #
+    #        Xen might hate being in /usr/local as much as it hate's being in
+    #        /scrap/ruckus-hostprep, though...
+    #
+    #        And, I'm really hesitant to install compilation toolchain stuff
+    #        that we're building ALL the time into /usr/local... could be
+    #        downgrading tools.  that's why i wanted the user to need to
+    #        explicitly put hostprep in PATH...
+    #
+    #        Plus, I'm just plain old paranoid that I'll hose up my host
+    #        system...
+    #
+    #if [ -n "$RUCKUS_BOOTSTRAP_STAGE2" ] || [ -n "$RUCKUS_BOOTSTRAP_EARLY" ]; then
+    #
     if [ -n "$RUCKUS_BOOTSTRAP_STAGE2" ]; then
 	SUDO=sudo
     else

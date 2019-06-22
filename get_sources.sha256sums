@@ -1,6 +1,6 @@
 015fde82b3979fbe5f83501986d328331ba8ddf008c1ff3da3c238f49ca062bc  src/mpfr/mpfr-3.1.5.tar.xz
 4122dfa099a7785084dfdf58c8dfb67af60f1c14b275eba7f030dee5c2fee132  src/mpfr/mpfr-3.1.5-fixes-1.patch
-2f778748dfbc8d0481ad9f19f88665b9b5a71520bd3a389f0e1ad1257b18f279  src/gettext/gettext-tools/misc/archive.dir-latest.tar.xz
+7e8ff0d12453ddfb230fc323b981d23d2aec4d548f9fb1009b5f9377baa36d34  src/gettext/gettext-tools/misc/archive.dir-latest.tar.xz
 87b565e89a9a684fe4ebeeddb8399dce2599f9c9049854ca8c0dfbdea0e21912  src/gmp/gmp-6.1.2.tar.xz
 1795c7d067a43174113fdf03447532f373e1c6c57c08d61d9e4e9be5e244b05e  src/xen/stubdom/zlib-1.2.3.tar.gz
 f60ae61cfbd5da1d849d0beaa21f593c38dac9359f0b3ddc612f447408265b24  src/xen/stubdom/pciutils-2.2.9.tar.bz2
