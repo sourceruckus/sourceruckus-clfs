@@ -264,13 +264,14 @@ build()
                 INITD_DIR=$PREFIX_HOSTPREP/etc/rc.d/init.d \
                 SYSCONFIG_DIR=$PREFIX_HOSTPREP/etc/sysconfig \
                 XEN_CONFIG_DIR=$PREFIX_HOSTPREP/etc/xen \
-                XEN_SCRIPT_DIR=$PREFIX_HOSTPREP/etc/xen \
+                XEN_SCRIPT_DIR=$PREFIX_HOSTPREP/etc/xen/scripts \
                 XEN_DUMP_DIR=$PREFIX_HOSTPREP/var/lib/xen/dump \
                 XEN_LOG_DIR=$PREFIX_HOSTPREP/var/log/xen \
                 XEN_RUN_DIR=$PREFIX_HOSTPREP/var/run/xen \
                 XEN_RUN_STORED=$PREFIX_HOSTPREP/var/run/xenstored \
                 XEN_LIB_DIR=$PREFIX_HOSTPREP/var/lib/xen \
                 XEN_LIB_STORED=$PREFIX_HOSTPREP/var/lib/xenstored \
+                XEN_LOCK_DIR=$PREFIX_HOSTPREP/var/lock \
                 BASH_COMPLETION_DIR=$PREFIX_HOSTPREP/etc/bash_completion.d \
                 XEN_PAGING_DIR=$PREFIX_HOSTPREP/var/lib/xen/xenpaging \
 	        -j$JOBCOUNT dist &&
@@ -281,17 +282,24 @@ build()
                 INITD_DIR=$PREFIX_HOSTPREP/etc/rc.d/init.d \
                 SYSCONFIG_DIR=$PREFIX_HOSTPREP/etc/sysconfig \
                 XEN_CONFIG_DIR=$PREFIX_HOSTPREP/etc/xen \
-                XEN_SCRIPT_DIR=$PREFIX_HOSTPREP/etc/xen \
+                XEN_SCRIPT_DIR=$PREFIX_HOSTPREP/etc/xen/scripts \
                 XEN_DUMP_DIR=$PREFIX_HOSTPREP/var/lib/xen/dump \
                 XEN_LOG_DIR=$PREFIX_HOSTPREP/var/log/xen \
                 XEN_RUN_DIR=$PREFIX_HOSTPREP/var/run/xen \
                 XEN_RUN_STORED=$PREFIX_HOSTPREP/var/run/xenstored \
                 XEN_LIB_DIR=$PREFIX_HOSTPREP/var/lib/xen \
                 XEN_LIB_STORED=$PREFIX_HOSTPREP/var/lib/xenstored \
+                XEN_LOCK_DIR=$PREFIX_HOSTPREP/var/lock \
                 BASH_COMPLETION_DIR=$PREFIX_HOSTPREP/etc/bash_completion.d \
                 XEN_PAGING_DIR=$PREFIX_HOSTPREP/var/lib/xen/xenpaging \
                 install &&
 	    popd || exit 1
+            # FIXME: looks like 4.11 doesn't consistently use SCRIPT_DIR,
+            #        VAR_DIR... basically all /etc/xen and /var stuff installed
+            #        in HOSTPREP/etc/xen and HOSTPREP/etc/rc.d/init.d
+            #
+            find $PREFIX_HOSTPREP/etc/{xen,rc.d/init.d}/* -type f -exec sed -i "s|/etc/xen|$PREFIX_HOSTPREP/etc/xen|g" {} \;
+            find $PREFIX_HOSTPREP/etc/{xen,rc.d/init.d}/* -type f -exec sed -i "s|/var|$PREFIX_HOSTPREP/var|g" {} \;
 	    ;;
         flex)
             # NOTE: flex cannot be built out-of-tree because the rule for
