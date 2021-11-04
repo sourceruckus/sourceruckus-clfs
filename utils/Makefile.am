@@ -1,5 +1,6 @@
 SUBDIRS=
 
+# FIXME: should only do this via xen) in go, which may or may not happen
 hostprep-local:
 	$(INSTALL_DATA) $(builddir)/ruckus-builder.env $(PREFIX_HOSTPREP)/
 

@@ -779,6 +779,7 @@ AS_IF([test "$xen_enabled" != "no"],
 
    AC_CHECK_LIB([aio], [io_setup], [], [p_early+=" libaio"])
 
+   # FIXME: check for /boot/xen.gz and xl
    p_early+=" xen"
 
    AS_IF([test "$build_cpu" != "x86_64" -a "$stage1_xen" != "no"],
@@ -790,6 +791,7 @@ AS_IF([test "$xen_enabled" != "no"],
           ;;
       esac
      ])
+   # FIXME: endif
   ]
 )
 AC_SUBST(XEN_DETOUR, $xen_detour)
