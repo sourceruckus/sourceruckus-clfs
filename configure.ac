@@ -1,6 +1,6 @@
 # -*- mode: autoconf -*-
 AC_PREREQ(2.65)
-AC_INIT([Source Ruckus], [3.0-dev], [michael.d.labriola@gmail.com], sourceruckus)
+AC_INIT([Source Ruckus CLFS], [3.0-dev], [veggiemike@sourceruckus.org], sourceruckus-clfs)
 
 # figure out our host system
 #
